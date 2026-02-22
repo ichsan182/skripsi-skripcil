@@ -1,1 +1,23 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+    --font-size-16: 16px;
+    --font-size-18: 18px;
+    --font-size-20: 20px;
+    --font-size-24: 24px;
+    --font-size-32: 32px;
+    --font-size-40: 40px;
+    --font-size-48: 48px;
+
+    --color-primary: #03624C;
+    --color-primary-dark: #023429;
+    --color-primary-light: #0CA582;
+    --color-primary-subtle: #9AC0B7;
+    --color-white: #FCFCFC;
+    --color-gray: #AAABB2;
+    --color-black: #030F0F;
+    --color-input-bg: #F2F6FC;
+}
+* {
+    padding: 0;
+    margin: 0;
+    font-family: montserrat, sans-serif;
+}
