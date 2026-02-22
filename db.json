@@ -1,0 +1,25 @@
+{
+  "users": [
+    {
+      "id": "b240",
+      "name": "tolol",
+      "email": "tolol@gmail.com",
+      "phone": "082112488179",
+      "password": "12412441242"
+    },
+    {
+      "id": "8019",
+      "name": "torik gila",
+      "email": "torik@gmail.com",
+      "phone": "124124124",
+      "password": "123456"
+    },
+    {
+      "id": "a742",
+      "name": "ichsan ilyasa",
+      "email": "ichsanilyasa3@gmail.com",
+      "phone": "082112488179",
+      "password": "124124124124"
+    }
+  ]
+}
