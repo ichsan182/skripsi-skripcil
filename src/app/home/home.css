@@ -1,7 +1,219 @@
-.home-page {
-	padding: 24px;
+.home-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
 }
 
-h1 {
-	margin-bottom: 8px;
+.home-page {
+  display: flex;
+  margin-left: 20%;
+  padding: 60px 24px 24px 24px;
+  overflow-y: auto;
+  flex-direction: column;
+}
+
+.home-page h1 {
+  font-size: var(--font-size-32);
+  font-weight: 600;
+  color: var(--color-black);
+}
+
+.home-page p {
+  font-size: var(--font-size-14);
+  color: var(--color-gray);
+  margin-top: 5px;
+}
+
+.title-subtitle-cards {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  width: 100%;
+  gap: 12px;
+}
+
+.container-monitor-cards {
+  display: flex;
+  gap: 20px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.sisa-saldo-card,
+.pemasukan-card,
+.pengeluaran-card,
+.hutang-card {
+  border-radius: 12px;
+  background-color: var(--color-card-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  justify-content: center;
+  min-width: 280px;
+}
+
+.title-cards {
+  font-size: var(--font-size-16);
+  color: var(--color-black);
+  font-weight: 600;
+}
+
+.cards-value {
+  font-size: var(--font-size-28);
+  font-weight: 700;
+  margin-top: 12px;
+  color: var(--color-primary-light);
+}
+
+.percentage-cards {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-13);
+  color: #27ae60;
+}
+
+.arrow-cards {
+  font-weight: 600;
+}
+
+.card-with-mention {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-with-mention p {
+  font-size: var(--font-size-12);
+  color: var(--color-gray);
+  margin-top: 8px;
+}
+
+.transparant {
+  opacity: 0.8;
+}
+
+@media (max-width: 1024px) {
+  .home-page {
+    padding: 50px 20px 20px 20px;
+  }
+
+  .container-monitor-cards {
+    gap: 16px;
+  }
+
+  .sisa-saldo-card,
+  .pemasukan-card,
+  .pengeluaran-card,
+  .hutang-card {
+    min-width: 240px;
+    padding: 16px;
+  }
+
+  .cards-value {
+    font-size: var(--font-size-24);
+  }
+}
+
+@media (max-width: 768px) {
+  .home-container {
+    flex-direction: column;
+  }
+
+  .home-page {
+    margin-left: 0;
+    padding: 40px 16px 16px 16px;
+  }
+
+  .home-page h1 {
+    font-size: var(--font-size-28);
+  }
+
+  .home-page p {
+    font-size: var(--font-size-13);
+  }
+
+  .title-cards {
+    font-size: var(--font-size-14);
+  }
+
+  .cards-value {
+    font-size: var(--font-size-22);
+  }
+
+  .container-monitor-cards {
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .sisa-saldo-card,
+  .pemasukan-card,
+  .pengeluaran-card,
+  .hutang-card {
+    min-width: 100%;
+    padding: 14px;
+  }
+
+  .card-with-mention p {
+    font-size: var(--font-size-11);
+    margin-top: 6px;
+  }
+
+  .percentage-cards {
+    font-size: var(--font-size-12);
+  }
+}
+
+@media (max-width: 480px) {
+  .home-page {
+    padding: 30px 12px 12px 12px;
+  }
+
+  .home-page h1 {
+    font-size: var(--font-size-24);
+    margin-bottom: 4px;
+  }
+
+  .home-page p {
+    font-size: var(--font-size-12);
+  }
+
+  .title-cards {
+    font-size: var(--font-size-13);
+  }
+
+  .cards-value {
+    font-size: var(--font-size-20);
+    margin-top: 8px;
+  }
+
+  .container-monitor-cards {
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .sisa-saldo-card,
+  .pemasukan-card,
+  .pengeluaran-card,
+  .hutang-card {
+    min-width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .title-subtitle-cards {
+    gap: 8px;
+  }
+
+  .card-with-mention p {
+    font-size: var(--font-size-10);
+    margin-top: 4px;
+  }
+
+  .percentage-cards {
+    font-size: var(--font-size-11);
+    gap: 2px;
+  }
 }

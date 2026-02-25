@@ -1,0 +1,31 @@
+<div class="sidebar">
+  <!-- Part 1: Logo -->
+  <div class="sidebar-logo">
+    <div class="logo-container">
+      <h1>Money<span>Mgmt</span></h1>
+    </div>
+  </div>
+
+  <!-- Part 2: Navigation -->
+  <nav class="sidebar-nav">
+    <ul class="nav-menu">
+      <li *ngFor="let item of navItems">
+        <a [routerLink]="item.path" class="nav-item">
+          <img [src]="item.icon" alt="{{ item.label }}" class="nav-icon" />
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Part 3: Profile -->
+  <div class="sidebar-profile">
+    <div class="profile-container">
+      <img [src]="profileImage" alt="Profile" class="profile-avatar" />
+      <div class="profile-info">
+        <p class="profile-name">{{ profileName }}</p>
+        <p class="profile-email">{{ profileEmail }}</p>
+      </div>
+    </div>
+  </div>
+</div>
