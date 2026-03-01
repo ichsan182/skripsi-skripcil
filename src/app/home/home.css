@@ -63,7 +63,14 @@
   font-size: var(--font-size-28);
   font-weight: 700;
   margin-top: 12px;
+}
+
+.cards-value.value-positive {
   color: var(--color-primary-light);
+}
+
+.cards-value.value-negative {
+  color: var(--color-accent-red);
 }
 
 .percentage-cards {
@@ -76,7 +83,19 @@
 }
 
 .arrow-cards {
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arrow-cards img {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.arrow-cards.down img {
+  transform: rotate(180deg);
 }
 
 .card-with-mention {
@@ -89,6 +108,19 @@
   font-size: var(--font-size-12);
   color: var(--color-gray);
   margin-top: 8px;
+}
+
+.mention-text {
+  min-height: 18px;
+}
+
+.mention-text.mention-hidden {
+  visibility: hidden;
+}
+
+.mention-percent {
+  color: var(--color-primary-light);
+  font-weight: 600;
 }
 
 .transparant {

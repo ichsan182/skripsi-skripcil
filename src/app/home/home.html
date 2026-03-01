@@ -9,52 +9,82 @@
           <div class="title-subtitle-cards">
             <div class="title-cards">Sisa Saldo</div>
             <div class="percentage-cards">
-              <div class="arrow-cards">O</div>
-              12,5%
+              <div class="arrow-cards up">
+                <img src="assets/arrow_up.svg" alt="Arrow up" />
+              </div>
+              {{ saldoPercentage }}%
             </div>
           </div>
-          <div class="cards-value">Rp. 999.999.999</div>
+          <div class="cards-value value-positive">Rp. 999.999.999</div>
         </div>
-        <p class="transparant">Saldo kamu lebih banyak 15% bulan ini</p>
+        <p class="mention-text" [class.mention-hidden]="!showMentions.saldo">
+          Saldo kamu lebih banyak
+          <span class="mention-percent">{{ saldoPercentage }}%</span>
+          bulan ini
+        </p>
       </div>
       <div class="card-with-mention">
         <div class="pemasukan-card">
           <div class="title-subtitle-cards">
             <div class="title-cards">Pemasukan</div>
             <div class="percentage-cards">
-              <div class="arrow-cards">O</div>
-              12,5%
+              <div class="arrow-cards up">
+                <img src="assets/arrow_up.svg" alt="Arrow up" />
+              </div>
+              {{ pemasukanPercentage }}%
             </div>
           </div>
-          <div class="cards-value">Rp. 11.000.000</div>
+          <div class="cards-value value-positive">Rp. 11.000.000</div>
         </div>
-        <p>Pemasukan lebih banyak 15% bulan ini</p>
+        <p
+          class="mention-text"
+          [class.mention-hidden]="!showMentions.pemasukan"
+        >
+          Pemasukan lebih banyak
+          <span class="mention-percent">{{ pemasukanPercentage }}%</span>
+          bulan ini
+        </p>
       </div>
       <div class="card-with-mention">
         <div class="pengeluaran-card">
           <div class="title-subtitle-cards">
             <div class="title-cards">Pengeluaran</div>
             <div class="percentage-cards">
-              <div class="arrow-cards">O</div>
-              12,5%
+              <div class="arrow-cards down">
+                <img src="assets/arrow_up.svg" alt="Arrow down" />
+              </div>
+              {{ pengeluaranPercentage }}%
             </div>
           </div>
-          <div class="cards-value">Rp. 1.100.000</div>
+          <div class="cards-value value-negative">Rp. 1.100.000</div>
         </div>
-        <p>Pengeluaran lebih sedikit 15% bulan ini</p>
+        <p
+          class="mention-text"
+          [class.mention-hidden]="!showMentions.pengeluaran"
+        >
+          Pengeluaran lebih sedikit
+          <span class="mention-percent">{{ pengeluaranPercentage }}%</span>
+          bulan ini
+        </p>
       </div>
       <div class="card-with-mention">
         <div class="hutang-card">
           <div class="title-subtitle-cards">
             <div class="title-cards">Hutang</div>
             <div class="percentage-cards">
-              <div class="arrow-cards">O</div>
-              12,5%
+              <div class="arrow-cards down">
+                <img src="assets/arrow_up.svg" alt="Arrow down" />
+              </div>
+              {{ hutangPercentage }}%
             </div>
           </div>
-          <div class="cards-value">Rp. 500.000</div>
+          <div class="cards-value value-negative">Rp. 500.000</div>
         </div>
-        <p>Hutang sudah terbayar 15% bulan ini</p>
+        <p class="mention-text" [class.mention-hidden]="!showMentions.hutang">
+          Hutang sudah terbayar
+          <span class="mention-percent">{{ hutangPercentage }}%</span>
+          bulan ini
+        </p>
       </div>
     </div>
   </section>

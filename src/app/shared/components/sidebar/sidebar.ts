@@ -39,7 +39,7 @@ export class Sidebar {
     {
       path: '/chat',
       label: 'Chat',
-      icon: 'assets/material-symbols_education.svg',
+      icon: 'assets/material-symbols_chat.svg',
     },
   ];
 }
