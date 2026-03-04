@@ -10,6 +10,7 @@
   padding: 60px 24px 24px 24px;
   overflow-y: auto;
   flex-direction: column;
+  gap: 30px;
 }
 
 .home-page h1 {
@@ -57,7 +58,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 30px;
   cursor: pointer;
   border-radius: 12px;
   background-color: var(--color-card-bg);
@@ -75,7 +75,7 @@
 .card-add-or-edit p {
   font-size: var(--font-size-18);
   color: black;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .title-cards {
@@ -150,6 +150,85 @@
 
 .transparant {
   opacity: 0.8;
+}
+
+.savings-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 15px 20px;
+  background-color: var(--color-card-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  border-radius: 12px;
+}
+
+.title-with-icon-savings {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: start;
+  gap: 8px;
+}
+
+.title-with-icon-savings .img {
+  width: 24px;
+  height: 24px;
+  background-image: url("/assets/savings.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  flex-shrink: 0;
+}
+
+.title-with-icon-savings h2 {
+  color: var(--color-primary);
+  font-size: var(--font-size-20);
+  font-weight: 600;
+}
+
+.subtitle-savings {
+  color: var(--color-gray);
+  font-size: var(--font-size-12);
+  font-weight: 400;
+  margin-top: 8px;
+}
+
+.savings-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  justify-content: center;
+  align-items: center;
+  border-radius: 12px;
+  border: 2px solid var(--color-primary);
+  margin-top: 10px;
+}
+
+.savings-details h2 {
+  color: var(--color-primary-light);
+  font-size: var(--font-size-32);
+  font-weight: 700;
+}
+
+.savings-details p {
+  color: black;
+  font-size: var(--font-size-14);
+  font-weight: 400;
+}
+
+.savings-details h5 {
+  color: var(--color-primary-subtle);
+  font-size: var(--font-size-12);
+  font-weight: 400;
+}
+
+.container-savings {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
 }
 
 @media (max-width: 1024px) {
