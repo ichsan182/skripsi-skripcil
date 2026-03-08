@@ -3,157 +3,176 @@
   <section class="home-page">
     <h1>Selamat Malam, Ichsan Ilyasa!</h1>
     <p>Cek status kamu hari ini yuk!</p>
-    <section class="container-monitor-cards">
-      <div class="card-with-mention">
-        <div class="sisa-saldo-card">
-          <div class="title-subtitle-cards">
-            <div class="title-cards">Sisa Saldo</div>
-            <div class="percentage-cards">
-              <div class="arrow-cards up">
-                <img src="assets/arrow_up.svg" alt="Arrow up" />
+    <div class="home-content">
+      <section class="summary-cards-section">
+        <div class="card-with-mention">
+          <div class="sisa-saldo-card">
+            <div class="title-subtitle-cards">
+              <div class="title-cards">Sisa Saldo</div>
+              <div class="percentage-cards">
+                <div class="arrow-cards up">
+                  <img src="assets/arrow_up.svg" alt="Arrow up" />
+                </div>
+                {{ saldoPercentage }}%
               </div>
-              {{ saldoPercentage }}%
             </div>
+            <div class="cards-value value-positive">Rp. 999.999.999</div>
           </div>
-          <div class="cards-value value-positive">Rp. 999.999.999</div>
+          <p class="mention-text" [class.mention-hidden]="!showMentions.saldo">
+            Saldo kamu lebih banyak
+            <span class="mention-percent">{{ saldoPercentage }}%</span>
+            bulan ini
+          </p>
         </div>
-        <p class="mention-text" [class.mention-hidden]="!showMentions.saldo">
-          Saldo kamu lebih banyak
-          <span class="mention-percent">{{ saldoPercentage }}%</span>
-          bulan ini
-        </p>
-      </div>
-      <div class="card-with-mention">
-        <div class="pemasukan-card">
-          <div class="title-subtitle-cards">
-            <div class="title-cards">Pemasukan</div>
-            <div class="percentage-cards">
-              <div class="arrow-cards up">
-                <img src="assets/arrow_up.svg" alt="Arrow up" />
+        <div class="card-with-mention">
+          <div class="pemasukan-card">
+            <div class="title-subtitle-cards">
+              <div class="title-cards">Pemasukan</div>
+              <div class="percentage-cards">
+                <div class="arrow-cards up">
+                  <img src="assets/arrow_up.svg" alt="Arrow up" />
+                </div>
+                {{ pemasukanPercentage }}%
               </div>
-              {{ pemasukanPercentage }}%
             </div>
+            <div class="cards-value value-positive">Rp. 11.000.000</div>
           </div>
-          <div class="cards-value value-positive">Rp. 11.000.000</div>
+          <p
+            class="mention-text"
+            [class.mention-hidden]="!showMentions.pemasukan"
+          >
+            Pemasukan lebih banyak
+            <span class="mention-percent">{{ pemasukanPercentage }}%</span>
+            bulan ini
+          </p>
         </div>
-        <p
-          class="mention-text"
-          [class.mention-hidden]="!showMentions.pemasukan"
-        >
-          Pemasukan lebih banyak
-          <span class="mention-percent">{{ pemasukanPercentage }}%</span>
-          bulan ini
-        </p>
-      </div>
-      <div class="card-with-mention">
-        <div class="pengeluaran-card">
-          <div class="title-subtitle-cards">
-            <div class="title-cards">Pengeluaran</div>
-            <div class="percentage-cards">
-              <div class="arrow-cards down">
-                <img src="assets/arrow_up.svg" alt="Arrow down" />
+        <div class="card-with-mention">
+          <div class="pengeluaran-card">
+            <div class="title-subtitle-cards">
+              <div class="title-cards">Pengeluaran</div>
+              <div class="percentage-cards">
+                <div class="arrow-cards down">
+                  <img src="assets/arrow_up.svg" alt="Arrow down" />
+                </div>
+                {{ pengeluaranPercentage }}%
               </div>
-              {{ pengeluaranPercentage }}%
             </div>
+            <div class="cards-value value-negative">Rp. 1.100.000</div>
           </div>
-          <div class="cards-value value-negative">Rp. 1.100.000</div>
+          <p
+            class="mention-text"
+            [class.mention-hidden]="!showMentions.pengeluaran"
+          >
+            Pengeluaran lebih sedikit
+            <span class="mention-percent">{{ pengeluaranPercentage }}%</span>
+            bulan ini
+          </p>
         </div>
-        <p
-          class="mention-text"
-          [class.mention-hidden]="!showMentions.pengeluaran"
-        >
-          Pengeluaran lebih sedikit
-          <span class="mention-percent">{{ pengeluaranPercentage }}%</span>
-          bulan ini
-        </p>
-      </div>
-      <div class="card-with-mention">
-        <div class="hutang-card">
-          <div class="title-subtitle-cards">
-            <div class="title-cards">Hutang</div>
-            <div class="percentage-cards">
-              <div class="arrow-cards down">
-                <img src="assets/arrow_up.svg" alt="Arrow down" />
+        <div class="card-with-mention">
+          <div class="hutang-card">
+            <div class="title-subtitle-cards">
+              <div class="title-cards">Hutang</div>
+              <div class="percentage-cards">
+                <div class="arrow-cards down">
+                  <img src="assets/arrow_up.svg" alt="Arrow down" />
+                </div>
+                {{ hutangPercentage }}%
               </div>
-              {{ hutangPercentage }}%
             </div>
+            <div class="cards-value value-negative">Rp. 500.000</div>
           </div>
-          <div class="cards-value value-negative">Rp. 500.000</div>
+          <p class="mention-text" [class.mention-hidden]="!showMentions.hutang">
+            Hutang sudah terbayar
+            <span class="mention-percent">{{ hutangPercentage }}%</span>
+            bulan ini
+          </p>
         </div>
-        <p class="mention-text" [class.mention-hidden]="!showMentions.hutang">
-          Hutang sudah terbayar
-          <span class="mention-percent">{{ hutangPercentage }}%</span>
-          bulan ini
-        </p>
-      </div>
-    </section>
-    <section class="card-settings">
-      <div class="card-add-or-edit">
-        <img
-          src="assets/symbol-setting_persenan.svg"
-          alt="Description of image"
-        />
-        <p>setting persenan</p>
-      </div>
-      <div class="card-add-or-edit">
-        <img
-          src="assets/symbol-tambah_pemasukan.svg"
-          alt="Description of image"
-        />
-        <p>Tambah Pemasukan</p>
-      </div>
-      <div class="card-add-or-edit">
-        <img
-          src="assets/symbol-tambah_pengeluaran.svg"
-          alt="Description of image"
-        />
-        <p>Tambah Pengeluaran</p>
-      </div>
-      <div class="card-add-or-edit">
-        <img src="assets/symbol-edit_hutang.svg" alt="Description of image" />
-        <p>Edit Hutang</p>
-      </div>
-    </section>
-    <section class="container-savings">
-      <div class="savings-container">
-        <div class="title-with-icon-savings">
-          <div class="img"></div>
-          <h2>Tabungan Kamu</h2>
+      </section>
+      <section class="quick-actions-section">
+        <div class="card-add-or-edit">
+          <img
+            src="assets/symbol-setting_persenan.svg"
+            alt="Description of image"
+          />
+          <p>setting persenan</p>
         </div>
-        <div class="subtitle-savings">
-          Jangan lupa nabung ya! berikut saran dari kami ✨
+        <div class="card-add-or-edit">
+          <img
+            src="assets/symbol-tambah_pemasukan.svg"
+            alt="Description of image"
+          />
+          <p>Tambah Pemasukan</p>
         </div>
-        <div class="savings-details">
-          <p>Tabungan pokok</p>
-          <h2>1.000.000</h2>
-          <h5>10% dari penghasilan kamu!</h5>
+        <div class="card-add-or-edit">
+          <img
+            src="assets/symbol-tambah_pengeluaran.svg"
+            alt="Description of image"
+          />
+          <p>Tambah Pengeluaran</p>
         </div>
-      </div>
-      <div class="savings-container">
-        <div class="title-with-icon-savings">
-          <div class="img"></div>
-          <h2>Tabungan Kamu</h2>
+        <div class="card-add-or-edit">
+          <img src="assets/symbol-edit_hutang.svg" alt="Description of image" />
+          <p>Edit Hutang</p>
         </div>
-        <div class="subtitle-savings">
-          Jangan lupa nabung ya! berikut saran dari kami ✨
+      </section>
+      <section class="savings-section">
+        <div class="savings-container">
+          <div class="title-with-icon-savings">
+            <div class="img"></div>
+            <h2>Tabungan Kamu</h2>
+          </div>
+          <div class="subtitle-savings">
+            Jangan lupa nabung ya! berikut saran dari kami ✨
+          </div>
+          <div class="savings-details">
+            <p>Tabungan pokok</p>
+            <h2>1.000.000</h2>
+            <h5>10% dari penghasilan kamu!</h5>
+          </div>
         </div>
-        <div class="savings-details">
-          <p>Tabungan pokok</p>
-          <h2>1.000.000</h2>
-          <h5>10% dari penghasilan kamu!</h5>
+        <div class="savings-container">
+          <div class="title-with-icon-savings">
+            <div class="img"></div>
+            <h2>Dana Darurat</h2>
+          </div>
+          <div class="subtitle-savings">
+            Dana darurat supaya kamu ga pusing 🙏
+          </div>
+          <div class="savings-details">
+            <p>Tabungan pokok</p>
+            <h2>1.000.000</h2>
+            <h5>10% dari penghasilan kamu!</h5>
+          </div>
         </div>
-      </div>
-    </section>
-    <section>
-      <div class="calendar-container">
-        <div class="title-calendar-streak">
-          <div class="img"></div>
-          <h2>192 Hari Streak!</h2>
+      </section>
+      <section class="insights-section">
+        <div class="insight-card">
+          <div class="insight-card-title">
+            <div class="img-streak"></div>
+            <h2>192 Hari Streak!</h2>
+          </div>
+          <div class="insight-card-subtitle">
+            Catat pengeluaran mu setiap hari untuk mendapatkan streak !
+          </div>
+          <div class="insight-card-body"></div>
         </div>
-        <div class="subtitle-calendar">
-          Catat pengeluaran mu setiap hari untuk mendapatkan streak !
+        <div class="insight-card">
+          <div class="insight-card-title">
+            <div class="img-level"></div>
+            <h2>Level</h2>
+          </div>
+          <div class="insight-card-subtitle">Level mu saat ini</div>
+          <div class="insight-card-body"></div>
         </div>
-      </div>
-    </section>
+        <div class="insight-card">
+          <div class="insight-card-title">
+            <div class="img-pengeluaran"></div>
+            <h2>Pengeluaran</h2>
+          </div>
+          <div class="insight-card-subtitle">Ringkasan pengeluaran mu nih!</div>
+          <div class="insight-card-body"></div>
+        </div>
+      </section>
+    </div>
   </section>
 </div>
