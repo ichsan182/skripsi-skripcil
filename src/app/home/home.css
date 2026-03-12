@@ -7,7 +7,7 @@
 .home-page {
   display: flex;
   margin-left: 20%;
-  padding: 60px 24px 24px 24px;
+  padding: 30px;
   overflow-y: auto;
   flex-direction: column;
   width: 100%;
@@ -249,12 +249,23 @@
   gap: 20px;
 }
 
-.insight-card {
+.insight-card-streak {
+  padding: 20px;
+  background-color: var(--color-card-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  min-width: 400px;
+}
+
+.insight-card-pengeluaran {
   padding: 20px;
   background-color: var(--color-card-bg);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-radius: 12px;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .insight-card-level {
@@ -264,20 +275,71 @@
   border-radius: 12px;
   min-width: 250px;
 }
-
-.insight-card-body {
-  width: 100%;
-  height: 230px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
-}
-
-.insight-card-title,
+.insight-card-title-level,
 .level-progress,
 .level-info,
-.insight-card-subtitle {
+.insight-card-subtitle-level {
   padding: 0 10px;
+}
+
+.insight-card-title-subtitle {
+  display: flex;
+  flex-direction: column;
+}
+
+.container-ts-calendar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.pick-calendar-date {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--color-gray);
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.calendar-picker-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.pick-calendar-label {
+  color: var(--color-black);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  padding-right: 50px;
+}
+
+.calendar-chevron-btn {
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  pointer-events: none;
+}
+
+.calendar-chevron-btn img {
+  width: 14px;
+  height: 14px;
+}
+
+.month-picker-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
 }
 
 .level-container {
@@ -402,6 +464,15 @@
   margin-bottom: 6px;
 }
 
+.insight-card-title,
+.insight-card-title-level {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
 .img-streak,
 .img-level,
 .img-pengeluaran {
@@ -423,17 +494,154 @@
 .img-pengeluaran {
   background-image: url("/assets/pengeluaran.svg");
 }
-.insight-card-title h2 {
+.insight-card-title h2,
+.insight-card-title-level h2 {
   color: var(--color-primary);
   font-size: 1.25rem;
   font-weight: 600;
 }
 
+.insight-card-subtitle-level,
 .insight-card-subtitle {
   color: var(--color-gray);
   font-weight: 400;
   font-size: 0.875rem;
   margin-bottom: 15px;
+}
+
+.insight-card-body-pengeluaran {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.month-year-switcher {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  gap: 8px;
+}
+
+.month-switch-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(3, 98, 76, 0.16);
+  border-radius: 50%;
+  background: var(--color-white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.month-switch-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+.month-year-label {
+  text-align: center;
+  color: black;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+}
+
+.table-and-list-pengeluaran {
+  max-height: 290px;
+  overflow-y: auto;
+  border: 1px solid rgba(3, 15, 15, 0.08);
+  border-radius: 12px;
+}
+
+.pengeluaran-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.pengeluaran-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-card-bg);
+  text-align: left;
+  padding: 12px 14px;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-black);
+  border-bottom: 1px solid rgba(3, 15, 15, 0.08);
+}
+
+.pengeluaran-table tbody td {
+  padding: 12px 14px;
+  font-size: var(--font-size-sm);
+  color: var(--color-black);
+  border-bottom: 1px solid rgba(3, 15, 15, 0.05);
+  vertical-align: middle;
+}
+
+.pengeluaran-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid;
+  padding: 4px 10px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.category-makanan {
+  color: var(--color-primary-light);
+  border-color: var(--color-primary-light);
+  background-color: color-mix(
+    in srgb,
+    var(--color-primary-light) 20%,
+    transparent
+  );
+}
+
+.category-travel {
+  color: var(--color-category-travel);
+  border-color: var(--color-category-travel);
+  background-color: color-mix(
+    in srgb,
+    var(--color-category-travel) 20%,
+    transparent
+  );
+}
+
+.category-entertainment {
+  color: var(--color-category-transport);
+  border-color: var(--color-category-transport);
+  background-color: color-mix(
+    in srgb,
+    var(--color-category-transport) 20%,
+    transparent
+  );
+}
+
+.category-subscription {
+  color: var(--color-category-subscription);
+  border-color: var(--color-category-subscription);
+  background-color: color-mix(
+    in srgb,
+    var(--color-category-subscription) 20%,
+    transparent
+  );
+}
+
+.pengeluaran-table tbody td.dpd-styling {
+  color: var(--color-gray);
+  font-size: var(--font-size-sm);
+  font-weight: 400;
 }
 
 @media (max-width: 1024px) {
@@ -493,6 +701,21 @@
   .savings-section,
   .insights-section {
     flex-direction: column;
+  }
+
+  .insight-card-streak,
+  .insight-card-level,
+  .insight-card-pengeluaran {
+    min-width: 100%;
+  }
+
+  .container-ts-calendar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pick-calendar-date {
+    align-self: flex-start;
   }
 
   .sisa-saldo-card,
@@ -562,5 +785,20 @@
   .percentage-cards {
     font-size: 0.75rem;
     gap: 2px;
+  }
+
+  .month-year-label {
+    font-size: var(--font-size-base);
+  }
+
+  .month-switch-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .pengeluaran-table thead th,
+  .pengeluaran-table tbody td {
+    padding: 10px 10px;
+    font-size: var(--font-size-2xs);
   }
 }

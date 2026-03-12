@@ -71,6 +71,11 @@
   --color-card-bg: #ffffff;
   --color-accent-red: #ff383c;
   --color-progress-bar-bg: #ECF2FA;
+  --color-category-travel: #9BA50C;
+  --color-category-transport: #1e90ff;
+  --color-category-entertainment: #0C87A5;
+  --color-category-subscription: #A50C0C;
+  --color-category-bills: #87ceeb;
 }
 
 *,
