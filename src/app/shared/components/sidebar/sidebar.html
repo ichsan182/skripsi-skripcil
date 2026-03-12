@@ -1,31 +1,36 @@
-<div class="sidebar">
-  <!-- Part 1: Logo -->
-  <div class="sidebar-logo">
-    <div class="logo-container">
-      <h1>Money<span>Mgmt</span></h1>
+<aside class="sidebar">
+  <!-- Brand -->
+  <div class="sidebar-brand">
+    <div class="brand-logo-mark">M</div>
+    <div class="brand-copy">
+      <h1 class="brand-name">MoneyMgmt</h1>
+      <p class="brand-tagline">Financial Dashboard</p>
     </div>
   </div>
 
-  <!-- Part 2: Navigation -->
-  <nav class="sidebar-nav">
-    <ul class="nav-menu">
+  <!-- Navigation -->
+  <nav class="sidebar-nav" aria-label="Main navigation">
+    <span class="nav-group-label">Main Menu</span>
+    <ul class="nav-list">
       <li *ngFor="let item of navItems">
-        <a [routerLink]="item.path" class="nav-item">
-          <img [src]="item.icon" alt="{{ item.label }}" class="nav-icon" />
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="nav-item--active"
+          class="nav-item"
+        >
+          <img [src]="item.icon" [alt]="item.label" class="nav-icon" />
           <span class="nav-label">{{ item.label }}</span>
         </a>
       </li>
     </ul>
   </nav>
 
-  <!-- Part 3: Profile -->
+  <!-- Profile -->
   <div class="sidebar-profile">
-    <div class="profile-container">
-      <img [src]="profileImage" alt="Profile" class="profile-avatar" />
-      <div class="profile-info">
-        <p class="profile-name">{{ profileName }}</p>
-        <p class="profile-email">{{ profileEmail }}</p>
-      </div>
+    <img [src]="profileImage" alt="Profile" class="profile-avatar" />
+    <div class="profile-info">
+      <p class="profile-name">{{ profileName }}</p>
+      <p class="profile-email">{{ profileEmail }}</p>
     </div>
   </div>
-</div>
+</aside>
