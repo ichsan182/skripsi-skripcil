@@ -156,14 +156,55 @@
           </div>
           <div class="insight-card-body"></div>
         </div>
-        <div class="insight-card">
+        <div class="insight-card-level">
           <div class="insight-card-title">
             <div class="img-level"></div>
             <h2>Level</h2>
           </div>
           <div class="insight-card-subtitle">Level mu saat ini</div>
-          <div class="insight-card-body"></div>
+          <div class="level-container">
+            <div class="level-progress">
+              <img
+                [src]="currentLevelImage"
+                [alt]="'Level ' + currentLevel"
+                class="img-level-progress"
+              />
+              <span class="current-level">Level {{ currentLevel }}</span>
+              <div class="level-progress-bar">
+                <div
+                  class="level-progress-fill"
+                  [style.width]="levelProgress + '%'"
+                >
+                  <span class="level-progress-percentage"
+                    >{{ levelProgress }}%</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="level-info">
+              <div class="task-level-info">
+                <h3>Task</h3>
+                <p>{{ currentLevelTask }}</p>
+              </div>
+            </div>
+            <div class="next-level-container">
+              @if (currentLevel < 7) {
+              <span class="next-level">Next Level :</span>
+              <img
+                [src]="nextLevelImage!"
+                [alt]="'Level ' + (currentLevel + 1)"
+                class="img-next-level"
+              />
+              } @else {
+              <span class="max-level-text"
+                >Selamat sudah mencapai level tertinggi!</span
+              >
+              }
+            </div>
+          </div>
         </div>
+
+        
         <div class="insight-card">
           <div class="insight-card-title">
             <div class="img-pengeluaran"></div>
