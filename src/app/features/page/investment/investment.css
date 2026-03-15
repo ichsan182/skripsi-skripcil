@@ -7,7 +7,7 @@
 .page-content {
   display: flex;
   margin-left: 20%;
-  padding: 60px 24px 24px 24px;
+  padding: 30px;
   overflow-y: auto;
   flex-direction: column;
   width: 100%;

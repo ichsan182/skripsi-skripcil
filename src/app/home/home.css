@@ -54,7 +54,7 @@
 .hutang-card {
   border-radius: 12px;
   background-color: var(--color-card-bg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -70,7 +70,7 @@
   cursor: pointer;
   border-radius: 12px;
   background-color: var(--color-card-bg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   flex-direction: row;
   padding: 20px;
   width: 100%;
@@ -169,7 +169,7 @@
   width: 100%;
   padding: 15px 20px;
   background-color: var(--color-card-bg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   cursor: pointer;
   border-radius: 12px;
 }
@@ -185,7 +185,7 @@
 .title-with-icon-savings .img {
   width: 24px;
   height: 24px;
-  background-image: url("/assets/savings.svg");
+  background-image: var(--asset-icon-savings);
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
@@ -252,7 +252,7 @@
 .insight-card-streak {
   padding: 20px;
   background-color: var(--color-card-bg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   border-radius: 12px;
   min-width: 400px;
 }
@@ -260,7 +260,7 @@
 .insight-card-pengeluaran {
   padding: 20px;
   background-color: var(--color-card-bg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   border-radius: 12px;
   width: 100%;
   display: flex;
@@ -271,7 +271,7 @@
 .insight-card-level {
   padding: 20px 10px;
   background-color: var(--color-card-bg);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   border-radius: 12px;
   min-width: 250px;
 }
@@ -426,7 +426,7 @@
 .next-level-container {
   width: 100%;
   padding: 14px 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 12px;
   display: flex;
@@ -485,14 +485,14 @@
 }
 
 .img-streak {
-  background-image: url("/assets/streak.svg");
+  background-image: var(--asset-icon-streak);
 }
 
 .img-level {
-  background-image: url("/assets/level.svg");
+  background-image: var(--asset-icon-level);
 }
 .img-pengeluaran {
-  background-image: url("/assets/pengeluaran.svg");
+  background-image: var(--asset-icon-pengeluaran);
 }
 .insight-card-title h2,
 .insight-card-title-level h2 {

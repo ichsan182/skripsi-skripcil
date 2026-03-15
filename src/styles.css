@@ -70,12 +70,19 @@
   --color-input-bg: #f2f6fc;
   --color-card-bg: #ffffff;
   --color-accent-red: #ff383c;
-  --color-progress-bar-bg: #ECF2FA;
-  --color-category-travel: #9BA50C;
+  --color-progress-bar-bg: #ecf2fa;
+  --color-category-travel: #9ba50c;
   --color-category-transport: #1e90ff;
-  --color-category-entertainment: #0C87A5;
-  --color-category-subscription: #A50C0C;
+  --color-category-entertainment: #0c87a5;
+  --color-category-subscription: #a50c0c;
   --color-category-bills: #87ceeb;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --asset-icon-savings: url("/assets/savings.svg");
+  --asset-icon-streak: url("/assets/streak.svg");
+  --asset-icon-level: url("/assets/level.svg");
+  --asset-icon-pengeluaran: url("/assets/pengeluaran.svg");
+  --asset-graphic-calculator-cuate: url("/assets/graphic/calculator-cuate.svg");
+  --asset-graphic-investing-cuate: url("/assets/graphic/investing-cuate.svg");
 }
 
 *,
