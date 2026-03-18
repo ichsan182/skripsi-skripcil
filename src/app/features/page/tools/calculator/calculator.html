@@ -33,10 +33,12 @@
       <label class="field-control">
         <span>Income (penghasilan)</span>
         <input
-          type="number"
-          min="0"
-          [(ngModel)]="income"
-          (ngModelChange)="onSavingsFieldChange()"
+          type="text"
+          inputmode="numeric"
+          class="currency-input"
+          [ngModel]="incomeInput"
+          (ngModelChange)="onIncomeInputChange($event)"
+          placeholder="1.000.000"
         />
       </label>
 
@@ -103,10 +105,12 @@
           <div class="input-prefix-wrap">
             <i>Rp</i>
             <input
-              type="number"
-              min="0"
-              [(ngModel)]="initialInvestment"
-              (ngModelChange)="onCompoundFieldChange()"
+              type="text"
+              inputmode="numeric"
+              class="currency-input"
+              [ngModel]="initialInvestmentInput"
+              (ngModelChange)="onInitialInvestmentInputChange($event)"
+              placeholder="1.000.000"
             />
           </div>
         </label>
@@ -116,6 +120,7 @@
           <input
             type="number"
             min="0"
+            max="1000"
             [(ngModel)]="interestRate"
             (ngModelChange)="onCompoundFieldChange()"
           />
@@ -178,10 +183,12 @@
           <div class="input-prefix-wrap">
             <i>Rp</i>
             <input
-              type="number"
-              min="0"
-              [(ngModel)]="depositAmount"
-              (ngModelChange)="onDepositAmountChange()"
+              type="text"
+              inputmode="numeric"
+              class="currency-input"
+              [ngModel]="depositAmountInput"
+              (ngModelChange)="onDepositAmountChange($event)"
+              placeholder="100.000"
             />
           </div>
         </label>
@@ -218,6 +225,7 @@
           <input
             type="number"
             min="0"
+            max="100"
             [(ngModel)]="annualDepositIncrease"
             (ngModelChange)="onCompoundFieldChange()"
           />

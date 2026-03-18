@@ -164,6 +164,12 @@
   color: var(--color-black);
 }
 
+.currency-input {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
 .field-control input:focus,
 .field-control select:focus {
   border-color: var(--color-primary-light);

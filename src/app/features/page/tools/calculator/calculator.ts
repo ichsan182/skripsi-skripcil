@@ -125,6 +125,10 @@ export class ToolsCalculator {
   protected annualDepositIncrease = 10;
   protected isDepositSynced = true;
 
+  protected incomeInput = '';
+  protected initialInvestmentInput = '';
+  protected depositAmountInput = '';
+
   protected normalLeft = 0;
   protected normalRight = 0;
   protected normalOperator: NormalOperator = 'add';
@@ -146,7 +150,7 @@ export class ToolsCalculator {
 
   constructor() {
     this.syncDepositWithSavings();
-    this.recalculateAll();
+    this.syncCurrencyInputsFromNumbers();
   }
 
   protected get savingsAmount(): number {
@@ -198,40 +202,68 @@ export class ToolsCalculator {
   }
 
   protected onSavingsFieldChange(): void {
-    this.savingsRate = this.clampPercent(this.savingsRate);
-    this.requiredExpenseRate = this.clampPercent(this.requiredExpenseRate);
+    this.savingsRate = this.clamp(this.ensureFinite(this.savingsRate), 0, 100);
+    this.requiredExpenseRate = this.clamp(
+      this.ensureFinite(this.requiredExpenseRate),
+      0,
+      100,
+    );
     this.income = this.safeNonNegative(this.income);
 
     if (this.isDepositSynced) {
-      this.syncDepositWithSavings();
+      this.depositAmount = this.savingsAmount;
+      this.depositEvery = this.savingsEvery;
+      if (!this.canChooseDepositTiming) {
+        this.depositTiming = 'end';
+      }
     }
 
+    this.syncCurrencyInputsFromNumbers();
     this.recalculateAll();
+  }
+
+  protected onIncomeInputChange(rawValue: string): void {
+    this.income = this.parseCurrencyInput(rawValue);
+    this.onSavingsFieldChange();
+  }
+
+  protected onInitialInvestmentInputChange(rawValue: string): void {
+    this.initialInvestment = this.parseCurrencyInput(rawValue);
+    this.syncCurrencyInputsFromNumbers();
+    this.onCompoundFieldChange();
   }
 
   protected onCompoundFieldChange(): void {
     this.initialInvestment = this.safeNonNegative(this.initialInvestment);
-    this.interestRate = this.safeNonNegative(this.interestRate);
+    this.interestRate = this.clamp(
+      this.safeNonNegative(this.interestRate),
+      0,
+      1000,
+    );
     this.investmentYears = Math.floor(
       this.safeNonNegative(this.investmentYears),
     );
     this.investmentMonths = Math.floor(
       this.clamp(this.safeNonNegative(this.investmentMonths), 0, 11),
     );
-    this.annualDepositIncrease = this.safeNonNegative(
-      this.annualDepositIncrease,
+    this.annualDepositIncrease = this.clamp(
+      this.safeNonNegative(this.annualDepositIncrease),
+      0,
+      100,
     );
 
     if (!this.canChooseDepositTiming) {
       this.depositTiming = 'end';
     }
 
+    this.syncCurrencyInputsFromNumbers();
     this.recalculateAll();
   }
 
-  protected onDepositAmountChange(): void {
-    this.depositAmount = this.safeNonNegative(this.depositAmount);
+  protected onDepositAmountChange(rawValue: string): void {
+    this.depositAmount = this.parseCurrencyInput(rawValue);
     this.isDepositSynced = false;
+    this.syncCurrencyInputsFromNumbers();
     this.recalculateAll();
   }
 
@@ -242,6 +274,7 @@ export class ToolsCalculator {
       this.depositTiming = 'end';
     }
     this.isDepositSynced = true;
+    this.syncCurrencyInputsFromNumbers();
     this.recalculateAll();
   }
 
@@ -599,8 +632,8 @@ export class ToolsCalculator {
     return Math.max(0, this.ensureFinite(value));
   }
 
-  private clampPercent(value: number): number {
-    return this.clamp(this.ensureFinite(value), 0, 100);
+  private clampPercent(value: number, maxValue: number = 100): number {
+    return this.clamp(this.ensureFinite(value), 0, maxValue);
   }
 
   private clamp(value: number, minimum: number, maximum: number): number {
@@ -609,6 +642,33 @@ export class ToolsCalculator {
 
   private ensureFinite(value: number): number {
     return Number.isFinite(value) ? value : 0;
+  }
+
+  private parseCurrencyInput(rawValue: string): number {
+    const normalized = rawValue.replace(/[^\d]/g, '');
+
+    if (normalized.length === 0) {
+      return 0;
+    }
+
+    // Remove leading zeros to prevent "0000", "006", etc.
+    let parsed = Number.parseInt(normalized, 10);
+
+    return this.safeNonNegative(parsed);
+  }
+
+  private formatCurrencyInput(value: number): string {
+    return new Intl.NumberFormat('id-ID', {
+      maximumFractionDigits: 0,
+    }).format(Math.round(this.safeNonNegative(value)));
+  }
+
+  private syncCurrencyInputsFromNumbers(): void {
+    this.incomeInput = this.formatCurrencyInput(this.income);
+    this.initialInvestmentInput = this.formatCurrencyInput(
+      this.initialInvestment,
+    );
+    this.depositAmountInput = this.formatCurrencyInput(this.depositAmount);
   }
 
   private roundCurrency(value: number): number {
