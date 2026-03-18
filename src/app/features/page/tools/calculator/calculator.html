@@ -17,7 +17,7 @@
         interest (bisa sync otomatis atau disesuaikan manual).
       </p>
       <p class="field-note">
-        💡 Saving rate + Pengeluaran wajib otomatis berjumlah 100%
+        Catatan: Saving rate + Pengeluaran wajib otomatis berjumlah 100%
       </p>
     </div>
 
@@ -294,6 +294,86 @@
         <div class="result-row">
           <span>Investment doubled after</span>
           <strong>{{ projection.doubledAfterLabel }}</strong>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <h3>Grafik Proyeksi</h3>
+          <div class="chart-controls">
+            <label>
+              <span>Interval</span>
+              <select
+                [(ngModel)]="chartGranularity"
+                (ngModelChange)="onChartGranularityChange()"
+              >
+                <option [ngValue]="'yearly'">Yearly</option>
+                <option [ngValue]="'monthly'">Monthly</option>
+              </select>
+            </label>
+            <label>
+              <span>Metrik</span>
+              <select
+                [(ngModel)]="chartMetric"
+                (ngModelChange)="onChartMetricChange()"
+              >
+                <option [ngValue]="'future-value'">Hasil akhir</option>
+                <option [ngValue]="'net-result'">Net hasil</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="chart-stat">
+          <span>
+            {{ chartMetric === 'future-value' ? 'Nilai terbaru' : 'Net terbaru'
+            }}
+          </span>
+          <strong>{{ formatCurrency(chartCurrentValue) }}</strong>
+          <small
+            >Perubahan dari awal: {{ formatCurrency(chartDeltaValue) }}</small
+          >
+        </div>
+
+        <div class="chart-plot-wrap">
+          <svg
+            class="projection-chart"
+            viewBox="0 0 560 220"
+            preserveAspectRatio="none"
+            role="img"
+            aria-label="Grafik proyeksi hasil investasi"
+          >
+            <defs>
+              <linearGradient
+                id="chartLineGradient"
+                x1="0"
+                x2="1"
+                y1="0"
+                y2="0"
+              >
+                <stop offset="0%" stop-color="var(--color-primary-dark)" />
+                <stop offset="100%" stop-color="var(--color-primary-light)" />
+              </linearGradient>
+            </defs>
+            <line class="chart-grid" x1="20" y1="14" x2="550" y2="14" />
+            <line class="chart-grid" x1="20" y1="106" x2="550" y2="106" />
+            <line class="chart-grid" x1="20" y1="202" x2="550" y2="202" />
+            <path class="chart-line" [attr.d]="chartPath" />
+          </svg>
+
+          <div class="chart-scale">
+            <span>{{ formatCurrency(chartMaxValue) }}</span>
+            <span>{{ formatCurrency(chartMinValue) }}</span>
+          </div>
+        </div>
+
+        <div class="chart-footer">
+          <span>{{ chartStartLabel }}</span>
+          <span>{{ chartEndLabel }}</span>
+        </div>
+
+        <div class="chart-year-track" aria-label="Skala tahun">
+          <span *ngFor="let tick of chartYearTicks">{{ tick }}</span>
         </div>
       </div>
 

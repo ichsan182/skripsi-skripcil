@@ -26,6 +26,8 @@ type CompoundFrequency =
 type DepositTiming = 'beginning' | 'end';
 type NormalOperator = 'add' | 'subtract' | 'multiply' | 'divide';
 type TimelineEventType = 'deposit-beginning' | 'compound' | 'deposit-end';
+type ChartGranularity = 'monthly' | 'yearly';
+type ChartMetric = 'future-value' | 'net-result';
 
 interface FrequencyOption<TValue extends string> {
   value: TValue;
@@ -49,6 +51,13 @@ interface ProjectionResult {
 interface TimelineEvent {
   timeInYears: number;
   type: TimelineEventType;
+}
+
+interface ProjectionChartPoint {
+  timeInYears: number;
+  label: string;
+  futureValue: number;
+  netResult: number;
 }
 
 @Component({
@@ -148,6 +157,16 @@ export class ToolsCalculator {
     doubledAfterLabel: 'Belum tersedia',
   };
 
+  protected chartGranularity: ChartGranularity = 'yearly';
+  protected chartMetric: ChartMetric = 'future-value';
+  protected chartPoints: ProjectionChartPoint[] = [];
+  protected chartPath = '';
+  protected chartMinValue = 0;
+  protected chartMaxValue = 0;
+  protected chartCurrentValue = 0;
+  protected chartDeltaValue = 0;
+  protected chartYearTicks: number[] = [0];
+
   constructor() {
     this.syncDepositWithSavings();
     this.syncCurrencyInputsFromNumbers();
@@ -199,6 +218,16 @@ export class ToolsCalculator {
       this.depositEvery === 'half-yearly' ||
       this.depositEvery === 'yearly'
     );
+  }
+
+  protected get chartStartLabel(): string {
+    return this.chartPoints.length > 0 ? this.chartPoints[0].label : '0 bulan';
+  }
+
+  protected get chartEndLabel(): string {
+    return this.chartPoints.length > 0
+      ? this.chartPoints[this.chartPoints.length - 1].label
+      : '0 bulan';
   }
 
   protected onSavingsRateChange(): void {
@@ -298,6 +327,14 @@ export class ToolsCalculator {
     this.recalculateAll();
   }
 
+  protected onChartGranularityChange(): void {
+    this.updateChartData();
+  }
+
+  protected onChartMetricChange(): void {
+    this.rebuildChartPath();
+  }
+
   protected onNormalFieldChange(): void {
     this.normalLeft = this.ensureFinite(this.normalLeft);
     this.normalRight = this.ensureFinite(this.normalRight);
@@ -319,7 +356,164 @@ export class ToolsCalculator {
 
   private recalculateAll(): void {
     this.projection = this.calculateProjection();
+    this.updateChartData();
     this.calculateNormal();
+  }
+
+  private updateChartData(): void {
+    this.chartPoints = this.buildProjectionSeries(this.chartGranularity);
+    this.updateChartYearTicks();
+    this.rebuildChartPath();
+  }
+
+  private updateChartYearTicks(): void {
+    if (this.chartPoints.length === 0) {
+      this.chartYearTicks = [0];
+      return;
+    }
+
+    const totalYears =
+      this.chartPoints[this.chartPoints.length - 1].timeInYears;
+    const wholeYears = Math.max(0, Math.floor(totalYears + 1e-8));
+    this.chartYearTicks = Array.from(
+      { length: wholeYears + 1 },
+      (_, index) => index,
+    );
+  }
+
+  private buildProjectionSeries(
+    granularity: ChartGranularity,
+  ): ProjectionChartPoint[] {
+    const initialInvestment = this.safeNonNegative(this.initialInvestment);
+    const interestRate = this.safeNonNegative(this.interestRate);
+    const depositAmount = this.safeNonNegative(this.depositAmount);
+    const investmentYears = Math.floor(
+      this.safeNonNegative(this.investmentYears),
+    );
+    const investmentMonths = Math.floor(
+      this.clamp(this.safeNonNegative(this.investmentMonths), 0, 11),
+    );
+    const annualDepositIncrease = this.safeNonNegative(
+      this.annualDepositIncrease,
+    );
+
+    const totalYears = investmentYears + investmentMonths / 12;
+    const sampleTimes = this.buildChartSampleTimes(totalYears, granularity);
+
+    const compoundPerYear = this.getCompoundPeriods(this.compoundFrequency);
+    const periodicRate = interestRate / 100;
+    const annualNominalRate =
+      periodicRate * this.getInterestPeriods(this.interestRateInterval);
+    const annualDepositIncreaseRate = annualDepositIncrease / 100;
+
+    return sampleTimes.map((sampleTime) => {
+      const projection = this.runProjectionTimeline(
+        initialInvestment,
+        annualNominalRate,
+        compoundPerYear,
+        sampleTime,
+        depositAmount,
+        this.getSavingsPeriods(this.depositEvery),
+        this.depositTiming,
+        annualDepositIncreaseRate,
+      );
+
+      const totalInvested = initialInvestment + projection.totalContributions;
+      const netResult = projection.futureValue - totalInvested;
+
+      return {
+        timeInYears: sampleTime,
+        label: this.formatDuration(sampleTime),
+        futureValue: this.roundCurrency(projection.futureValue),
+        netResult: this.roundCurrency(netResult),
+      };
+    });
+  }
+
+  private buildChartSampleTimes(
+    totalYears: number,
+    granularity: ChartGranularity,
+  ): number[] {
+    if (totalYears <= 0) {
+      return [0];
+    }
+
+    const baseStep = granularity === 'monthly' ? 1 / 12 : 1;
+    const maxPoints = 360;
+    const estimatePointCount = Math.ceil(totalYears / baseStep) + 1;
+    const multiplier = Math.max(1, Math.ceil(estimatePointCount / maxPoints));
+    const step = baseStep * multiplier;
+
+    const times: number[] = [0];
+    let current = step;
+    while (current < totalYears - 1e-8) {
+      times.push(this.roundToPrecision(current, 6));
+      current += step;
+    }
+
+    if (times[times.length - 1] < totalYears - 1e-8) {
+      times.push(this.roundToPrecision(totalYears, 6));
+    }
+
+    return times;
+  }
+
+  private rebuildChartPath(): void {
+    if (this.chartPoints.length === 0) {
+      this.chartPath = '';
+      this.chartMinValue = 0;
+      this.chartMaxValue = 0;
+      this.chartCurrentValue = 0;
+      this.chartDeltaValue = 0;
+      return;
+    }
+
+    const values = this.chartPoints.map((point) =>
+      this.getChartMetricValue(point),
+    );
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const valueRange = maxValue - minValue;
+
+    const chartWidth = 560;
+    const chartHeight = 220;
+    const padLeft = 20;
+    const padRight = 10;
+    const padTop = 14;
+    const padBottom = 18;
+    const innerWidth = chartWidth - padLeft - padRight;
+    const innerHeight = chartHeight - padTop - padBottom;
+
+    const safeRange = valueRange > 0 ? valueRange : 1;
+    const lastIndex = this.chartPoints.length - 1;
+    const pathParts: string[] = [];
+
+    this.chartPoints.forEach((point, index) => {
+      const value = this.getChartMetricValue(point);
+      const x =
+        lastIndex > 0
+          ? padLeft + (index / lastIndex) * innerWidth
+          : padLeft + innerWidth / 2;
+      const y = padTop + ((maxValue - value) / safeRange) * innerHeight;
+
+      pathParts.push(
+        `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`,
+      );
+    });
+
+    this.chartPath = pathParts.join(' ');
+    this.chartMinValue = this.roundCurrency(minValue);
+    this.chartMaxValue = this.roundCurrency(maxValue);
+    this.chartCurrentValue = this.roundCurrency(values[values.length - 1]);
+    this.chartDeltaValue = this.roundCurrency(
+      values[values.length - 1] - values[0],
+    );
+  }
+
+  private getChartMetricValue(point: ProjectionChartPoint): number {
+    return this.chartMetric === 'future-value'
+      ? point.futureValue
+      : point.netResult;
   }
 
   private calculateNormal(): void {
@@ -677,6 +871,11 @@ export class ToolsCalculator {
     return new Intl.NumberFormat('id-ID', {
       maximumFractionDigits: 0,
     }).format(Math.round(this.safeNonNegative(value)));
+  }
+
+  private roundToPrecision(value: number, precision: number): number {
+    const factor = Math.pow(10, precision);
+    return Math.round(this.ensureFinite(value) * factor) / factor;
   }
 
   private syncCurrencyInputsFromNumbers(): void {
