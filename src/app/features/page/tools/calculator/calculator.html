@@ -16,6 +16,9 @@
         Bagian ini menjadi sumber data untuk deposit amount pada compound
         interest (bisa sync otomatis atau disesuaikan manual).
       </p>
+      <p class="field-note">
+        💡 Saving rate + Pengeluaran wajib otomatis berjumlah 100%
+      </p>
     </div>
 
     <div class="field-grid field-grid-savings">
@@ -26,7 +29,7 @@
           min="0"
           max="100"
           [(ngModel)]="savingsRate"
-          (ngModelChange)="onSavingsFieldChange()"
+          (ngModelChange)="onSavingsRateChange()"
         />
       </label>
 
@@ -49,7 +52,7 @@
           min="0"
           max="100"
           [(ngModel)]="requiredExpenseRate"
-          (ngModelChange)="onSavingsFieldChange()"
+          (ngModelChange)="onRequiredExpenseRateChange()"
         />
       </label>
 
@@ -57,7 +60,7 @@
         <span>Every</span>
         <select
           [(ngModel)]="savingsEvery"
-          (ngModelChange)="onSavingsFieldChange()"
+          (ngModelChange)="syncAndRecalculateSavings()"
         >
           <option
             *ngFor="let option of savingsFrequencyOptions"

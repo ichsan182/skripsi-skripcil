@@ -201,15 +201,31 @@ export class ToolsCalculator {
     );
   }
 
-  protected onSavingsFieldChange(): void {
+  protected onSavingsRateChange(): void {
+    // Clamp saving rate to 0-100
     this.savingsRate = this.clamp(this.ensureFinite(this.savingsRate), 0, 100);
+    // Auto-calculate required expense rate as complement (total = 100%)
+    this.requiredExpenseRate = this.clamp(100 - this.savingsRate, 0, 100);
+    this.income = this.safeNonNegative(this.income);
+
+    this.syncAndRecalculateSavings();
+  }
+
+  protected onRequiredExpenseRateChange(): void {
+    // Clamp required expense rate to 0-100
     this.requiredExpenseRate = this.clamp(
       this.ensureFinite(this.requiredExpenseRate),
       0,
       100,
     );
+    // Auto-calculate saving rate as complement (total = 100%)
+    this.savingsRate = this.clamp(100 - this.requiredExpenseRate, 0, 100);
     this.income = this.safeNonNegative(this.income);
 
+    this.syncAndRecalculateSavings();
+  }
+
+  protected syncAndRecalculateSavings(): void {
     if (this.isDepositSynced) {
       this.depositAmount = this.savingsAmount;
       this.depositEvery = this.savingsEvery;
@@ -224,7 +240,7 @@ export class ToolsCalculator {
 
   protected onIncomeInputChange(rawValue: string): void {
     this.income = this.parseCurrencyInput(rawValue);
-    this.onSavingsFieldChange();
+    this.syncAndRecalculateSavings();
   }
 
   protected onInitialInvestmentInputChange(rawValue: string): void {
