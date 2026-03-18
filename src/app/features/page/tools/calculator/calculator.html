@@ -1,0 +1,353 @@
+<section class="calculator-page">
+  <header class="calculator-header">
+    <a class="back-link" routerLink="/tools">Kembali ke halaman Tools</a>
+    <p class="header-kicker">Chained Financial Calculator</p>
+    <h1>Kalkulator Finansial Berantai yang Presisi dan Mudah Dipakai</h1>
+    <p class="header-caption">
+      Rancang target tabungan, simulasi compound interest, dan cek hitungan
+      cepat di satu halaman dengan standar perhitungan finansial internasional.
+    </p>
+  </header>
+
+  <article class="savings-card">
+    <div class="card-title-wrap">
+      <h2>Kalkulator Tabungan</h2>
+      <p>
+        Bagian ini menjadi sumber data untuk deposit amount pada compound
+        interest (bisa sync otomatis atau disesuaikan manual).
+      </p>
+    </div>
+
+    <div class="field-grid field-grid-savings">
+      <label class="field-control">
+        <span>Saving rate (%)</span>
+        <input
+          type="number"
+          min="0"
+          max="100"
+          [(ngModel)]="savingsRate"
+          (ngModelChange)="onSavingsFieldChange()"
+        />
+      </label>
+
+      <label class="field-control">
+        <span>Income (penghasilan)</span>
+        <input
+          type="number"
+          min="0"
+          [(ngModel)]="income"
+          (ngModelChange)="onSavingsFieldChange()"
+        />
+      </label>
+
+      <label class="field-control">
+        <span>Pengeluaran wajib (%)</span>
+        <input
+          type="number"
+          min="0"
+          max="100"
+          [(ngModel)]="requiredExpenseRate"
+          (ngModelChange)="onSavingsFieldChange()"
+        />
+      </label>
+
+      <label class="field-control">
+        <span>Every</span>
+        <select
+          [(ngModel)]="savingsEvery"
+          (ngModelChange)="onSavingsFieldChange()"
+        >
+          <option
+            *ngFor="let option of savingsFrequencyOptions"
+            [ngValue]="option.value"
+          >
+            {{ option.label }}
+          </option>
+        </select>
+      </label>
+    </div>
+
+    <div class="insight-strip">
+      <div class="insight-item">
+        <span>Saving amount</span>
+        <strong>{{ formatCurrency(savingsAmount) }}</strong>
+      </div>
+      <div class="insight-item">
+        <span>Pengeluaran wajib</span>
+        <strong>{{ formatCurrency(requiredExpenseAmount) }}</strong>
+      </div>
+      <div class="insight-item">
+        <span>Sisa kas setelah alokasi</span>
+        <strong>{{ formatCurrency(cashflowAfterSavingsAndExpenses) }}</strong>
+      </div>
+      <div class="insight-item">
+        <span>Estimasi tabungan per tahun</span>
+        <strong>{{ formatCurrency(annualSavingsProjection) }}</strong>
+      </div>
+    </div>
+  </article>
+
+  <section class="compound-layout">
+    <article class="compound-card">
+      <div class="card-title-wrap">
+        <h2>Compound Interest Calculator</h2>
+        <p>
+          Formula memakai annual nominal rate dan compound frequency yang dapat
+          disesuaikan.
+        </p>
+      </div>
+
+      <div class="field-grid field-grid-compound">
+        <label class="field-control">
+          <span>Initial investment</span>
+          <div class="input-prefix-wrap">
+            <i>Rp</i>
+            <input
+              type="number"
+              min="0"
+              [(ngModel)]="initialInvestment"
+              (ngModelChange)="onCompoundFieldChange()"
+            />
+          </div>
+        </label>
+
+        <label class="field-control">
+          <span>Interest rate (%)</span>
+          <input
+            type="number"
+            min="0"
+            [(ngModel)]="interestRate"
+            (ngModelChange)="onCompoundFieldChange()"
+          />
+        </label>
+
+        <label class="field-control">
+          <span>Interest rate interval</span>
+          <select
+            [(ngModel)]="interestRateInterval"
+            (ngModelChange)="onCompoundFieldChange()"
+          >
+            <option
+              *ngFor="let option of interestIntervalOptions"
+              [ngValue]="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
+        </label>
+
+        <label class="field-control">
+          <span>Compound frequency</span>
+          <select
+            [(ngModel)]="compoundFrequency"
+            (ngModelChange)="onCompoundFieldChange()"
+          >
+            <option
+              *ngFor="let option of compoundFrequencyOptions"
+              [ngValue]="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
+        </label>
+
+        <div class="field-row-two">
+          <label class="field-control">
+            <span>Duration years</span>
+            <input
+              type="number"
+              min="0"
+              [(ngModel)]="investmentYears"
+              (ngModelChange)="onCompoundFieldChange()"
+            />
+          </label>
+          <label class="field-control">
+            <span>Duration months</span>
+            <input
+              type="number"
+              min="0"
+              max="11"
+              [(ngModel)]="investmentMonths"
+              (ngModelChange)="onCompoundFieldChange()"
+            />
+          </label>
+        </div>
+
+        <label class="field-control">
+          <span>Regular contributions (deposit amount)</span>
+          <div class="input-prefix-wrap">
+            <i>Rp</i>
+            <input
+              type="number"
+              min="0"
+              [(ngModel)]="depositAmount"
+              (ngModelChange)="onDepositAmountChange()"
+            />
+          </div>
+        </label>
+
+        <label class="field-control">
+          <span>Deposits every</span>
+          <select
+            [(ngModel)]="depositEvery"
+            (ngModelChange)="onCompoundFieldChange()"
+          >
+            <option
+              *ngFor="let option of savingsFrequencyOptions"
+              [ngValue]="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
+        </label>
+
+        <label class="field-control">
+          <span>Deposit timing</span>
+          <select
+            [(ngModel)]="depositTiming"
+            [disabled]="!canChooseDepositTiming"
+            (ngModelChange)="onCompoundFieldChange()"
+          >
+            <option [ngValue]="'beginning'">Di awal periode</option>
+            <option [ngValue]="'end'">Di akhir periode</option>
+          </select>
+        </label>
+
+        <label class="field-control">
+          <span>Annual deposits increase (%)</span>
+          <input
+            type="number"
+            min="0"
+            [(ngModel)]="annualDepositIncrease"
+            (ngModelChange)="onCompoundFieldChange()"
+          />
+        </label>
+      </div>
+
+      <div class="sync-bar">
+        <p>
+          Status sinkronisasi deposit dari Kalkulator Tabungan:
+          <strong>{{ isDepositSynced ? 'Aktif' : 'Manual' }}</strong>
+        </p>
+        <button
+          type="button"
+          class="ghost-btn"
+          (click)="syncDepositWithSavings()"
+        >
+          Sync deposit dengan saving rate
+        </button>
+      </div>
+
+      <button type="button" class="calculate-btn" (click)="calculateNow()">
+        Hitung Keseluruhan
+      </button>
+
+      <p class="formula-note">
+        Catatan standar: Daily memakai 365 hari atau 360 hari per tahun sesuai
+        pilihan. Weekly = 52, Monthly = 12, Quarterly = 4.
+      </p>
+      <p class="formula-note">
+        Kuartal finansial: Q1 (Jan-Mar), Q2 (Apr-Jun), Q3 (Jul-Sep), Q4
+        (Oct-Dec).
+      </p>
+    </article>
+
+    <aside class="result-card">
+      <p class="result-kicker">Output</p>
+      <h2>Calculation for {{ projection.termLabel }}</h2>
+
+      <div class="result-highlight">
+        <span>Future investment value</span>
+        <strong>{{ formatCurrency(projection.futureValue) }}</strong>
+      </div>
+
+      <div class="result-list">
+        <div class="result-row">
+          <span>Total interest earned</span>
+          <strong>{{ formatCurrency(projection.totalInterestEarned) }}</strong>
+        </div>
+        <div class="result-row">
+          <span>Initial balance</span>
+          <strong>{{ formatCurrency(projection.initialBalance) }}</strong>
+        </div>
+        <div class="result-row">
+          <span>Total regular contributions</span>
+          <strong>{{ formatCurrency(projection.totalContributions) }}</strong>
+        </div>
+        <div class="result-row">
+          <span>All time rate of return (RoR)</span>
+          <strong
+            >{{ formatPercent(projection.allTimeRateOfReturnPct) }}</strong
+          >
+        </div>
+        <div class="result-row">
+          <span>Investment doubled after</span>
+          <strong>{{ projection.doubledAfterLabel }}</strong>
+        </div>
+      </div>
+
+      <div class="rate-panel">
+        <h3>Rate Explanation</h3>
+        <p>
+          Rate nominal kamu saat ini adalah
+          <strong>{{ periodicRateLabel }}</strong>
+          dengan skema compounding yang menghasilkan effective yearly rate
+          <strong>{{ effectiveYearlyRateLabel }}</strong>.
+        </p>
+      </div>
+    </aside>
+  </section>
+
+  <article class="normal-card">
+    <div class="card-title-wrap">
+      <h2>Normal Calculator</h2>
+      <p>
+        Kalkulator cepat ini berdiri sendiri dan tidak mempengaruhi hasil
+        compound interest.
+      </p>
+    </div>
+
+    <div class="normal-grid">
+      <label class="field-control">
+        <span>Angka pertama</span>
+        <input
+          type="number"
+          [(ngModel)]="normalLeft"
+          (ngModelChange)="onNormalFieldChange()"
+        />
+      </label>
+
+      <label class="field-control">
+        <span>Operator</span>
+        <select
+          [(ngModel)]="normalOperator"
+          (ngModelChange)="onNormalFieldChange()"
+        >
+          <option
+            *ngFor="let option of normalOperatorOptions"
+            [ngValue]="option.value"
+          >
+            {{ option.label }}
+          </option>
+        </select>
+      </label>
+
+      <label class="field-control">
+        <span>Angka kedua</span>
+        <input
+          type="number"
+          [(ngModel)]="normalRight"
+          (ngModelChange)="onNormalFieldChange()"
+        />
+      </label>
+    </div>
+
+    <div class="normal-result">
+      <span>Hasil</span>
+      <strong>{{ normalResult }}</strong>
+      @if (normalError) {
+      <p>{{ normalError }}</p>
+      }
+    </div>
+  </article>
+</section>

@@ -6,6 +6,7 @@ import { Chat } from './features/page/chat/chat';
 import { Transaction } from './features/page/transaction/transaction';
 import { Investment } from './features/page/investment/investment';
 import { Tools } from './features/page/tools/tools';
+import { ToolsCalculator } from './features/page/tools/calculator/calculator';
 import { Education } from './features/page/education/education';
 
 export const routes: Routes = [
@@ -45,6 +46,10 @@ export const routes: Routes = [
   {
     path: 'tools',
     component: Tools,
+  },
+  {
+    path: 'tools/calculator',
+    component: ToolsCalculator,
   },
   {
     path: 'education',
