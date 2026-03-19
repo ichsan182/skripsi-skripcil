@@ -41,13 +41,70 @@ interface ChartPoint {
 })
 export class ToolsSimulation implements OnInit, OnDestroy {
   protected readonly availableAssets: AssetOption[] = [
+    // Logam mulia
     { id: 'GC=F', name: 'Emas (Gold)', symbol: 'GC=F' },
     { id: 'SI=F', name: 'Perak (Silver)', symbol: 'SI=F' },
-    { id: 'BTC-USD', name: 'Bitcoin', symbol: 'BTC-USD' },
+    { id: 'PL=F', name: 'Platinum', symbol: 'PL=F' },
+    { id: 'PA=F', name: 'Palladium', symbol: 'PA=F' },
+
+    // Crypto
+    { id: 'BTC-USD', name: 'Bitcoin (BTC)', symbol: 'BTC-USD' },
+    { id: 'ETH-USD', name: 'Ethereum (ETH)', symbol: 'ETH-USD' },
+    { id: 'BNB-USD', name: 'BNB', symbol: 'BNB-USD' },
+    { id: 'SOL-USD', name: 'Solana (SOL)', symbol: 'SOL-USD' },
+    { id: 'XRP-USD', name: 'XRP', symbol: 'XRP-USD' },
+    { id: 'ADA-USD', name: 'Cardano (ADA)', symbol: 'ADA-USD' },
+    { id: 'DOGE-USD', name: 'Dogecoin (DOGE)', symbol: 'DOGE-USD' },
+
+    // Indeks Amerika
     { id: '^GSPC', name: 'S&P 500', symbol: '^GSPC' },
     { id: '^IXIC', name: 'NASDAQ', symbol: '^IXIC' },
-    { id: 'AAPL', name: 'Saham US (Apple)', symbol: 'AAPL' },
-    { id: 'BBCA.JK', name: 'Saham IDX (BBCA)', symbol: 'BBCA.JK' },
+    { id: '^DJI', name: 'Dow Jones', symbol: '^DJI' },
+    { id: '^RUT', name: 'Russell 2000', symbol: '^RUT' },
+
+    // Indeks Asia & Global
+    { id: '^JKSE', name: 'IHSG (Indonesia)', symbol: '^JKSE' },
+    { id: '^N225', name: 'Nikkei 225 (JP)', symbol: '^N225' },
+    { id: '^HSI', name: 'Hang Seng (HK)', symbol: '^HSI' },
+    { id: '^KS11', name: 'KOSPI (Korea)', symbol: '^KS11' },
+    { id: '^STI', name: 'STI (Singapura)', symbol: '^STI' },
+    { id: '^FTSE', name: 'FTSE 100 (UK)', symbol: '^FTSE' },
+
+    // Saham Amerika (Big Tech)
+    { id: 'AAPL', name: 'Apple (AAPL)', symbol: 'AAPL' },
+    { id: 'MSFT', name: 'Microsoft (MSFT)', symbol: 'MSFT' },
+    { id: 'GOOGL', name: 'Alphabet (GOOGL)', symbol: 'GOOGL' },
+    { id: 'AMZN', name: 'Amazon (AMZN)', symbol: 'AMZN' },
+    { id: 'NVDA', name: 'NVIDIA (NVDA)', symbol: 'NVDA' },
+    { id: 'TSLA', name: 'Tesla (TSLA)', symbol: 'TSLA' },
+    { id: 'META', name: 'Meta (META)', symbol: 'META' },
+
+    // Saham IDX — Blue Chip
+    { id: 'BBCA.JK', name: 'BCA (BBCA)', symbol: 'BBCA.JK' },
+    { id: 'BBRI.JK', name: 'BRI (BBRI)', symbol: 'BBRI.JK' },
+    { id: 'BMRI.JK', name: 'Mandiri (BMRI)', symbol: 'BMRI.JK' },
+    { id: 'TLKM.JK', name: 'Telkom (TLKM)', symbol: 'TLKM.JK' },
+    { id: 'ASII.JK', name: 'Astra (ASII)', symbol: 'ASII.JK' },
+    { id: 'UNVR.JK', name: 'Unilever (UNVR)', symbol: 'UNVR.JK' },
+    { id: 'GOTO.JK', name: 'GoTo (GOTO)', symbol: 'GOTO.JK' },
+    { id: 'ADRO.JK', name: 'Adaro (ADRO)', symbol: 'ADRO.JK' },
+
+    // ETF
+    { id: 'SPY', name: 'S&P 500 ETF (SPY)', symbol: 'SPY' },
+    { id: 'QQQ', name: 'NASDAQ ETF (QQQ)', symbol: 'QQQ' },
+    { id: 'GLD', name: 'Gold ETF (GLD)', symbol: 'GLD' },
+    { id: 'VTI', name: 'Total Market ETF (VTI)', symbol: 'VTI' },
+
+    // Energi & Komoditas
+    { id: 'CL=F', name: 'Minyak Mentah (WTI)', symbol: 'CL=F' },
+    { id: 'BZ=F', name: 'Minyak Brent', symbol: 'BZ=F' },
+    { id: 'NG=F', name: 'Gas Alam', symbol: 'NG=F' },
+
+    // Forex
+    { id: 'USDIDR=X', name: 'USD / IDR', symbol: 'USDIDR=X' },
+    { id: 'EURUSD=X', name: 'EUR / USD', symbol: 'EURUSD=X' },
+    { id: 'GBPUSD=X', name: 'GBP / USD', symbol: 'GBPUSD=X' },
+    { id: 'USDJPY=X', name: 'USD / JPY', symbol: 'USDJPY=X' },
   ];
 
   protected selectedAsset = this.availableAssets[0].id;
