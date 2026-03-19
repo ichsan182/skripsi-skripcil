@@ -76,6 +76,8 @@
   --color-category-entertainment: #0c87a5;
   --color-category-subscription: #a50c0c;
   --color-category-bills: #87ceeb;
+  --color-answer-chat-bg: #f4f7fd;
+  --color-text-answer: #292929;
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.1);
   --asset-icon-savings: url("/assets/savings.svg");
   --asset-icon-streak: url("/assets/streak.svg");

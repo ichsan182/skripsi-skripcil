@@ -2,6 +2,343 @@
   <app-sidebar></app-sidebar>
   <section class="page-content">
     <h1>Transaction</h1>
-    <p>Transaction page content goes here</p>
+    <p>Kalender, chat assistant, dan ringkasan transaksi harian kamu.</p>
+
+    <div class="transaction-content">
+      <section class="top-containers">
+        <article class="transaction-card calendar-card">
+          <div class="card-header">
+            <div class="title-with-icon">
+              <img
+                src="assets/calendar-picker.svg"
+                alt="Kalender"
+                class="header-icon"
+              />
+              <h2>Calendar</h2>
+            </div>
+            <span class="selected-date-pill">{{ selectedDateLabel }}</span>
+          </div>
+
+          <div class="month-year-switcher">
+            <button
+              type="button"
+              class="month-switch-btn"
+              (click)="changeMonth(-1)"
+              aria-label="Bulan sebelumnya"
+            >
+              <img src="assets/prev.svg" alt="Bulan sebelumnya" />
+            </button>
+            <span class="month-year-label">{{ monthYearLabel }}</span>
+            <button
+              type="button"
+              class="month-switch-btn"
+              (click)="changeMonth(1)"
+              aria-label="Bulan berikutnya"
+            >
+              <img src="assets/next.svg" alt="Bulan berikutnya" />
+            </button>
+          </div>
+
+          <div class="calendar-grid">
+            <span class="weekday-label" *ngFor="let day of weekDays"
+              >{{ day }}</span
+            >
+
+            <button
+              type="button"
+              class="calendar-day"
+              *ngFor="let cell of calendarCells"
+              (click)="selectDate(cell)"
+              [class.outside-month]="!cell.inCurrentMonth"
+              [class.selected]="isSameDate(cell.date, selectedDate)"
+              [class.today]="cell.isToday"
+              [attr.aria-label]="'Pilih tanggal ' + cell.key"
+            >
+              {{ cell.dayNumber }}
+            </button>
+          </div>
+        </article>
+
+        <article class="transaction-card chat-card">
+          <div class="card-header">
+            <div class="title-with-icon">
+              <img
+                src="assets/material-symbols_chat.svg"
+                alt="Chat"
+                class="header-icon"
+              />
+              <h2>Chat Assistant</h2>
+            </div>
+            <span class="mode-chip" [class.active]="isSelectedDateToday">
+              {{ isSelectedDateToday ? 'Hari ini aktif' : 'Mode riwayat' }}
+            </span>
+          </div>
+
+          <p class="card-subtitle">
+            Riwayat chat tanggal {{ selectedDateLabel }}.
+          </p>
+
+          <div class="chat-thread">
+            <p class="empty-state" *ngIf="selectedChatMessages.length === 0">
+              Tidak ada chat pada hari ini.
+            </p>
+
+            <div
+              class="chat-row"
+              *ngFor="let message of selectedChatMessages"
+              [class.user]="message.sender === 'user'"
+            >
+              <div
+                class="chat-bubble"
+                [class.user]="message.sender === 'user'"
+                [class.assistant]="message.sender === 'assistant'"
+              >
+                <p>{{ message.text }}</p>
+                <span>{{ message.time }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-area">
+            <input
+              type="text"
+              placeholder="{{
+                isSelectedDateToday
+                  ? 'Tulis pesan untuk hari ini...'
+                  : 'Chat hanya bisa dikirim untuk hari ini'
+              }}"
+              [(ngModel)]="messageInput"
+              [disabled]="!isSelectedDateToday"
+              (keydown.enter)="sendMessage()"
+            />
+            <button
+              type="button"
+              class="send-btn"
+              (click)="sendMessage()"
+              [disabled]="!isSelectedDateToday || !messageInput.trim()"
+            >
+              Kirim
+            </button>
+          </div>
+        </article>
+      </section>
+
+      <section class="bottom-containers">
+        <article class="transaction-card summary-card">
+          <div class="card-header">
+            <div class="title-with-icon">
+              <img
+                src="assets/summary.svg"
+                alt="Ringkasan"
+                class="header-icon"
+              />
+              <h2>Ringkasan</h2>
+            </div>
+            <span class="selected-date-pill">{{ selectedDateLabel }}</span>
+          </div>
+
+          <div class="donut-container">
+            <div class="donut-chart" [style.background]="donutGradient">
+              <div class="donut-center">
+                <span>Pengeluaran</span>
+                <strong>{{ formatCompactCurrency(totalExpenseAmount) }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="legend-list">
+            <p class="empty-state" *ngIf="categoryBreakdown.length === 0">
+              Belum ada pengeluaran pada tanggal ini.
+            </p>
+
+            <div class="legend-item" *ngFor="let item of categoryBreakdown">
+              <div class="legend-left">
+                <span
+                  class="legend-color"
+                  [style.background-color]="'var(' + item.colorVar + ')'"
+                ></span>
+                <span
+                  class="legend-name"
+                  [style.color]="'var(' + item.colorVar + ')'"
+                >
+                  {{ item.label }}
+                </span>
+              </div>
+              <span class="legend-percent"
+                >{{ formatPercent(item.percent) }}%</span
+              >
+            </div>
+          </div>
+        </article>
+
+        <div class="stacked-lists">
+          <article class="transaction-card list-card">
+            <div class="card-header list-header">
+              <div class="title-with-icon">
+                <img
+                  src="assets/summary.svg"
+                  alt="Pengeluaran"
+                  class="header-icon"
+                />
+                <h2>Pengeluaran</h2>
+              </div>
+              <span class="total-chip"
+                >{{ formatCurrency(totalExpenseAmount) }}</span
+              >
+            </div>
+
+            <form
+              class="entry-form entry-form-expense"
+              (submit)="addExpense(); $event.preventDefault()"
+            >
+              <input
+                type="text"
+                name="expense-description"
+                [(ngModel)]="expenseDraft.description"
+                placeholder="Deskripsi"
+                [disabled]="!isSelectedDateToday"
+              />
+              <select
+                name="expense-category"
+                [(ngModel)]="expenseDraft.category"
+                [disabled]="!isSelectedDateToday"
+              >
+                <option
+                  *ngFor="let option of categoryOptions"
+                  [value]="option.key"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+              <input
+                type="number"
+                min="1"
+                name="expense-amount"
+                [(ngModel)]="expenseDraft.amount"
+                placeholder="Nominal"
+                [disabled]="!isSelectedDateToday"
+              />
+              <button type="submit" [disabled]="!isSelectedDateToday">
+                Tambah
+              </button>
+            </form>
+
+            <p class="form-note" *ngIf="!isSelectedDateToday">
+              Hari sebelumnya hanya dapat dilihat sebagai history.
+            </p>
+
+            <div class="table-and-list-pengeluaran">
+              <table class="pengeluaran-table">
+                <thead>
+                  <tr>
+                    <th>Pengeluaran</th>
+                    <th>Deskripsi</th>
+                    <th>Kategori</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngIf="selectedExpenses.length === 0">
+                    <td colspan="3" class="empty-table-cell">
+                      Belum ada data pengeluaran.
+                    </td>
+                  </tr>
+                  <tr *ngFor="let expense of selectedExpenses">
+                    <td class="dpd-styling">
+                      {{ formatCurrency(expense.amount) }}
+                    </td>
+                    <td class="dpd-styling">{{ expense.description }}</td>
+                    <td>
+                      <span
+                        class="category-pill"
+                        [ngClass]="categoryMeta[expense.category].className"
+                      >
+                        {{ categoryMeta[expense.category].label }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="transaction-card list-card">
+            <div class="card-header list-header">
+              <div class="title-with-icon">
+                <img
+                  src="assets/summary.svg"
+                  alt="Pemasukan"
+                  class="header-icon"
+                />
+                <h2>Pemasukan</h2>
+              </div>
+              <span class="total-chip total-chip-income">
+                {{ formatCurrency(totalIncomeAmount) }}
+              </span>
+            </div>
+
+            <form
+              class="entry-form entry-form-income"
+              (submit)="addIncome(); $event.preventDefault()"
+            >
+              <input
+                type="text"
+                name="income-description"
+                [(ngModel)]="incomeDraft.description"
+                placeholder="Deskripsi"
+                [disabled]="!isSelectedDateToday"
+              />
+              <input
+                type="text"
+                name="income-source"
+                [(ngModel)]="incomeDraft.source"
+                placeholder="Sumber"
+                [disabled]="!isSelectedDateToday"
+              />
+              <input
+                type="number"
+                min="1"
+                name="income-amount"
+                [(ngModel)]="incomeDraft.amount"
+                placeholder="Nominal"
+                [disabled]="!isSelectedDateToday"
+              />
+              <button type="submit" [disabled]="!isSelectedDateToday">
+                Tambah
+              </button>
+            </form>
+
+            <p class="form-note" *ngIf="!isSelectedDateToday">
+              Hari sebelumnya hanya dapat dilihat sebagai history.
+            </p>
+
+            <div class="table-and-list-pengeluaran">
+              <table class="pengeluaran-table">
+                <thead>
+                  <tr>
+                    <th>Pemasukan</th>
+                    <th>Deskripsi</th>
+                    <th>Sumber</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngIf="selectedIncomes.length === 0">
+                    <td colspan="3" class="empty-table-cell">
+                      Belum ada data pemasukan.
+                    </td>
+                  </tr>
+                  <tr *ngFor="let income of selectedIncomes">
+                    <td class="dpd-styling">
+                      {{ formatCurrency(income.amount) }}
+                    </td>
+                    <td class="dpd-styling">{{ income.description }}</td>
+                    <td class="dpd-styling">{{ income.source }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
   </section>
 </div>
