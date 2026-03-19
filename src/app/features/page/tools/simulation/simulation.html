@@ -33,8 +33,9 @@
           <input
             type="text"
             inputmode="numeric"
-            [(ngModel)]="investmentAmount"
-            placeholder="{{ currency === 'idr' ? '1.000.000' : '1000' }}"
+            [value]="investmentAmount"
+            (input)="onAmountInput($event)"
+            placeholder="{{ currency === 'idr' ? '1.000.000' : '1.000' }}"
           />
         </div>
       </label>

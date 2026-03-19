@@ -108,7 +108,7 @@ export class ToolsSimulation implements OnInit, OnDestroy {
   ];
 
   protected selectedAsset = this.availableAssets[0].id;
-  protected investmentAmount = '1000000';
+  protected investmentAmount = '1.000.000';
   protected startDate = this.formatDateForInput(this.getDateYearsAgo(1));
   protected currency: CurrencyCode = 'idr';
 
@@ -232,6 +232,22 @@ export class ToolsSimulation implements OnInit, OnDestroy {
 
   protected getTodayFormatted(): string {
     return this.formatDateDisplay(this.startOfDay(new Date()));
+  }
+
+  protected onAmountInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '');
+
+    if (!digits) {
+      this.investmentAmount = '';
+      input.value = '';
+      return;
+    }
+
+    const num = Number.parseInt(digits, 10);
+    const formatted = new Intl.NumberFormat('id-ID').format(num);
+    this.investmentAmount = formatted;
+    input.value = formatted;
   }
 
   private processSimulationData(
