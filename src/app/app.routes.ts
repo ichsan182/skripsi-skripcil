@@ -8,6 +8,7 @@ import { Investment } from './features/page/investment/investment';
 import { Tools } from './features/page/tools/tools';
 import { ToolsCalculator } from './features/page/tools/calculator/calculator';
 import { Education } from './features/page/education/education';
+import { ToolsSimulation } from './features/page/tools/simulation/simulation';
 
 export const routes: Routes = [
   {
@@ -50,6 +51,10 @@ export const routes: Routes = [
   {
     path: 'tools/calculator',
     component: ToolsCalculator,
+  },
+  {
+    path: 'tools/simulation',
+    component: ToolsSimulation,
   },
   {
     path: 'education',

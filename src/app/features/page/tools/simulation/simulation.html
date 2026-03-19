@@ -1,0 +1,207 @@
+<section class="simulation-page">
+  <header class="simulation-header">
+    <a class="back-link" routerLink="/tools">Kembali ke halaman Tools</a>
+    <p class="header-kicker">Investment Simulation</p>
+    <h1>Simulasi Investasi Aset Historis dengan Presisi Tinggi</h1>
+    <p class="header-caption">
+      Lihat bagaimana investasi Anda berkembang di berbagai aset seperti
+      Bitcoin, Emas, S&P 500, dan lainnya. Pilih jumlah, tanggal mulai, dan
+      currency untuk melihat estimasi nilai investasi hari ini.
+    </p>
+  </header>
+
+  <article class="simulation-card">
+    <div class="card-title-wrap">
+      <h2>Konfigurasi Simulasi</h2>
+      <p>Atur parameter investasi Anda untuk melihat proyeksi hasil.</p>
+    </div>
+
+    <div class="field-grid field-grid-simulation">
+      <label class="field-control">
+        <span>Asset yang dipilih</span>
+        <select [(ngModel)]="selectedAsset">
+          <option *ngFor="let asset of availableAssets" [value]="asset.id">
+            {{ asset.name }} ({{ asset.symbol }})
+          </option>
+        </select>
+      </label>
+
+      <label class="field-control">
+        <span>Jumlah investasi awal</span>
+        <div class="input-prefix-wrap">
+          <i>{{ currency === 'idr' ? 'Rp' : '$' }}</i>
+          <input
+            type="text"
+            inputmode="numeric"
+            [(ngModel)]="investmentAmount"
+            placeholder="{{ currency === 'idr' ? '1.000.000' : '1000' }}"
+          />
+        </div>
+      </label>
+
+      <label class="field-control">
+        <span>Mulai investasi pada tanggal</span>
+        <input type="date" [(ngModel)]="startDate" />
+      </label>
+
+      <label class="field-control">
+        <span>Currency</span>
+        <select [(ngModel)]="currency">
+          <option [value]="'usd'">USD ($)</option>
+          <option [value]="'idr'">IDR (Rp)</option>
+        </select>
+      </label>
+    </div>
+
+    <button
+      type="button"
+      class="calculate-btn"
+      (click)="simulateInvestment()"
+      [disabled]="isLoading"
+    >
+      {{ isLoading ? 'Sedang memproses...' : 'Jalankan Simulasi' }}
+    </button>
+
+    <p class="formula-note">
+      Catatan: Simulasi menggunakan data harga historis dari CoinGecko (untuk
+      crypto & commodity) dan data pasar resmi. Range waktu dapat disesuaikan
+      antara 6 bulan hingga 10 tahun ke belakang.
+    </p>
+
+    <div class="error-message" *ngIf="errorMessage">
+      <p>⚠️ {{ errorMessage }}</p>
+    </div>
+  </article>
+
+  <div *ngIf="showChart && calculation" class="result-layout">
+    <aside class="result-card">
+      <p class="result-kicker">Hasil Simulasi</p>
+      <h2>
+        {{ getAssetLabel(selectedAsset) }} ({{ (calculation.investmentDays /
+        365).toFixed(1) }} tahun)
+      </h2>
+
+      <div class="result-highlight">
+        <span>Nilai investasi hari ini</span>
+        <strong>{{ formatCurrency(calculation.endValue) }}</strong>
+      </div>
+
+      <div class="result-list">
+        <div class="result-row">
+          <span>Investasi awal</span>
+          <strong>{{ formatCurrency(calculation.startValue) }}</strong>
+        </div>
+        <div class="result-row">
+          <span>Keuntungan total</span>
+          <strong
+            [class.positive]="calculation.totalReturn >= 0"
+            [class.negative]="calculation.totalReturn < 0"
+          >
+            {{ formatCurrency(calculation.totalReturn) }}
+          </strong>
+        </div>
+        <div class="result-row">
+          <span>Return (%)</span>
+          <strong
+            [class.positive]="calculation.percentageReturn >= 0"
+            [class.negative]="calculation.percentageReturn < 0"
+          >
+            {{ formatPercent(calculation.percentageReturn) }}%
+          </strong>
+        </div>
+        <div class="result-row">
+          <span>Annualized return</span>
+          <strong
+            [class.positive]="calculation.annualizedReturn >= 0"
+            [class.negative]="calculation.annualizedReturn < 0"
+          >
+            {{ formatPercent(calculation.annualizedReturn) }}% per tahun
+          </strong>
+        </div>
+        <div class="result-row">
+          <span>Periode investasi</span>
+          <strong
+            >{{ calculation.investmentDays }} hari ({{
+            calculation.investmentYears }} tahun)</strong
+          >
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <h3>Grafik Harga Aset</h3>
+        </div>
+
+        <div class="chart-stat">
+          <span>Harga saat ini</span>
+          <strong>{{ formatCurrency(chartCurrentValue) }}</strong>
+          <small
+            >Perubahan dari investasi: {{ formatCurrency(chartDeltaValue) }}
+          </small>
+        </div>
+
+        <div class="chart-plot-wrap">
+          <svg
+            class="projection-chart"
+            viewBox="0 0 560 220"
+            preserveAspectRatio="none"
+            role="img"
+            aria-label="Grafik harga aset historis"
+          >
+            <defs>
+              <linearGradient
+                id="chartGradient"
+                x1="0%"
+                y1="0%"
+                x2="0%"
+                y2="100%"
+              >
+                <stop
+                  offset="0%"
+                  style="stop-color: var(--color-primary); stop-opacity: 0.2"
+                />
+                <stop
+                  offset="100%"
+                  style="stop-color: var(--color-primary); stop-opacity: 0"
+                />
+              </linearGradient>
+            </defs>
+            <line class="chart-grid" x1="20" y1="14" x2="550" y2="14" />
+            <line class="chart-grid" x1="20" y1="106" x2="550" y2="106" />
+            <line class="chart-grid" x1="20" y1="202" x2="550" y2="202" />
+            <path class="chart-line" [attr.d]="chartPath" />
+          </svg>
+
+          <div class="chart-scale">
+            <span>{{ formatCurrency(chartMaxValue) }}</span>
+            <span>{{ formatCurrency(chartMinValue) }}</span>
+          </div>
+        </div>
+
+        <div class="chart-footer">
+          <span>{{ chartStartLabel }}</span>
+          <span>{{ chartEndLabel }}</span>
+        </div>
+
+        <div class="chart-year-track" aria-label="Skala waktu">
+          <span *ngFor="let tick of chartYearTicks">{{ tick }}</span>
+        </div>
+      </div>
+
+      <div class="info-panel">
+        <h3>ℹ️ Penjelasan Simulasi</h3>
+        <p>
+          Simulasi ini menunjukkan bagaimana nilai investasi Anda berkembang
+          berdasarkan data harga historis aset pilihan. Grafik menampilkan
+          pergerakan harga mingguan dari tanggal mulai investasi hingga hari ini
+          ({{ getTodayFormatted() }}).
+        </p>
+        <p>
+          <strong>Catatan:</strong> Simulasi ini untuk tujuan edukatif dan
+          referensi saja. Performa masa lalu tidak menjamin hasil di masa depan.
+          Selalu lakukan riset mendalam sebelum berinvestasi.
+        </p>
+      </div>
+    </aside>
+  </div>
+</section>
