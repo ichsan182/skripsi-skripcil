@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 import {
   PriceData,
   YahooFinanceService,
@@ -61,6 +61,7 @@ export class ToolsSimulation implements OnInit, OnDestroy {
   protected calculation: SimulationCalculation | null = null;
 
   protected chartPath = '';
+  protected assetCurrentPrice = 0;
   protected chartCurrentValue = 0;
   protected chartDeltaValue = 0;
   protected chartMaxValue = 0;
@@ -119,20 +120,26 @@ export class ToolsSimulation implements OnInit, OnDestroy {
     this.showChart = false;
     this.activeRequest?.unsubscribe();
 
-    this.activeRequest = this.yf
-      .getHistoricalPrices(this.selectedAsset, '5y', interval)
-      .subscribe({
-        next: (rows) => {
-          this.isLoading = false;
-          this.processSimulationData(rows, amount, startInputDate);
-        },
-        error: () => {
-          this.isLoading = false;
-          this.handleSimulationError(
-            'Gagal mengambil data dari Yahoo Finance API. Coba lagi dalam beberapa saat.',
-          );
-        },
-      });
+    this.activeRequest = forkJoin({
+      history: this.yf.getHistoricalPrices(this.selectedAsset, '5y', interval),
+      quote: this.yf.getCurrentPrice(this.selectedAsset),
+    }).subscribe({
+      next: ({ history, quote }) => {
+        this.isLoading = false;
+        this.processSimulationData(
+          history,
+          amount,
+          startInputDate,
+          quote.price,
+        );
+      },
+      error: () => {
+        this.isLoading = false;
+        this.handleSimulationError(
+          'Gagal mengambil data dari Yahoo Finance API. Coba lagi dalam beberapa saat.',
+        );
+      },
+    });
   }
 
   protected getAssetLabel(assetId: string): string {
@@ -174,6 +181,7 @@ export class ToolsSimulation implements OnInit, OnDestroy {
     rows: PriceData[],
     amount: number,
     startDate: Date,
+    currentQuotePrice: number,
   ): void {
     const usableRows = this.extractUsableRows(rows, startDate);
 
@@ -188,6 +196,10 @@ export class ToolsSimulation implements OnInit, OnDestroy {
     const lastRow = usableRows[usableRows.length - 1];
     const startPrice = firstRow.close;
     const endPrice = lastRow.close;
+    const displayedCurrentPrice =
+      Number.isFinite(currentQuotePrice) && currentQuotePrice > 0
+        ? currentQuotePrice
+        : endPrice;
 
     if (startPrice <= 0 || endPrice <= 0) {
       this.handleSimulationError(
@@ -230,8 +242,19 @@ export class ToolsSimulation implements OnInit, OnDestroy {
       date: row.date,
       value: amount * (row.close / startPrice),
     }));
+    this.assetCurrentPrice = this.normalizeAssetDisplayPrice(
+      displayedCurrentPrice,
+    );
     this.updateChartState(chartSeries, amount);
     this.showChart = true;
+  }
+
+  protected getAssetPriceCaption(): string {
+    if (this.isIdxStock(this.selectedAsset)) {
+      return 'Harga aset terakhir per lot (100 lembar)';
+    }
+
+    return 'Harga aset terakhir dari Yahoo Finance';
   }
 
   private updateChartState(series: ChartPoint[], startValue: number): void {
@@ -387,6 +410,22 @@ export class ToolsSimulation implements OnInit, OnDestroy {
     return new Date(now.getFullYear() - years, now.getMonth(), now.getDate());
   }
 
+  private normalizeAssetDisplayPrice(price: number): number {
+    if (!Number.isFinite(price)) {
+      return 0;
+    }
+
+    if (this.isIdxStock(this.selectedAsset)) {
+      return price * 100;
+    }
+
+    return price;
+  }
+
+  private isIdxStock(symbol: string): boolean {
+    return symbol.endsWith('.JK');
+  }
+
   private formatDateForInput(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -442,6 +481,7 @@ export class ToolsSimulation implements OnInit, OnDestroy {
     this.showChart = false;
     this.calculation = null;
     this.chartPath = '';
+    this.assetCurrentPrice = 0;
     this.chartCurrentValue = 0;
     this.chartDeltaValue = 0;
     this.chartMaxValue = 0;

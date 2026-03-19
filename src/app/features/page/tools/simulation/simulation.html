@@ -134,9 +134,10 @@
 
         <div class="chart-stat">
           <span>Harga saat ini</span>
-          <strong>{{ formatCurrency(chartCurrentValue) }}</strong>
+          <strong>{{ formatCurrency(assetCurrentPrice) }}</strong>
           <small
-            >Perubahan dari investasi: {{ formatCurrency(chartDeltaValue) }}
+            >{{ getAssetPriceCaption() }}. Nilai simulasi saat ini: {{
+            formatCurrency(chartCurrentValue) }}
           </small>
         </div>
 
