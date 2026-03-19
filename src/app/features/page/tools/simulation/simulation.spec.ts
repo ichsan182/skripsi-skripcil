@@ -1,18 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
-import { Simulation } from './simulation';
+import { ToolsSimulation } from './simulation';
 
 describe('Simulation', () => {
-  let component: Simulation;
-  let fixture: ComponentFixture<Simulation>;
+  let component: ToolsSimulation;
+  let fixture: ComponentFixture<ToolsSimulation>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Simulation]
-    })
-    .compileComponents();
+      imports: [ToolsSimulation],
+      providers: [provideRouter([])],
+    }).compileComponents();
 
-    fixture = TestBed.createComponent(Simulation);
+    fixture = TestBed.createComponent(ToolsSimulation);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

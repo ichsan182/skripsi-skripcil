@@ -63,9 +63,9 @@
     </button>
 
     <p class="formula-note">
-      Catatan: Simulasi menggunakan data harga historis dari CoinGecko (untuk
-      crypto & commodity) dan data pasar resmi. Range waktu dapat disesuaikan
-      antara 6 bulan hingga 10 tahun ke belakang.
+      Catatan: Simulasi menggunakan data historis Yahoo Finance via RapidAPI.
+      Pada endpoint ini, data historis yang tersedia sekitar 5 tahun terakhir.
+      Jika API sedang gagal, sistem akan menampilkan pesan error.
     </p>
 
     <div class="error-message" *ngIf="errorMessage">
