@@ -13,6 +13,15 @@ interface ExpenseRow {
   day: number;
 }
 
+interface StreakDay {
+  day: number | null;
+  date: Date | null;
+  isDisabled: boolean;
+  isInRange: boolean;
+  isStart: boolean;
+  isEnd: boolean;
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -79,8 +88,15 @@ export class Home {
     'Capai semua target keuangan',
   ];
 
+  readonly dayHeaders = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  streakStartDate: Date = new Date(2026, 2, 1);
+  streakCalendarYear: number = new Date().getFullYear();
+  streakCalendarMonth: number = new Date().getMonth();
+  streakCalendarDays: StreakDay[] = [];
+
   constructor() {
     this.refreshMonthlyExpenses();
+    this.refreshStreakCalendar();
   }
 
   get currentLevelImage(): string {
@@ -97,6 +113,22 @@ export class Home {
 
   get currentMonthYearLabel(): string {
     return `${this.monthNames[this.selectedMonthIndex]} ${this.selectedYear}`;
+  }
+
+  get streakCount(): number {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(this.streakStartDate);
+    start.setHours(0, 0, 0, 0);
+    if (today < start) return 0;
+    return (
+      Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) +
+      1
+    );
+  }
+
+  get streakCalendarLabel(): string {
+    return `${this.monthNames[this.streakCalendarMonth]} ${this.streakCalendarYear}`;
   }
 
   changeMonth(step: number): void {
@@ -128,6 +160,54 @@ export class Home {
     this.selectedMonthIndex = month;
     this.selectedMonthValue = this.toMonthInputValue(year, month);
     this.refreshMonthlyExpenses();
+  }
+
+  changeStreakMonth(step: number): void {
+    const total =
+      this.streakCalendarYear * 12 + this.streakCalendarMonth + step;
+    this.streakCalendarYear = Math.floor(total / 12);
+    this.streakCalendarMonth = ((total % 12) + 12) % 12;
+    this.refreshStreakCalendar();
+  }
+
+  private refreshStreakCalendar(): void {
+    const year = this.streakCalendarYear;
+    const month = this.streakCalendarMonth;
+    const firstDayOfWeek = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(this.streakStartDate);
+    start.setHours(0, 0, 0, 0);
+
+    const days: StreakDay[] = [];
+
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      days.push({
+        day: null,
+        date: null,
+        isDisabled: false,
+        isInRange: false,
+        isStart: false,
+        isEnd: false,
+      });
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, month, d);
+      date.setHours(0, 0, 0, 0);
+      days.push({
+        day: d,
+        date,
+        isDisabled: date > today,
+        isInRange: date >= start && date <= today,
+        isStart: date.getTime() === start.getTime(),
+        isEnd: date.getTime() === today.getTime(),
+      });
+    }
+
+    this.streakCalendarDays = days;
   }
 
   private refreshMonthlyExpenses(): void {
