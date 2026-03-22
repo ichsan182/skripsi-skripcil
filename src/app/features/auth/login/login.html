@@ -1,68 +1,120 @@
 <section class="auth-page">
-	<div class="auth-card">
-		<h1>{{ isForgotMode ? 'Forgot Password' : 'Login' }}</h1>
-		<p class="subtitle">{{ isForgotMode ? 'Masukkan email untuk kirim link reset password' : 'Masuk menggunakan email dan password' }}</p>
+  <div class="auth-layout">
+    <div class="auth-panel">
+      <div class="auth-card">
+        @if (!isForgotMode) {
+        <h1>Selamat Datang di MauWealthy</h1>
+        <p class="subtitle">Mulai menabung sekarang!</p>
 
-    @if (!isForgotMode) {
-			<form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
-				<div class="form-group">
-					<label for="email">Email</label>
-					<input id="email" type="email" formControlName="email" placeholder="nama@email.com" />
-					@if (showError('email')) {
-						<small class="error">Masukkan email yang valid.</small>
-					}
-				</div>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+          <div class="form-group">
+            <div class="input-field">
+              <img src="assets/email.svg" alt="Email icon" />
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+                placeholder="Email"
+              />
+            </div>
+            @if (showError('email')) {
+            <small class="error">Masukkan email yang valid.</small>
+            }
+          </div>
 
-				<div class="form-group">
-					<label for="password">Password</label>
-					<input id="password" type="password" formControlName="password" placeholder="Masukkan password" />
-					@if (showError('password')) {
-						<small class="error">Password minimal 6 karakter.</small>
-					}
-				</div>
+          <div class="form-group">
+            <div class="input-field">
+              <img src="assets/password.svg" alt="Password icon" />
+              <input
+                id="password"
+                [type]="isPasswordVisible ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="Password"
+              />
+              <button
+                type="button"
+                class="toggle-visibility"
+                (click)="togglePasswordVisibility()"
+                [attr.aria-label]="isPasswordVisible ? 'Sembunyikan password' : 'Lihat password'"
+              >
+                <img
+                  [src]="isPasswordVisible ? 'assets/eye-open.svg' : 'assets/eye-closed.svg'"
+                  alt="Password visibility"
+                />
+              </button>
+            </div>
+            @if (showError('password')) {
+            <small class="error">Password minimal 6 karakter.</small>
+            }
+          </div>
 
-				<button type="submit" [disabled]="isSubmitting">
-					{{ isSubmitting ? 'Memproses...' : 'Login' }}
-				</button>
-			</form>
-    } @else {
-      <form [formGroup]="forgotForm" (ngSubmit)="onForgotPassword()" novalidate>
-				<div class="form-group">
-					<label for="forgot-email">Email</label>
-					<input id="forgot-email" type="email" formControlName="email" placeholder="nama@email.com" />
-					@if (showError('email', 'forgot')) {
-						<small class="error">Masukkan email yang valid.</small>
-					}
-				</div>
+          <div class="forgot-password">
+            <a routerLink="/forgot-password">Lupa Password?</a>
+          </div>
 
-				<button type="submit" [disabled]="isSubmitting">
-					{{ isSubmitting ? 'Memproses...' : 'Kirim Email Reset' }}
-				</button>
-			</form>
-    }
+          <button class="submit-button" type="submit" [disabled]="isSubmitting">
+            {{ isSubmitting ? 'Memproses...' : 'Masuk' }}
+          </button>
+        </form>
 
-		@if (successMessage) {
-			<p class="success">{{ successMessage }}</p>
-		}
+        @if (successMessage) {
+        <p class="success">{{ successMessage }}</p>
+        } @if (errorMessage) {
+        <p class="error-box">{{ errorMessage }}</p>
+        }
 
-		@if (errorMessage) {
-			<p class="error-box">{{ errorMessage }}</p>
-		}
+        <p class="switch-auth">
+          Belum punya akun?
+          <a routerLink="/register">Daftar Sekarang!</a>
+        </p>
+        } @else {
+        <h1>Lupa Password</h1>
+        <p class="subtitle subtitle-forgot">
+          Masukkan email untuk kirim link reset password
+        </p>
 
-		@if (!isForgotMode) {
-			<p class="switch-auth">
-				Belum punya akun?
-				<a routerLink="/register">Daftar di sini</a>
-			</p>
-			<p class="switch-auth">
-				Lupa password?
-				<a routerLink="/forgot-password">Reset di sini</a>
-			</p>
-		} @else {
-			<p class="switch-auth">
-				Ingat password?
-				<a routerLink="/login">Kembali ke Login</a>
-			</p>
-		}
-	</div>
+        <form
+          [formGroup]="forgotForm"
+          (ngSubmit)="onForgotPassword()"
+          novalidate
+        >
+          <div class="form-group">
+            <label for="forgot-email">Email</label>
+            <div class="input-field">
+              <img src="assets/email.svg" alt="Email icon" />
+              <input
+                id="forgot-email"
+                type="email"
+                formControlName="email"
+                placeholder="Email"
+              />
+            </div>
+            @if (showError('email', 'forgot')) {
+            <small class="error">Masukkan email yang valid.</small>
+            }
+          </div>
+
+          <button class="submit-button" type="submit" [disabled]="isSubmitting">
+            {{ isSubmitting ? 'Memproses...' : 'Kirim Email Reset' }}
+          </button>
+        </form>
+
+        @if (successMessage) {
+        <p class="success">{{ successMessage }}</p>
+        } @if (errorMessage) {
+        <p class="error-box">{{ errorMessage }}</p>
+        }
+
+        <p class="switch-auth">
+          Ingat password?
+          <a routerLink="/login">Kembali ke Login</a>
+        </p>
+        }
+      </div>
+    </div>
+
+    <div class="graphic-panel" aria-hidden="true">
+      <img src="assets/graphic/login-graphics.svg" alt="Login Graphic" />
+    </div>
+  </div>
 </section>

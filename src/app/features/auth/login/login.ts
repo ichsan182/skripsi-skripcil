@@ -27,6 +27,7 @@ export class Login {
   private readonly activatedRoute = inject(ActivatedRoute);
 
   protected isSubmitting = false;
+  protected isPasswordVisible = false;
   protected successMessage = '';
   protected errorMessage = '';
 
@@ -59,7 +60,9 @@ export class Login {
       const normalizedEmail = (email ?? '').trim().toLowerCase();
       const normalizedPassword = (password ?? '').trim();
 
-      const users = await firstValueFrom(this.httpClient.get<User[]>(this.usersApiUrl));
+      const users = await firstValueFrom(
+        this.httpClient.get<User[]>(this.usersApiUrl),
+      );
       const user = users.find(
         (item) =>
           item.email.trim().toLowerCase() === normalizedEmail &&
@@ -74,7 +77,8 @@ export class Login {
       this.successMessage = `Login berhasil. Selamat datang, ${user.name}!`;
       await this.router.navigateByUrl('/home');
     } catch {
-      this.errorMessage = 'Gagal terhubung ke server. Pastikan json-server berjalan.';
+      this.errorMessage =
+        'Gagal terhubung ke server. Pastikan json-server berjalan.';
     } finally {
       this.isSubmitting = false;
     }
@@ -92,9 +96,15 @@ export class Login {
     this.isSubmitting = true;
 
     try {
-      const email = (this.forgotForm.getRawValue().email ?? '').trim().toLowerCase();
-      const users = await firstValueFrom(this.httpClient.get<User[]>(this.usersApiUrl));
-      const user = users.find((item) => item.email.trim().toLowerCase() === email);
+      const email = (this.forgotForm.getRawValue().email ?? '')
+        .trim()
+        .toLowerCase();
+      const users = await firstValueFrom(
+        this.httpClient.get<User[]>(this.usersApiUrl),
+      );
+      const user = users.find(
+        (item) => item.email.trim().toLowerCase() === email,
+      );
 
       if (!user) {
         this.errorMessage = 'Email tidak ditemukan.';
@@ -105,20 +115,33 @@ export class Login {
       this.successMessage = 'Reset password sudah terkirim.';
       this.forgotForm.reset();
     } catch {
-      this.errorMessage = 'Gagal terhubung ke server. Pastikan json-server berjalan.';
+      this.errorMessage =
+        'Gagal terhubung ke server. Pastikan json-server berjalan.';
     } finally {
       this.isSubmitting = false;
     }
   }
 
-  protected showError(controlName: 'email' | 'password', formType: 'login' | 'forgot' = 'login'): boolean {
+  protected showError(
+    controlName: 'email' | 'password',
+    formType: 'login' | 'forgot' = 'login',
+  ): boolean {
     if (formType === 'forgot') {
       const forgotControl = this.forgotForm.get('email');
-      return Boolean(forgotControl && forgotControl.invalid && (forgotControl.dirty || forgotControl.touched));
+      return Boolean(
+        forgotControl &&
+        forgotControl.invalid &&
+        (forgotControl.dirty || forgotControl.touched),
+      );
     }
 
     const control = this.loginForm.get(controlName);
-    return Boolean(control && control.invalid && (control.dirty || control.touched));
+    return Boolean(
+      control && control.invalid && (control.dirty || control.touched),
+    );
   }
 
+  protected togglePasswordVisibility(): void {
+    this.isPasswordVisible = !this.isPasswordVisible;
+  }
 }
