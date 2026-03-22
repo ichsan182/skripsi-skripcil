@@ -9,6 +9,8 @@ import { Tools } from './features/page/tools/tools';
 import { ToolsCalculator } from './features/page/tools/calculator/calculator';
 import { Education } from './features/page/education/education';
 import { ToolsSimulation } from './features/page/tools/simulation/simulation';
+import { EducationContent } from './features/page/education/education-content/education-content';
+
 
 export const routes: Routes = [
   {
@@ -59,5 +61,9 @@ export const routes: Routes = [
   {
     path: 'education',
     component: Education,
+  },
+  {
+    path: 'education/content',
+    component: EducationContent,
   },
 ];
