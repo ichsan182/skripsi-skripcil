@@ -92,9 +92,19 @@ input::placeholder {
   background: transparent;
   padding: 0;
   height: 20px;
+  min-height: 20px;
   width: 20px;
   cursor: pointer;
   flex-shrink: 0;
+  box-shadow: none;
+  transform: none;
+  filter: none;
+}
+
+.toggle-visibility:hover:not(:disabled) {
+  box-shadow: none;
+  transform: none;
+  filter: none;
 }
 
 .toggle-visibility img {

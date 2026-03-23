@@ -1,57 +1,102 @@
 <section class="auth-page">
-	<div class="auth-card">
-		<h1>Register</h1>
-		<p class="subtitle">Buat akun baru terlebih dahulu</p>
+  <div class="auth-layout">
+    <div class="graphic-panel" aria-hidden="true">
+      <img src="assets/graphic/register-graphics.svg" alt="Register Graphic" />
+    </div>
 
-		<form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
-			<div class="form-group">
-				<label for="name">Nama</label>
-				<input id="name" type="text" formControlName="name" placeholder="Masukkan nama lengkap" />
-				@if (showError('name')) {
-					<small class="error">Nama minimal 3 karakter.</small>
-				}
-			</div>
+    <div class="auth-panel">
+      <div class="auth-card">
+        <h1>Daftar Sekarang Dan Jadi The Next Wealthiest</h1>
+        <p class="subtitle">Sebelum itu, ayo isi data diri dulu</p>
 
-			<div class="form-group">
-				<label for="email">Email</label>
-				<input id="email" type="email" formControlName="email" placeholder="nama@email.com" />
-				@if (showError('email')) {
-					<small class="error">Masukkan email yang valid.</small>
-				}
-			</div>
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+          <div class="form-group">
+            <div class="input-field">
+              <img src="assets/user.svg" alt="User icon" />
+              <input
+                id="name"
+                type="text"
+                formControlName="name"
+                placeholder="Nama"
+              />
+            </div>
+            @if (showError('name')) {
+            <small class="error">Nama minimal 3 karakter.</small>
+            }
+          </div>
 
-			<div class="form-group">
-				<label for="phone">Nomor HP</label>
-				<input id="phone" type="tel" formControlName="phone" placeholder="Contoh: 08123456789" />
-				@if (showError('phone')) {
-					<small class="error">Nomor HP harus 9-15 digit angka.</small>
-				}
-			</div>
+          <div class="form-group">
+            <div class="input-field">
+              <img src="assets/email.svg" alt="Email icon" />
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+                placeholder="Email"
+              />
+            </div>
+            @if (showError('email')) {
+            <small class="error">Masukkan email yang valid.</small>
+            }
+          </div>
 
-			<div class="form-group">
-				<label for="password">Password</label>
-				<input id="password" type="password" formControlName="password" placeholder="Buat password" />
-				@if (showError('password')) {
-					<small class="error">Password minimal 6 karakter.</small>
-				}
-			</div>
+          <div class="form-group">
+            <div class="input-field">
+              <img src="assets/phone.svg" alt="Phone icon" />
+              <input
+                id="phone"
+                type="tel"
+                formControlName="phone"
+                placeholder="Nomor HP"
+              />
+            </div>
+            @if (showError('phone')) {
+            <small class="error">Nomor HP harus 9-15 digit angka.</small>
+            }
+          </div>
 
-			<button type="submit" [disabled]="isSubmitting">
-				{{ isSubmitting ? 'Menyimpan...' : 'Register' }}
-			</button>
-		</form>
+          <div class="form-group">
+            <div class="input-field">
+              <img src="assets/password.svg" alt="Password icon" />
+              <input
+                id="password"
+                [type]="isPasswordVisible ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="Password"
+              />
+              <button
+                type="button"
+                class="toggle-visibility"
+                (click)="togglePasswordVisibility()"
+                [attr.aria-label]="isPasswordVisible ? 'Sembunyikan password' : 'Lihat password'"
+              >
+                <img
+                  [src]="isPasswordVisible ? 'assets/eye-open.svg' : 'assets/eye-closed.svg'"
+                  alt="Password visibility"
+                />
+              </button>
+            </div>
+            @if (showError('password')) {
+            <small class="error">Password minimal 6 karakter.</small>
+            }
+          </div>
 
-		@if (successMessage) {
-			<p class="success">{{ successMessage }}</p>
-		}
+          <button class="submit-button" type="submit" [disabled]="isSubmitting">
+            {{ isSubmitting ? 'Menyimpan...' : 'Daftar' }}
+          </button>
+        </form>
 
-		@if (errorMessage) {
-			<p class="error-box">{{ errorMessage }}</p>
-		}
+        @if (successMessage) {
+        <p class="success">{{ successMessage }}</p>
+        } @if (errorMessage) {
+        <p class="error-box">{{ errorMessage }}</p>
+        }
 
-		<p class="switch-auth">
-			Sudah punya akun?
-			<a routerLink="/login">Login di sini</a>
-		</p>
-	</div>
+        <p class="switch-auth">
+          Sudah punya akun?
+          <a routerLink="/login">Masuk Sekarang!</a>
+        </p>
+      </div>
+    </div>
+  </div>
 </section>

@@ -24,6 +24,7 @@ export class Register {
   private readonly httpClient = inject(HttpClient);
 
   protected isSubmitting = false;
+  protected isPasswordVisible = false;
   protected successMessage = '';
   protected errorMessage = '';
 
@@ -55,24 +56,34 @@ export class Register {
       );
 
       if (existingUser.length) {
-        this.errorMessage = 'Email sudah terdaftar. Silakan gunakan email lain.';
+        this.errorMessage =
+          'Email sudah terdaftar. Silakan gunakan email lain.';
         return;
       }
 
       await firstValueFrom(this.httpClient.post(this.usersApiUrl, payload));
 
-      this.successMessage = 'Registrasi berhasil. Silakan login menggunakan akun baru.';
+      this.successMessage =
+        'Registrasi berhasil. Silakan login menggunakan akun baru.';
       this.registerForm.reset();
     } catch {
-      this.errorMessage = 'Gagal menyimpan data. Pastikan json-server berjalan.';
+      this.errorMessage =
+        'Gagal menyimpan data. Pastikan json-server berjalan.';
     } finally {
       this.isSubmitting = false;
     }
   }
 
-  protected showError(controlName: 'name' | 'email' | 'phone' | 'password'): boolean {
+  protected showError(
+    controlName: 'name' | 'email' | 'phone' | 'password',
+  ): boolean {
     const control = this.registerForm.get(controlName);
-    return Boolean(control && control.invalid && (control.dirty || control.touched));
+    return Boolean(
+      control && control.invalid && (control.dirty || control.touched),
+    );
   }
 
+  protected togglePasswordVisibility(): void {
+    this.isPasswordVisible = !this.isPasswordVisible;
+  }
 }
