@@ -79,6 +79,15 @@
   --color-answer-chat-bg: #f4f7fd;
   --color-text-answer: #292929;
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --page-content-padding: 30px;
+  --page-content-padding-tablet: 20px;
+  --page-content-padding-mobile: 12px;
+  --btn-radius: 10px;
+  --btn-font-size: var(--font-size-sm);
+  --btn-font-weight: 700;
+  --btn-padding-y: 12px;
+  --btn-padding-x: clamp(16px, 2.5vw, 24px);
+  --btn-min-height: 40px;
   --asset-icon-savings: url("/assets/savings.svg");
   --asset-icon-streak: url("/assets/streak.svg");
   --asset-icon-level: url("/assets/level.svg");
@@ -97,4 +106,99 @@
   padding: 0;
   margin: 0;
   font-family: var(--font-family-base);
+}
+
+.page-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.page-content {
+  display: flex;
+  margin-left: 20%;
+  padding: var(--page-content-padding);
+  overflow-y: auto;
+  flex-direction: column;
+  width: 100%;
+}
+
+.page-content h1 {
+  font-size: clamp(1.75rem, 2.5vw, 2rem);
+  line-height: 1.2;
+  font-weight: 600;
+  color: var(--color-black);
+}
+
+.page-content p {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-gray);
+  margin-top: 5px;
+}
+
+:where(
+  .tool-start-btn,
+  .calculate-btn,
+  .submit-button,
+  .entry-form button,
+  .card-education button
+) {
+  border: none;
+  border-radius: var(--btn-radius);
+  background: var(--btn-bg, var(--color-primary));
+  color: var(--btn-color, var(--color-white));
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  padding: var(--btn-padding-y) var(--btn-padding-x);
+  min-height: var(--btn-min-height);
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
+:where(
+    .tool-start-btn,
+    .calculate-btn,
+    .submit-button,
+    .entry-form button,
+    .card-education button,
+    .auth-card button
+  ):hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(0.97);
+  box-shadow: 0 6px 16px
+    color-mix(in srgb, var(--color-primary) 24%, transparent);
+}
+
+:where(
+  .tool-start-btn,
+  .calculate-btn,
+  .submit-button,
+  .entry-form button,
+  .card-education button,
+  .auth-card button
+):disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    flex-direction: column;
+  }
+
+  .page-content {
+    margin-left: 0;
+    padding: var(--page-content-padding-tablet);
+  }
+}
+
+@media (max-width: 480px) {
+  .page-content {
+    padding: var(--page-content-padding-mobile);
+  }
 }

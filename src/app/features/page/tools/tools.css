@@ -1,31 +1,5 @@
-.page-container {
-  display: flex;
-  min-height: 100vh;
-  width: 100%;
-}
-
-.page-content {
-  display: flex;
-  margin-left: 20%;
-  padding: 30px;
-  overflow-y: auto;
-  flex-direction: column;
-  width: 100%;
-}
-
 .page-content h1 {
-  font-size: clamp(1.75rem, 2.5vw, 2rem);
-  line-height: 1.2;
-  font-weight: 600;
-  color: var(--color-black);
   margin-bottom: 30px;
-}
-
-.page-content p {
-  font-size: 1rem;
-  line-height: 1.5;
-  color: var(--color-gray);
-  margin-top: 5px;
 }
 
 .tools-grid {
@@ -81,24 +55,13 @@
 }
 
 .tool-start-btn {
+  --btn-font-size: var(--font-size-sm);
+  --btn-font-weight: 700;
+  --btn-padding-y: 12px;
+  --btn-padding-x: 34px;
+  --btn-min-height: 44px;
   margin-top: auto;
   width: 100%;
-  border: none;
-  border-radius: 10px;
-  background-color: var(--color-primary);
-  color: var(--color-white);
-  padding: 12px 34px;
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.tool-start-btn:hover {
-  background-color: var(--color-primary-dark);
-  transform: translateY(-1px);
 }
 
 .tool-start-btn:focus-visible {
@@ -117,15 +80,6 @@
 }
 
 @media (max-width: 768px) {
-  .page-container {
-    flex-direction: column;
-  }
-
-  .page-content {
-    margin-left: 0;
-    padding: 40px 16px 16px 16px;
-  }
-
   .page-content h1 {
     margin-bottom: 24px;
   }
@@ -146,10 +100,6 @@
 }
 
 @media (max-width: 480px) {
-  .page-content {
-    padding: 30px 12px 12px 12px;
-  }
-
   .page-content h1 {
     font-size: 1.5rem;
     margin-bottom: 20px;

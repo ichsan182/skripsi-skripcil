@@ -55,7 +55,7 @@
   );
   border: 1px solid
     color-mix(in srgb, var(--color-primary-subtle) 28%, transparent);
-  box-shadow: 0 12px 30px rgba(2, 52, 41, 0.07);
+  box-shadow: var(--shadow-card);
   border-radius: 12px;
 }
 
@@ -302,44 +302,34 @@
 
 .ghost-btn,
 .calculate-btn {
-  border: none;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    filter 0.2s ease;
+  --btn-radius: 12px;
+  --btn-font-weight: 700;
 }
 
 .ghost-btn {
-  padding: 10px 14px;
-  color: var(--color-primary-dark);
-  background: color-mix(
+  --btn-padding-y: 10px;
+  --btn-padding-x: 14px;
+  --btn-min-height: 36px;
+  --btn-font-size: var(--font-size-2xs);
+  --btn-bg: color-mix(
     in srgb,
     var(--color-primary-subtle) 25%,
     var(--color-white)
   );
-  font-size: var(--font-size-2xs);
+  --btn-color: var(--color-primary-dark);
+  color: var(--color-primary-dark);
   white-space: nowrap;
 }
 
-.ghost-btn:hover,
-.calculate-btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(0.98);
-}
-
 .calculate-btn {
+  --btn-padding-y: 12px;
+  --btn-padding-x: 16px;
+  --btn-min-height: 46px;
+  --btn-font-size: var(--font-size-sm);
+  --btn-bg: var(--color-primary);
+  --btn-color: var(--color-white);
   margin-top: 16px;
   width: 100%;
-  min-height: 46px;
-  background: linear-gradient(
-    135deg,
-    var(--color-primary) 0%,
-    color-mix(in srgb, var(--color-primary-light) 75%, var(--color-primary))
-      100%
-  );
-  color: var(--color-white);
   letter-spacing: 0.02em;
 }
 

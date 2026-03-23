@@ -16,7 +16,7 @@
   );
   border: 1px solid
     color-mix(in srgb, var(--color-primary-subtle) 28%, transparent);
-  box-shadow: 0 12px 30px rgba(2, 52, 41, 0.07);
+  box-shadow: var(--shadow-card);
   border-radius: 12px;
   display: grid;
   padding: clamp(20px, 3vw, 34px);
@@ -158,22 +158,13 @@
 }
 
 .calculate-btn {
+  --btn-radius: 10px;
+  --btn-font-size: var(--font-size-base);
+  --btn-font-weight: 600;
+  --btn-padding-y: 14px;
+  --btn-padding-x: 20px;
+  --btn-min-height: 48px;
   width: 100%;
-  border: none;
-  border-radius: 10px;
-  background: var(--color-primary);
-  color: var(--color-white);
-  font-size: var(--font-size-base);
-  font-weight: 600;
-  padding: 14px 20px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-height: 48px;
-}
-
-.calculate-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(3, 98, 76, 0.2);
 }
 
 .calculate-btn:disabled {

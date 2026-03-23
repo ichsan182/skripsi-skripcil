@@ -113,16 +113,13 @@ input::placeholder {
 }
 
 .submit-button {
+  --btn-radius: 12px;
+  --btn-font-size: var(--font-size-base);
+  --btn-font-weight: 700;
+  --btn-padding-y: 12px;
+  --btn-padding-x: 20px;
   margin-top: 6px;
   width: 100%;
-  padding: 12px 20px;
-  border: 0;
-  border-radius: 12px;
-  background: var(--color-primary);
-  color: var(--color-white);
-  font-weight: 700;
-  font-size: var(--font-size-base);
-  cursor: pointer;
 }
 
 .submit-button:disabled {
