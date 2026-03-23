@@ -2,6 +2,9 @@ import { Routes } from '@angular/router';
 import { Home } from './home/home';
 import { Login } from './features/auth/login/login';
 import { Register } from './features/auth/register/register';
+import { Welcome } from './features/onboarding/welcome/welcome';
+import { Questionnaire } from './features/onboarding/questionnaire/questionnaire';
+import { Result } from './features/onboarding/result/result';
 import { Chat } from './features/page/chat/chat';
 import { Transaction } from './features/page/transaction/transaction';
 import { Investment } from './features/page/investment/investment';
@@ -10,7 +13,6 @@ import { ToolsCalculator } from './features/page/tools/calculator/calculator';
 import { Education } from './features/page/education/education';
 import { ToolsSimulation } from './features/page/tools/simulation/simulation';
 import { EducationContent } from './features/page/education/education-content/education-content';
-
 
 export const routes: Routes = [
   {
@@ -29,6 +31,18 @@ export const routes: Routes = [
   {
     path: 'register',
     component: Register,
+  },
+  {
+    path: 'welcome',
+    component: Welcome,
+  },
+  {
+    path: 'questionnaire',
+    component: Questionnaire,
+  },
+  {
+    path: 'result',
+    component: Result,
   },
   {
     path: 'home',

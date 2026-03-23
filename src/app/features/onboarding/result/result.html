@@ -1,0 +1,67 @@
+<section class="result-page">
+  <div class="result-layout">
+    <div class="result-left">
+      <img
+        src="assets/graphic/make-it-rain-cuate.svg"
+        alt="Result illustration"
+        class="result-image"
+      />
+    </div>
+
+    <div class="result-right">
+      <h1 class="result-name">{{ userName }}</h1>
+      <p class="result-description">{{ resultDescription }}</p>
+
+      <div class="result-points">
+        <div class="result-point level-badge">
+          <span class="point-label">Level Kamu</span>
+          <span class="point-value"
+            >Level {{ userLevel }} — {{ levelLabel }}</span
+          >
+        </div>
+
+        <div class="result-point">
+          <span class="point-label">Pendapatan</span>
+          <span class="point-value"
+            >{{ formatRupiah(financialData.pendapatan) }} / bulan</span
+          >
+        </div>
+
+        <div class="result-point">
+          <span class="point-label">Pengeluaran Wajib</span>
+          <span class="point-value"
+            >{{ formatRupiah(financialData.pengeluaranWajib) }} / bulan</span
+          >
+        </div>
+
+        <div class="result-point">
+          <span class="point-label">Hutang</span>
+          <span class="point-value"
+            >{{ formatRupiah(financialData.hutangWajib) }} / bulan</span
+          >
+        </div>
+
+        <div class="result-point">
+          <span class="point-label">Tabungan</span>
+          <span class="point-value"
+            >{{ formatRupiah(financialData.estimasiTabungan) }}</span
+          >
+        </div>
+
+        <div class="result-point">
+          <span class="point-label">Dana Darurat</span>
+          <span class="point-value"
+            >{{ formatRupiah(financialData.danaDarurat) }}</span
+          >
+        </div>
+
+        <div class="result-point highlight">
+          <span class="point-label">Uang Sisa / bulan</span>
+          <span class="point-value">{{ formatRupiah(uangSisa) }}</span>
+        </div>
+      </div>
+
+      <button class="start-btn" (click)="goToHome()">Mulai Menabung</button>
+    </div>
+  </div>
+</section>

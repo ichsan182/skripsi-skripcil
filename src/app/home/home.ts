@@ -4,6 +4,15 @@ import { Sidebar } from '../shared/components/sidebar/sidebar';
 
 type ExpenseCategory = 'makanan' | 'travel' | 'entertainment' | 'subscription';
 
+interface FinancialData {
+  pendapatan: number;
+  pengeluaranWajib: number;
+  tanggalPemasukan: number;
+  hutangWajib: number;
+  estimasiTabungan: number;
+  danaDarurat: number;
+}
+
 interface ExpenseRow {
   date: string;
   amount: string;
@@ -30,6 +39,9 @@ interface StreakDay {
   styleUrl: './home.css',
 })
 export class Home {
+  userName = 'User';
+  financialData: FinancialData | null = null;
+
   showMentions = {
     saldo: false,
     pemasukan: true,
@@ -95,8 +107,68 @@ export class Home {
   streakCalendarDays: StreakDay[] = [];
 
   constructor() {
+    this.loadUserData();
     this.refreshMonthlyExpenses();
     this.refreshStreakCalendar();
+  }
+
+  private loadUserData(): void {
+    try {
+      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      if (user.name) this.userName = user.name;
+      if (user.level) {
+        this.currentLevel = user.level;
+        this.levelProgress = this.calculateLevelProgress();
+      }
+      if (user.financialData) this.financialData = user.financialData;
+    } catch {
+      // use defaults
+    }
+  }
+
+  private calculateLevelProgress(): number {
+    if (!this.financialData) return 0;
+    const { hutangWajib, estimasiTabungan, danaDarurat, pendapatan } =
+      this.financialData;
+    if (this.currentLevel === 2) return 10;
+    if (this.currentLevel === 3) {
+      const tabProgress = Math.min((estimasiTabungan / 10_000_000) * 100, 100);
+      const target = pendapatan * 3;
+      const ddProgress =
+        target > 0 ? Math.min((danaDarurat / target) * 100, 100) : 0;
+      return Math.round((tabProgress + ddProgress) / 2);
+    }
+    if (this.currentLevel >= 4) return 100;
+    return 0;
+  }
+
+  get sisaSaldo(): string {
+    if (!this.financialData) return this.formatRupiah(0);
+    const sisa =
+      this.financialData.pendapatan -
+      this.financialData.pengeluaranWajib -
+      this.financialData.hutangWajib;
+    return this.formatRupiah(sisa);
+  }
+
+  get pendapatanFormatted(): string {
+    return this.formatRupiah(this.financialData?.pendapatan || 0);
+  }
+
+  get pengeluaranFormatted(): string {
+    return this.formatRupiah(this.financialData?.pengeluaranWajib || 0);
+  }
+
+  get hutangFormatted(): string {
+    return this.formatRupiah(this.financialData?.hutangWajib || 0);
+  }
+
+  get tabunganFormatted(): string {
+    return this.formatRupiah(this.financialData?.estimasiTabungan || 0);
+  }
+
+  get danaDaruratFormatted(): string {
+    return this.formatRupiah(this.financialData?.danaDarurat || 0);
   }
 
   get currentLevelImage(): string {

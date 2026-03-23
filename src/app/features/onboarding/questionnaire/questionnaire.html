@@ -1,0 +1,165 @@
+<section class="questionnaire-page">
+  <aside class="questionnaire-sidebar">
+    <h1 class="sidebar-title">Ayo Kenalan Dulu!</h1>
+    <p class="sidebar-subtitle">
+      Biar kami tau nih, kamu harus ngapain supaya bisa nabung dengan efektif
+      dan aman :)
+    </p>
+
+    <div class="progress-steps">
+      <div
+        class="progress-step"
+        [class.active]="currentStep === 1"
+        [class.completed]="currentStep > 1"
+        (click)="goToStep(1)"
+      >
+        <img [src]="getStepIcon(1)" alt="Step 1" class="progress-icon" />
+        <span class="progress-label">Pengeluaran</span>
+      </div>
+
+      <div class="progress-line"></div>
+
+      <div
+        class="progress-step"
+        [class.active]="currentStep === 2"
+        (click)="goToStep(2)"
+      >
+        <img [src]="getStepIcon(2)" alt="Step 2" class="progress-icon" />
+        <span class="progress-label">Dana Darurat</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="questionnaire-content">
+    @if (currentStep === 1) {
+    <form [formGroup]="form1" class="question-form">
+      <div class="question-group">
+        <h2 class="question-title">Berapa Pendapatan Mu Perbulan?</h2>
+        <p class="question-desc">
+          Masukkan rata-rata pendapatan tetap yang kamu terima setiap bulan,
+          termasuk gaji pokok dan pendapatan rutin lainnya.
+        </p>
+        <div class="input-field">
+          <input
+            type="text"
+            formControlName="pendapatan"
+            placeholder="Contoh: 5.000.000"
+            inputmode="numeric"
+          />
+        </div>
+        @if (showError('form1', 'pendapatan')) {
+        <small class="error">Wajib diisi.</small>
+        }
+      </div>
+
+      <div class="question-group">
+        <h2 class="question-title">Berapa Rata-Rata Pengeluaran Wajib Mu?</h2>
+        <p class="question-desc">
+          Total pengeluaran yang wajib kamu bayar setiap bulan seperti bayar
+          kos, makan, transportasi, dan tagihan rutin.
+        </p>
+        <div class="input-field">
+          <input
+            type="text"
+            formControlName="pengeluaranWajib"
+            placeholder="Contoh: 2.000.000"
+            inputmode="numeric"
+          />
+        </div>
+        @if (showError('form1', 'pengeluaranWajib')) {
+        <small class="error">Wajib diisi.</small>
+        }
+      </div>
+
+      <div class="question-group">
+        <h2 class="question-title">Pemasukan Tanggal Berapa?</h2>
+        <p class="question-desc">
+          Tanggal berapa kamu biasanya menerima gaji, agar bisa mengatur jadwal
+          bayar kos, makan, dan kebutuhan lainnya.
+        </p>
+        <div class="input-field">
+          <input
+            type="text"
+            formControlName="tanggalPemasukan"
+            placeholder="Contoh: 25"
+            inputmode="numeric"
+          />
+        </div>
+        @if (showError('form1', 'tanggalPemasukan')) {
+        <small class="error">Wajib diisi.</small>
+        }
+      </div>
+
+      <div class="question-group">
+        <h2 class="question-title">Hutang Wajib (Kecil ke Menengah) Berapa?</h2>
+        <p class="question-desc">
+          Total cicilan hutang kecil hingga menengah per bulan, selain KPR, KPA
+          (Kredit Kepemilikan Apartemen), kredit mobil, atau motor mewah.
+        </p>
+        <div class="input-field">
+          <input
+            type="text"
+            formControlName="hutangWajib"
+            placeholder="Contoh: 200.000"
+            inputmode="numeric"
+          />
+        </div>
+        @if (showError('form1', 'hutangWajib')) {
+        <small class="error">Wajib diisi.</small>
+        }
+      </div>
+
+      <button type="button" class="form-btn" (click)="nextStep()">NEXT</button>
+    </form>
+    } @else {
+    <form [formGroup]="form2" class="question-form">
+      <div class="question-group">
+        <h2 class="question-title">Estimasi Total Tabungan</h2>
+        <p class="question-desc">
+          Perkiraan total tabungan yang kamu miliki saat ini di seluruh rekening
+          bank atau celengan.
+        </p>
+        <div class="input-field">
+          <input
+            type="text"
+            formControlName="estimasiTabungan"
+            placeholder="Contoh: 2.000.000"
+            inputmode="numeric"
+          />
+        </div>
+        @if (showError('form2', 'estimasiTabungan')) {
+        <small class="error">Wajib diisi.</small>
+        }
+      </div>
+
+      <div class="question-group">
+        <h2 class="question-title">Estimasi Total Dana Darurat?</h2>
+        <p class="question-desc">
+          Total dana yang kamu siapkan khusus untuk kebutuhan tak terduga
+          seperti sakit, kehilangan pekerjaan, atau keadaan darurat lainnya.
+        </p>
+        <div class="input-field">
+          <input
+            type="text"
+            formControlName="danaDarurat"
+            placeholder="Contoh: 1.000.000"
+            inputmode="numeric"
+          />
+        </div>
+        @if (showError('form2', 'danaDarurat')) {
+        <small class="error">Wajib diisi.</small>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="form-btn"
+        (click)="onFinish()"
+        [disabled]="isSubmitting"
+      >
+        {{ isSubmitting ? 'Menyimpan...' : 'FINISH' }}
+      </button>
+    </form>
+    }
+  </main>
+</section>

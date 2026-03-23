@@ -10,6 +10,8 @@ interface RegisterPayload {
   email: string;
   phone: string;
   password: string;
+  onboardingCompleted: boolean;
+  level: number;
 }
 
 @Component({
@@ -47,7 +49,15 @@ export class Register {
     this.isSubmitting = true;
 
     try {
-      const payload = this.registerForm.getRawValue() as RegisterPayload;
+      const formValues = this.registerForm.getRawValue();
+      const payload: RegisterPayload = {
+        name: formValues.name ?? '',
+        email: formValues.email ?? '',
+        phone: formValues.phone ?? '',
+        password: formValues.password ?? '',
+        onboardingCompleted: false,
+        level: 1,
+      };
 
       const existingUser = await firstValueFrom(
         this.httpClient.get<RegisterPayload[]>(

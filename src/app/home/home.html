@@ -1,7 +1,7 @@
 <div class="home-container">
   <app-sidebar></app-sidebar>
   <section class="home-page">
-    <h1>Selamat Malam, Ichsan Ilyasa!</h1>
+    <h1>Selamat Datang, {{ userName }}!</h1>
     <p>Cek status kamu hari ini yuk!</p>
     <div class="home-content">
       <section class="summary-cards-section">
@@ -16,7 +16,7 @@
                 {{ saldoPercentage }}%
               </div>
             </div>
-            <div class="cards-value value-positive">Rp. 999.999.999</div>
+            <div class="cards-value value-positive">{{ sisaSaldo }}</div>
           </div>
           <p class="mention-text" [class.mention-hidden]="!showMentions.saldo">
             Saldo kamu lebih banyak
@@ -35,7 +35,9 @@
                 {{ pemasukanPercentage }}%
               </div>
             </div>
-            <div class="cards-value value-positive">Rp. 11.000.000</div>
+            <div class="cards-value value-positive">
+              {{ pendapatanFormatted }}
+            </div>
           </div>
           <p
             class="mention-text"
@@ -57,7 +59,9 @@
                 {{ pengeluaranPercentage }}%
               </div>
             </div>
-            <div class="cards-value value-negative">Rp. 1.100.000</div>
+            <div class="cards-value value-negative">
+              {{ pengeluaranFormatted }}
+            </div>
           </div>
           <p
             class="mention-text"
@@ -79,7 +83,7 @@
                 {{ hutangPercentage }}%
               </div>
             </div>
-            <div class="cards-value value-negative">Rp. 500.000</div>
+            <div class="cards-value value-negative">{{ hutangFormatted }}</div>
           </div>
           <p class="mention-text" [class.mention-hidden]="!showMentions.hutang">
             Hutang sudah terbayar
@@ -126,7 +130,7 @@
           </div>
           <div class="savings-details">
             <p>Tabungan pokok</p>
-            <h2>1.000.000</h2>
+            <h2>{{ tabunganFormatted }}</h2>
             <h5>10% dari penghasilan kamu!</h5>
           </div>
         </div>
@@ -139,9 +143,9 @@
             Dana darurat supaya kamu ga pusing 🙏
           </div>
           <div class="savings-details">
-            <p>Tabungan pokok</p>
-            <h2>1.000.000</h2>
-            <h5>10% dari penghasilan kamu!</h5>
+            <p>Dana darurat</p>
+            <h2>{{ danaDaruratFormatted }}</h2>
+            <h5>Target: 3x pendapatan bulanan</h5>
           </div>
         </div>
       </section>

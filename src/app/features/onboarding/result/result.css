@@ -1,0 +1,121 @@
+.result-page {
+  min-height: 100vh;
+  background: var(--color-primary);
+}
+
+.result-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+  align-items: center;
+}
+
+.result-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.result-image {
+  width: clamp(200px, 25vw, 350px);
+}
+
+.result-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px clamp(20px, 4vw, 60px);
+  gap: 16px;
+}
+
+.result-name {
+  color: var(--color-white);
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 700;
+  line-height: var(--line-height-tight);
+}
+
+.result-description {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+}
+
+.result-points {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.result-point {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 12px 16px;
+  border-radius: 10px;
+}
+
+.result-point.level-badge {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.result-point.highlight {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.point-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.point-value {
+  color: var(--color-white);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.start-btn {
+  background: var(--color-white);
+  color: var(--color-primary);
+  border: none;
+  border-radius: var(--btn-radius);
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  padding: var(--btn-padding-y) var(--btn-padding-x);
+  min-height: var(--btn-min-height);
+  cursor: pointer;
+  align-self: flex-start;
+  min-width: 200px;
+  margin-top: 10px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.start-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 768px) {
+  .result-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .result-left {
+    padding: 24px 20px;
+  }
+
+  .result-image {
+    width: 200px;
+  }
+
+  .result-right {
+    padding: 24px 20px;
+  }
+}

@@ -5,21 +5,35 @@
       "name": "tolol",
       "email": "tolol@gmail.com",
       "phone": "082112488179",
-      "password": "12412441242"
+      "password": "12412441242",
+      "onboardingCompleted": false,
+      "level": 1
     },
     {
       "id": "8019",
       "name": "torik gila",
       "email": "torik@gmail.com",
       "phone": "124124124",
-      "password": "123456"
+      "password": "123456",
+      "onboardingCompleted": false,
+      "level": 1
     },
     {
       "id": "a742",
       "name": "ichsan ilyasa",
       "email": "ichsanilyasa3@gmail.com",
       "phone": "082112488179",
-      "password": "124124124124"
+      "password": "124124124124",
+      "onboardingCompleted": true,
+      "level": 3,
+      "financialData": {
+        "pendapatan": 4000000,
+        "pengeluaranWajib": 2000000,
+        "tanggalPemasukan": 1,
+        "hutangWajib": 0,
+        "estimasiTabungan": 10000000,
+        "danaDarurat": 3500000
+      }
     }
   ]
 }

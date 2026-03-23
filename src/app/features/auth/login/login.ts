@@ -11,6 +11,16 @@ interface User {
   email: string;
   phone: string;
   password: string;
+  onboardingCompleted?: boolean;
+  financialData?: {
+    pendapatan: number;
+    pengeluaranWajib: number;
+    tanggalPemasukan: number;
+    hutangWajib: number;
+    estimasiTabungan: number;
+    danaDarurat: number;
+  };
+  level?: number;
 }
 
 @Component({
@@ -74,8 +84,13 @@ export class Login {
         return;
       }
 
-      this.successMessage = `Login berhasil. Selamat datang, ${user.name}!`;
-      await this.router.navigateByUrl('/home');
+      localStorage.setItem('currentUser', JSON.stringify(user));
+
+      if (!user.onboardingCompleted) {
+        await this.router.navigateByUrl('/welcome');
+      } else {
+        await this.router.navigateByUrl('/home');
+      }
     } catch {
       this.errorMessage =
         'Gagal terhubung ke server. Pastikan json-server berjalan.';
