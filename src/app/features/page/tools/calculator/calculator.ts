@@ -25,7 +25,7 @@ type CompoundFrequency =
 
 type DepositTiming = 'beginning' | 'end';
 type NormalOperator = 'add' | 'subtract' | 'multiply' | 'divide';
-type TimelineEventType = 'deposit-beginning' | 'compound' | 'deposit-end';
+
 type ChartGranularity = 'monthly' | 'yearly';
 type ChartMetric = 'future-value' | 'net-result';
 
@@ -48,10 +48,7 @@ interface ProjectionResult {
   doubledAfterLabel: string;
 }
 
-interface TimelineEvent {
-  timeInYears: number;
-  type: TimelineEventType;
-}
+
 
 interface ProjectionChartPoint {
   timeInYears: number;
@@ -620,105 +617,123 @@ export class ToolsCalculator {
       };
     }
 
-    const factorPerCompound = 1 + annualNominalRate / compoundsPerYear;
-    const events: TimelineEvent[] = [];
+    const ratePerCompound = annualNominalRate / compoundsPerYear;
+    const compoundInterval = 1 / compoundsPerYear;
+    const depositInterval =
+      contributionPerYear > 0 ? 1 / contributionPerYear : 0;
 
-    const compoundEvents = Math.floor(totalYears * compoundsPerYear + 1e-8);
-    for (let index = 1; index <= compoundEvents; index += 1) {
-      events.push({
-        timeInYears: index / compoundsPerYear,
-        type: 'compound',
-      });
-    }
-
-    const contributionEvents = Math.floor(
-      totalYears * contributionPerYear + 1e-8,
+    const totalCompoundPeriods = Math.floor(
+      totalYears * compoundsPerYear + 1e-8,
     );
-    if (baseContribution > 0 && contributionEvents > 0) {
-      if (contributionTiming === 'beginning') {
-        for (let index = 0; index < contributionEvents; index += 1) {
-          events.push({
-            timeInYears: index / contributionPerYear,
-            type: 'deposit-beginning',
-          });
-        }
-      } else {
-        for (let index = 1; index <= contributionEvents; index += 1) {
-          events.push({
-            timeInYears: index / contributionPerYear,
-            type: 'deposit-end',
-          });
-        }
-      }
-    }
-
-    events.sort((left, right) => {
-      if (left.timeInYears !== right.timeInYears) {
-        return left.timeInYears - right.timeInYears;
-      }
-
-      return (
-        this.getEventPriority(left.type) - this.getEventPriority(right.type)
-      );
-    });
+    const totalDepositEvents =
+      baseContribution > 0 && contributionPerYear > 0
+        ? Math.floor(totalYears * contributionPerYear + 1e-8)
+        : 0;
 
     const doubleTarget = initialInvestment > 0 ? initialInvestment * 2 : 0;
     let timeToDouble: number | null = null;
-    let currentTime = 0;
     let balance = initialInvestment;
     let totalContributions = 0;
 
-    for (const event of events) {
-      if (event.timeInYears > currentTime) {
-        const previousBalance = balance;
-        const yearsDelta = event.timeInYears - currentTime;
-        balance *= Math.pow(factorPerCompound, yearsDelta * compoundsPerYear);
+    for (
+      let compoundIndex = 0;
+      compoundIndex < totalCompoundPeriods;
+      compoundIndex += 1
+    ) {
+      const compoundStart = compoundIndex * compoundInterval;
+      const compoundEnd = (compoundIndex + 1) * compoundInterval;
 
-        if (
-          timeToDouble === null &&
-          doubleTarget > 0 &&
-          previousBalance < doubleTarget &&
-          balance >= doubleTarget
-        ) {
-          const crossingTime = this.solveCrossingTime(
-            previousBalance,
-            doubleTarget,
-            factorPerCompound,
-            compoundsPerYear,
-            yearsDelta,
-          );
-          timeToDouble =
-            crossingTime !== null
-              ? currentTime + crossingTime
-              : event.timeInYears;
+      // Collect deposits that fall within this compound period
+      interface PendingDeposit {
+        depositIndex: number;
+        timeInYears: number;
+        amount: number;
+        fractionRemaining: number;
+      }
+      const depositsInPeriod: PendingDeposit[] = [];
+
+      if (totalDepositEvents > 0) {
+        if (contributionTiming === 'beginning') {
+          // Beginning-of-period deposits: at t = depositIndex / contributionPerYear
+          for (
+            let depositIndex = 0;
+            depositIndex < totalDepositEvents;
+            depositIndex += 1
+          ) {
+            const depositTime = depositIndex * depositInterval;
+            if (
+              depositTime >= compoundStart - 1e-8 &&
+              depositTime < compoundEnd - 1e-8
+            ) {
+              const depositYear = Math.floor(
+                depositIndex / contributionPerYear + 1e-8,
+              );
+              const amount =
+                baseContribution *
+                Math.pow(1 + annualContributionIncreaseRate, depositYear);
+              const fractionRemaining =
+                (compoundEnd - depositTime) / compoundInterval;
+              depositsInPeriod.push({
+                depositIndex,
+                timeInYears: depositTime,
+                amount,
+                fractionRemaining: Math.min(1, Math.max(0, fractionRemaining)),
+              });
+            }
+          }
+        } else {
+          // End-of-period deposits: at t = (depositIndex + 1) / contributionPerYear
+          for (
+            let depositIndex = 0;
+            depositIndex < totalDepositEvents;
+            depositIndex += 1
+          ) {
+            const depositTime = (depositIndex + 1) * depositInterval;
+            if (
+              depositTime > compoundStart + 1e-8 &&
+              depositTime <= compoundEnd + 1e-8
+            ) {
+              const depositYear = Math.floor(
+                depositIndex / contributionPerYear + 1e-8,
+              );
+              const amount =
+                baseContribution *
+                Math.pow(1 + annualContributionIncreaseRate, depositYear);
+              const fractionRemaining =
+                (compoundEnd - depositTime) / compoundInterval;
+              depositsInPeriod.push({
+                depositIndex,
+                timeInYears: depositTime,
+                amount,
+                fractionRemaining: Math.min(1, Math.max(0, fractionRemaining)),
+              });
+            }
+          }
         }
-
-        currentTime = event.timeInYears;
       }
 
-      if (event.type === 'deposit-beginning' || event.type === 'deposit-end') {
-        const contributionYear = Math.floor(event.timeInYears + 1e-8);
-        const adjustedContribution =
-          baseContribution *
-          Math.pow(1 + annualContributionIncreaseRate, contributionYear);
-
-        balance += adjustedContribution;
-        totalContributions += adjustedContribution;
-
+      // Add beginning-of-period deposits before compounding
+      for (const deposit of depositsInPeriod) {
         if (
-          timeToDouble === null &&
-          doubleTarget > 0 &&
-          balance >= doubleTarget
+          contributionTiming === 'beginning' &&
+          Math.abs(deposit.timeInYears - compoundStart) < 1e-8
         ) {
-          timeToDouble = event.timeInYears;
+          balance += deposit.amount;
+          totalContributions += deposit.amount;
+
+          if (
+            timeToDouble === null &&
+            doubleTarget > 0 &&
+            balance >= doubleTarget
+          ) {
+            timeToDouble = deposit.timeInYears;
+          }
         }
       }
-    }
 
-    if (totalYears > currentTime) {
+      // Apply compound interest to existing balance
       const previousBalance = balance;
-      const yearsDelta = totalYears - currentTime;
-      balance *= Math.pow(factorPerCompound, yearsDelta * compoundsPerYear);
+      balance *= 1 + ratePerCompound;
 
       if (
         timeToDouble === null &&
@@ -729,12 +744,55 @@ export class ToolsCalculator {
         const crossingTime = this.solveCrossingTime(
           previousBalance,
           doubleTarget,
-          factorPerCompound,
+          1 + ratePerCompound,
           compoundsPerYear,
-          yearsDelta,
+          compoundInterval,
         );
         timeToDouble =
-          crossingTime !== null ? currentTime + crossingTime : totalYears;
+          crossingTime !== null
+            ? compoundStart + crossingTime
+            : compoundEnd;
+      }
+
+      // Add deposits with simple pro-rated interest for remaining fraction
+      for (const deposit of depositsInPeriod) {
+        if (
+          contributionTiming === 'beginning' &&
+          Math.abs(deposit.timeInYears - compoundStart) < 1e-8
+        ) {
+          continue; // Already added above
+        }
+
+        const depositWithInterest =
+          deposit.amount * (1 + ratePerCompound * deposit.fractionRemaining);
+        balance += depositWithInterest;
+        totalContributions += deposit.amount;
+
+        if (
+          timeToDouble === null &&
+          doubleTarget > 0 &&
+          balance >= doubleTarget
+        ) {
+          timeToDouble = deposit.timeInYears;
+        }
+      }
+    }
+
+    // Handle remaining time after the last compound period
+    const timeAfterLastCompound = totalCompoundPeriods / compoundsPerYear;
+    if (totalYears > timeAfterLastCompound + 1e-8) {
+      const remainingFraction =
+        (totalYears - timeAfterLastCompound) / compoundInterval;
+      const previousBalance = balance;
+      balance *= 1 + ratePerCompound * remainingFraction;
+
+      if (
+        timeToDouble === null &&
+        doubleTarget > 0 &&
+        previousBalance < doubleTarget &&
+        balance >= doubleTarget
+      ) {
+        timeToDouble = totalYears;
       }
     }
 
@@ -798,17 +856,6 @@ export class ToolsCalculator {
     return `${years} tahun ${months} bulan`;
   }
 
-  private getEventPriority(type: TimelineEventType): number {
-    if (type === 'deposit-beginning') {
-      return 0;
-    }
-
-    if (type === 'compound') {
-      return 1;
-    }
-
-    return 2;
-  }
 
   private getInterestPeriods(interval: InterestInterval): number {
     return (
@@ -880,6 +927,7 @@ export class ToolsCalculator {
 
   private syncCurrencyInputsFromNumbers(): void {
     this.incomeInput = this.formatCurrencyInput(this.income);
+
     this.initialInvestmentInput = this.formatCurrencyInput(
       this.initialInvestment,
     );
