@@ -17,6 +17,9 @@ type CompoundFrequency =
   | 'daily-365'
   | 'daily-360'
   | 'semi-weekly'
+  | 'weekly'
+  | 'bi-weekly'
+  | 'semi-monthly'
   | 'monthly'
   | 'bi-monthly'
   | 'quarterly'
@@ -47,8 +50,6 @@ interface ProjectionResult {
   periodicRatePct: number;
   doubledAfterLabel: string;
 }
-
-
 
 interface ProjectionChartPoint {
   timeInYears: number;
@@ -93,13 +94,20 @@ export class ToolsCalculator {
     { value: 'daily-360', label: 'Daily (360/year)', periodsPerYear: 360 },
     {
       value: 'semi-weekly',
-      label: 'Semi-weekly (24/year)',
+      label: 'Semi-weekly (104/year)',
+      periodsPerYear: 104,
+    },
+    { value: 'weekly', label: 'Weekly (52/year)', periodsPerYear: 52 },
+    { value: 'bi-weekly', label: 'Bi-weekly (26/year)', periodsPerYear: 26 },
+    {
+      value: 'semi-monthly',
+      label: 'Semi-monthly (24/year)',
       periodsPerYear: 24,
     },
     { value: 'monthly', label: 'Monthly (12/year)', periodsPerYear: 12 },
-    { value: 'bi-monthly', label: 'Bi monthly (6/year)', periodsPerYear: 6 },
+    { value: 'bi-monthly', label: 'Bi-monthly (6/year)', periodsPerYear: 6 },
     { value: 'quarterly', label: 'Quarterly (4/year)', periodsPerYear: 4 },
-    { value: 'half-yearly', label: 'Half yearly (2/year)', periodsPerYear: 2 },
+    { value: 'half-yearly', label: 'Half-yearly (2/year)', periodsPerYear: 2 },
     { value: 'yearly', label: 'Yearly (1/year)', periodsPerYear: 1 },
   ];
 
@@ -121,7 +129,7 @@ export class ToolsCalculator {
   protected initialInvestment = 1_000_000;
   protected interestRate = 2;
   protected interestRateInterval: InterestInterval = 'monthly';
-  protected compoundFrequency: CompoundFrequency = 'yearly';
+  protected compoundFrequency: CompoundFrequency = 'monthly';
   protected investmentYears = 5;
   protected investmentMonths = 0;
 
@@ -749,9 +757,7 @@ export class ToolsCalculator {
           compoundInterval,
         );
         timeToDouble =
-          crossingTime !== null
-            ? compoundStart + crossingTime
-            : compoundEnd;
+          crossingTime !== null ? compoundStart + crossingTime : compoundEnd;
       }
 
       // Add deposits with simple pro-rated interest for remaining fraction
@@ -855,7 +861,6 @@ export class ToolsCalculator {
 
     return `${years} tahun ${months} bulan`;
   }
-
 
   private getInterestPeriods(interval: InterestInterval): number {
     return (
