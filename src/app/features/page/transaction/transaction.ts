@@ -1,22 +1,15 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Sidebar } from '../../../shared/components/sidebar/sidebar';
-
-type ChatSender = 'user' | 'assistant';
-type ExpenseCategory =
-  | 'makanan'
-  | 'travel'
-  | 'entertainment'
-  | 'subscription'
-  | 'bills';
-
-interface ChatMessage {
-  id: number;
-  sender: ChatSender;
-  text: string;
-  time: string;
-}
+import {
+  ExpenseCategory,
+  ExpenseEntry,
+  IncomeEntry,
+  ChatMessage,
+  JournalService,
+  UserJournal,
+} from '../../../core/services/journal.service';
 
 interface CalendarCell {
   date: Date;
@@ -24,18 +17,6 @@ interface CalendarCell {
   key: string;
   inCurrentMonth: boolean;
   isToday: boolean;
-}
-
-interface ExpenseEntry {
-  amount: number;
-  description: string;
-  category: ExpenseCategory;
-}
-
-interface IncomeEntry {
-  amount: number;
-  description: string;
-  source: string;
 }
 
 interface CategoryMeta {
@@ -89,6 +70,8 @@ const CATEGORY_META: Record<ExpenseCategory, CategoryMeta> = {
   styleUrl: './transaction.css',
 })
 export class Transaction {
+  private readonly journalService = inject(JournalService);
+
   readonly weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   readonly categoryMeta = CATEGORY_META;
   readonly categoryOptions = Object.entries(CATEGORY_META).map(
@@ -131,15 +114,16 @@ export class Transaction {
     amount: null,
   };
 
-  private nextMessageId = 1;
-
-  private readonly chatByDate: Record<string, ChatMessage[]> = {};
-  private readonly expensesByDate: Record<string, ExpenseEntry[]> = {};
-  private readonly incomesByDate: Record<string, IncomeEntry[]> = {};
+  private journal: UserJournal = {
+    nextChatMessageId: 1,
+    chatByDate: {},
+    expensesByDate: {},
+    incomesByDate: {},
+  };
 
   constructor() {
-    this.seedDummyData();
     this.rebuildCalendar();
+    void this.initializeData();
   }
 
   get monthYearLabel(): string {
@@ -167,15 +151,15 @@ export class Transaction {
   }
 
   get selectedChatMessages(): ChatMessage[] {
-    return this.chatByDate[this.selectedDateKey] ?? [];
+    return this.journal.chatByDate[this.selectedDateKey] ?? [];
   }
 
   get selectedExpenses(): ExpenseEntry[] {
-    return this.expensesByDate[this.selectedDateKey] ?? [];
+    return this.journal.expensesByDate[this.selectedDateKey] ?? [];
   }
 
   get selectedIncomes(): IncomeEntry[] {
-    return this.incomesByDate[this.selectedDateKey] ?? [];
+    return this.journal.incomesByDate[this.selectedDateKey] ?? [];
   }
 
   get totalExpenseAmount(): number {
@@ -261,7 +245,7 @@ export class Transaction {
     return this.toDateKey(dateA) === this.toDateKey(dateB);
   }
 
-  sendMessage(): void {
+  async sendMessage(): Promise<void> {
     if (!this.isSelectedDateToday) {
       return;
     }
@@ -272,27 +256,16 @@ export class Transaction {
     }
 
     const todayKey = this.selectedDateKey;
-
-    this.ensureChatBucket(todayKey).push({
-      id: this.nextMessageId++,
-      sender: 'user',
-      text,
-      time: this.getCurrentTimeLabel(),
-    });
-
     this.messageInput = '';
 
-    setTimeout(() => {
-      this.ensureChatBucket(todayKey).push({
-        id: this.nextMessageId++,
-        sender: 'assistant',
-        text: `Catatan untuk ${this.selectedDateLabel} sudah disimpan.`,
-        time: this.getCurrentTimeLabel(),
-      });
-    }, 300);
+    this.journal = await this.journalService.addChatMessageWithAutoExpense(
+      todayKey,
+      text,
+      this.selectedDateLabel,
+    );
   }
 
-  addExpense(): void {
+  async addExpense(): Promise<void> {
     if (!this.isSelectedDateToday) {
       return;
     }
@@ -304,7 +277,7 @@ export class Transaction {
       return;
     }
 
-    this.ensureExpenseBucket(this.selectedDateKey).unshift({
+    this.journal = await this.journalService.addExpense(this.selectedDateKey, {
       description,
       amount,
       category: this.expenseDraft.category,
@@ -314,7 +287,7 @@ export class Transaction {
     this.expenseDraft.amount = null;
   }
 
-  addIncome(): void {
+  async addIncome(): Promise<void> {
     if (!this.isSelectedDateToday) {
       return;
     }
@@ -327,7 +300,7 @@ export class Transaction {
       return;
     }
 
-    this.ensureIncomeBucket(this.selectedDateKey).unshift({
+    this.journal = await this.journalService.addIncome(this.selectedDateKey, {
       description,
       source,
       amount,
@@ -364,98 +337,8 @@ export class Transaction {
     return this.trimTrailingZero(safe);
   }
 
-  private seedDummyData(): void {
-    const today = this.normalizeDate(new Date());
-    const yesterday = this.shiftDate(today, -1);
-    const twoDaysAgo = this.shiftDate(today, -2);
-
-    const todayKey = this.toDateKey(today);
-    const yesterdayKey = this.toDateKey(yesterday);
-    const twoDaysAgoKey = this.toDateKey(twoDaysAgo);
-
-    this.chatByDate[todayKey] = [
-      {
-        id: this.nextMessageId++,
-        sender: 'assistant',
-        text: 'Halo! Pilih tanggal untuk lihat riwayat chat dan transaksi kamu.',
-        time: '09:00',
-      },
-    ];
-
-    this.chatByDate[yesterdayKey] = [
-      {
-        id: this.nextMessageId++,
-        sender: 'user',
-        text: 'Kemarin pengeluaran paling besar ada di transport.',
-        time: '20:10',
-      },
-      {
-        id: this.nextMessageId++,
-        sender: 'assistant',
-        text: 'Noted, besok bisa dibatasi dengan budget harian ya.',
-        time: '20:11',
-      },
-    ];
-
-    this.expensesByDate[todayKey] = [
-      {
-        amount: 85000,
-        description: 'Makan siang kantor',
-        category: 'makanan',
-      },
-      {
-        amount: 35000,
-        description: 'Langganan musik',
-        category: 'subscription',
-      },
-      {
-        amount: 125000,
-        description: 'Transport pulang pergi',
-        category: 'travel',
-      },
-    ];
-
-    this.expensesByDate[yesterdayKey] = [
-      {
-        amount: 120000,
-        description: 'Bensin',
-        category: 'travel',
-      },
-      {
-        amount: 70000,
-        description: 'Makan malam',
-        category: 'makanan',
-      },
-      {
-        amount: 90000,
-        description: 'Nonton bioskop',
-        category: 'entertainment',
-      },
-    ];
-
-    this.expensesByDate[twoDaysAgoKey] = [
-      {
-        amount: 140000,
-        description: 'Tagihan listrik',
-        category: 'bills',
-      },
-    ];
-
-    this.incomesByDate[todayKey] = [
-      {
-        amount: 450000,
-        description: 'Freelance desain',
-        source: 'Project klien A',
-      },
-    ];
-
-    this.incomesByDate[yesterdayKey] = [
-      {
-        amount: 200000,
-        description: 'Cashback marketplace',
-        source: 'Program promo',
-      },
-    ];
+  private async initializeData(): Promise<void> {
+    this.journal = await this.journalService.loadCurrentUserJournal();
   }
 
   private rebuildCalendar(): void {
@@ -485,46 +368,8 @@ export class Transaction {
     });
   }
 
-  private ensureChatBucket(dateKey: string): ChatMessage[] {
-    if (!this.chatByDate[dateKey]) {
-      this.chatByDate[dateKey] = [];
-    }
-
-    return this.chatByDate[dateKey];
-  }
-
-  private ensureExpenseBucket(dateKey: string): ExpenseEntry[] {
-    if (!this.expensesByDate[dateKey]) {
-      this.expensesByDate[dateKey] = [];
-    }
-
-    return this.expensesByDate[dateKey];
-  }
-
-  private ensureIncomeBucket(dateKey: string): IncomeEntry[] {
-    if (!this.incomesByDate[dateKey]) {
-      this.incomesByDate[dateKey] = [];
-    }
-
-    return this.incomesByDate[dateKey];
-  }
-
-  private getCurrentTimeLabel(): string {
-    return new Intl.DateTimeFormat('id-ID', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).format(new Date());
-  }
-
   private normalizeDate(date: Date): Date {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  }
-
-  private shiftDate(source: Date, offset: number): Date {
-    const shifted = new Date(source);
-    shifted.setDate(shifted.getDate() + offset);
-    return this.normalizeDate(shifted);
   }
 
   private toDateKey(date: Date): string {

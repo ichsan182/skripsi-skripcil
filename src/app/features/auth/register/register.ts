@@ -12,6 +12,12 @@ interface RegisterPayload {
   password: string;
   onboardingCompleted: boolean;
   level: number;
+  journal: {
+    nextChatMessageId: number;
+    chatByDate: Record<string, never[]>;
+    expensesByDate: Record<string, never[]>;
+    incomesByDate: Record<string, never[]>;
+  };
 }
 
 @Component({
@@ -57,6 +63,12 @@ export class Register {
         password: formValues.password ?? '',
         onboardingCompleted: false,
         level: 1,
+        journal: {
+          nextChatMessageId: 1,
+          chatByDate: {},
+          expensesByDate: {},
+          incomesByDate: {},
+        },
       };
 
       const existingUser = await firstValueFrom(

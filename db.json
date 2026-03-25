@@ -7,7 +7,13 @@
       "phone": "082112488179",
       "password": "12412441242",
       "onboardingCompleted": false,
-      "level": 1
+      "level": 1,
+      "journal": {
+        "nextChatMessageId": 1,
+        "chatByDate": {},
+        "expensesByDate": {},
+        "incomesByDate": {}
+      }
     },
     {
       "id": "8019",
@@ -16,7 +22,13 @@
       "phone": "124124124",
       "password": "123456",
       "onboardingCompleted": false,
-      "level": 1
+      "level": 1,
+      "journal": {
+        "nextChatMessageId": 1,
+        "chatByDate": {},
+        "expensesByDate": {},
+        "incomesByDate": {}
+      }
     },
     {
       "id": "a742",
@@ -33,6 +45,213 @@
         "hutangWajib": 0,
         "estimasiTabungan": 10000000,
         "danaDarurat": 3500000
+      },
+      "journal": {
+        "nextChatMessageId": 22,
+        "chatByDate": {
+          "2026-03-25": [
+            {
+              "id": 1,
+              "sender": "assistant",
+              "text": "Halo! Ketik contoh seperti 10000 makan agar otomatis masuk ke pengeluaran.",
+              "time": "09:00"
+            },
+            {
+              "id": 2,
+              "sender": "user",
+              "text": "10000 makan",
+              "time": "09:05"
+            },
+            {
+              "id": 3,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"makan\" kategori makanan.",
+              "time": "09:05"
+            },
+            {
+              "id": 8,
+              "sender": "user",
+              "text": "25000 travel",
+              "time": "23.29"
+            },
+            {
+              "id": 9,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 25.000 untuk \"travel\" kategori travel.",
+              "time": "23.29"
+            },
+            {
+              "id": 10,
+              "sender": "user",
+              "text": "12000 travel",
+              "time": "23.30"
+            },
+            {
+              "id": 11,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 12.000 untuk \"travel\" kategori travel.",
+              "time": "23.30"
+            },
+            {
+              "id": 12,
+              "sender": "user",
+              "text": "10000 makan",
+              "time": "23.30"
+            },
+            {
+              "id": 13,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"makan\" kategori makanan.",
+              "time": "23.30"
+            },
+            {
+              "id": 14,
+              "sender": "user",
+              "text": "10000 mam",
+              "time": "23.30"
+            },
+            {
+              "id": 15,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"mam\" kategori makanan.",
+              "time": "23.30"
+            },
+            {
+              "id": 16,
+              "sender": "user",
+              "text": "netplik 10000",
+              "time": "23.31"
+            },
+            {
+              "id": 17,
+              "sender": "assistant",
+              "text": "Catatan untuk Rabu, 25 Maret 2026 sudah disimpan.",
+              "time": "23.31"
+            },
+            {
+              "id": 18,
+              "sender": "user",
+              "text": "netflix 10000",
+              "time": "23.31"
+            },
+            {
+              "id": 19,
+              "sender": "assistant",
+              "text": "Catatan untuk Rabu, 25 Maret 2026 sudah disimpan.",
+              "time": "23.31"
+            },
+            {
+              "id": 20,
+              "sender": "user",
+              "text": "10000 netflix",
+              "time": "23.31"
+            },
+            {
+              "id": 21,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"netflix\" kategori subscription.",
+              "time": "23.31"
+            }
+          ],
+          "2026-03-24": [
+            {
+              "id": 4,
+              "sender": "user",
+              "text": "25000 travel",
+              "time": "20:10"
+            },
+            {
+              "id": 5,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 25.000 untuk \"travel\" kategori travel.",
+              "time": "20:11"
+            },
+            {
+              "id": 6,
+              "sender": "user",
+              "text": "30000 subscription",
+              "time": "20:15"
+            },
+            {
+              "id": 7,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 30.000 untuk \"subscription\" kategori subscription.",
+              "time": "20:15"
+            }
+          ]
+        },
+        "expensesByDate": {
+          "2026-03-25": [
+            {
+              "amount": 10000,
+              "description": "netflix",
+              "category": "subscription"
+            },
+            {
+              "amount": 10000,
+              "description": "mam",
+              "category": "makanan"
+            },
+            {
+              "amount": 10000,
+              "description": "makan",
+              "category": "makanan"
+            },
+            {
+              "amount": 12000,
+              "description": "travel",
+              "category": "travel"
+            },
+            {
+              "amount": 25000,
+              "description": "travel",
+              "category": "travel"
+            },
+            {
+              "amount": 10000,
+              "description": "makan",
+              "category": "makanan"
+            },
+            {
+              "amount": 10000,
+              "description": "makan",
+              "category": "makanan"
+            },
+            {
+              "amount": 10000,
+              "description": "makan",
+              "category": "makanan"
+            }
+          ],
+          "2026-03-24": [
+            {
+              "amount": 25000,
+              "description": "travel",
+              "category": "travel"
+            },
+            {
+              "amount": 30000,
+              "description": "subscription",
+              "category": "subscription"
+            }
+          ]
+        },
+        "incomesByDate": {
+          "2026-03-25": [
+            {
+              "amount": 200000,
+              "description": "Freelance desain",
+              "source": "Project klien A"
+            }
+          ],
+          "2026-03-24": [
+            {
+              "amount": 120000,
+              "description": "Cashback marketplace",
+              "source": "Program promo"
+            }
+          ]
+        }
       }
     }
   ]

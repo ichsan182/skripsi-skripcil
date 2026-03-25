@@ -2,6 +2,134 @@
   <app-sidebar></app-sidebar>
   <section class="page-content">
     <h1>Chat</h1>
-    <p>Chat page content goes here</p>
+    <p>
+      Chat sinkron dengan Transaction. Format cepat: "10000 makan" agar otomatis
+      masuk ke pengeluaran hari ini.
+    </p>
+
+    <div class="chat-page-content">
+      <article class="chat-card calendar-card">
+        <div class="card-header">
+          <div class="title-with-icon">
+            <img
+              src="assets/calendar-picker.svg"
+              alt="Kalender"
+              class="header-icon"
+            />
+            <h2>Calendar</h2>
+          </div>
+          <span class="selected-date-pill">{{ selectedDateLabel }}</span>
+        </div>
+
+        <div class="month-year-switcher">
+          <button
+            type="button"
+            class="month-switch-btn"
+            (click)="changeMonth(-1)"
+            aria-label="Bulan sebelumnya"
+          >
+            <img src="assets/prev.svg" alt="Bulan sebelumnya" />
+          </button>
+          <span class="month-year-label">{{ monthYearLabel }}</span>
+          <button
+            type="button"
+            class="month-switch-btn"
+            (click)="changeMonth(1)"
+            aria-label="Bulan berikutnya"
+          >
+            <img src="assets/next.svg" alt="Bulan berikutnya" />
+          </button>
+        </div>
+
+        <div class="calendar-grid">
+          <span class="weekday-label" *ngFor="let day of weekDays"
+            >{{ day }}</span
+          >
+
+          <button
+            type="button"
+            class="calendar-day"
+            *ngFor="let cell of calendarCells"
+            (click)="selectDate(cell)"
+            [class.outside-month]="!cell.inCurrentMonth"
+            [class.selected]="isSameDate(cell.date, selectedDate)"
+            [class.today]="cell.isToday"
+            [attr.aria-label]="'Pilih tanggal ' + cell.key"
+          >
+            {{ cell.dayNumber }}
+          </button>
+        </div>
+      </article>
+
+      <article class="chat-card conversation-card">
+        <div class="card-header">
+          <div class="title-with-icon">
+            <img
+              src="assets/material-symbols_chat.svg"
+              alt="Chat"
+              class="header-icon"
+            />
+            <h2>Chat Assistant</h2>
+          </div>
+          <span class="mode-chip" [class.active]="isSelectedDateToday">
+            {{ isSelectedDateToday ? 'Hari ini aktif' : 'Mode riwayat' }}
+          </span>
+        </div>
+
+        <p class="card-subtitle">
+          Riwayat chat tanggal {{ selectedDateLabel }}.
+        </p>
+
+        <div class="quick-guide">
+          <span class="guide-title">Kategori cepat:</span>
+          <span class="guide-chip" *ngFor="let item of quickGuide"
+            >{{ item }}</span
+          >
+        </div>
+
+        <div class="chat-thread">
+          <p class="empty-state" *ngIf="selectedChatMessages.length === 0">
+            Belum ada chat pada tanggal ini.
+          </p>
+
+          <div
+            class="chat-row"
+            *ngFor="let message of selectedChatMessages"
+            [class.user]="message.sender === 'user'"
+          >
+            <div
+              class="chat-bubble"
+              [class.user]="message.sender === 'user'"
+              [class.assistant]="message.sender === 'assistant'"
+            >
+              <p>{{ message.text }}</p>
+              <span>{{ message.time }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <input
+            type="text"
+            placeholder="{{
+              isSelectedDateToday
+                ? 'Tulis pesan untuk hari ini...'
+                : 'Chat hanya bisa dikirim untuk hari ini'
+            }}"
+            [(ngModel)]="messageInput"
+            [disabled]="!isSelectedDateToday"
+            (keydown.enter)="sendMessage()"
+          />
+          <button
+            type="button"
+            class="send-btn"
+            (click)="sendMessage()"
+            [disabled]="!isSelectedDateToday || !messageInput.trim()"
+          >
+            Kirim
+          </button>
+        </div>
+      </article>
+    </div>
   </section>
 </div>
