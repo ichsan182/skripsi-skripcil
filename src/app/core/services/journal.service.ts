@@ -223,14 +223,26 @@ export class JournalService {
   }
 
   private parseExpenseFromMessage(text: string): ExpenseEntry | null {
-    const expensePattern = /^(\d[\d.,]*)\s+(.+)$/;
-    const match = text.trim().match(expensePattern);
-    if (!match) {
+    const trimmed = text.trim();
+
+    // Support both "10000 makan" and "makan 10000"
+    const numberFirst = /^(\d[\d.,]*)\s+(.+)$/.exec(trimmed);
+    const numberLast = /^(.+?)\s+(\d[\d.,]*)$/.exec(trimmed);
+
+    let rawAmount: string;
+    let description: string;
+
+    if (numberFirst) {
+      rawAmount = numberFirst[1];
+      description = numberFirst[2].trim().toLowerCase();
+    } else if (numberLast) {
+      rawAmount = numberLast[2];
+      description = numberLast[1].trim().toLowerCase();
+    } else {
       return null;
     }
 
-    const amount = Number.parseInt(match[1].replace(/\D/g, ''), 10);
-    const description = match[2].trim().toLowerCase();
+    const amount = Number.parseInt(rawAmount.replace(/\D/g, ''), 10);
 
     if (!Number.isFinite(amount) || amount <= 0 || !description) {
       return null;
