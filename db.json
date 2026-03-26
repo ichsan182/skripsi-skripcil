@@ -529,8 +529,8 @@
         "pengeluaranWajib": 3000000,
         "tanggalPemasukan": 28,
         "hutangWajib": 0,
-        "estimasiTabungan": 11770000,
-        "danaDarurat": 48530000,
+        "estimasiTabungan": 25592222,
+        "danaDarurat": 67907778,
         "danaInvestasi": 0,
         "budgetAllocation": {
           "mode": 2,
@@ -539,8 +539,8 @@
           "savings": 80
         },
         "savingsAllocation": {
-          "tabungan": 2300000,
-          "danaDarurat": 9700000,
+          "tabungan": 2322222,
+          "danaDarurat": 9677778,
           "danaInvestasi": 0
         }
       }

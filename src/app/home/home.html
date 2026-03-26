@@ -498,12 +498,17 @@
           </div>
         </div>
 
-        @if (budgetSavings > 0) {
         <div class="sp-allocation-section sp-savings-section">
           <h3 class="sp-section-title">Alokasi Tabungan</h3>
           <p class="sp-sub-info">
-            Sisa saldo untuk ditabung: {{ formatRupiah(savingsTotalAmount) }}
+            Sisa saldo kamu: {{ formatRupiah(savingsTotalAmount) }}
           </p>
+
+          @if (isSisaSaldoEmpty && savingsUsed === 0) {
+          <div class="sp-warning-box">
+            ⚠️ Sisa saldo kamu sudah habis. Tidak bisa mengalokasikan tabungan lagi.
+          </div>
+          }
 
           <div class="sp-allocation-grid">
             <div class="sp-alloc-field">
@@ -517,6 +522,7 @@
                   (input)="onSavingsAmountInput('tabungan', $event)"
                   placeholder="0"
                   class="sp-input"
+                  [disabled]="isSisaSaldoEmpty && savingsTabunganInput === 0"
                 />
               </div>
               <span class="sp-existing-info"
@@ -536,6 +542,7 @@
                   (input)="onSavingsAmountInput('danaDarurat', $event)"
                   placeholder="0"
                   class="sp-input"
+                  [disabled]="isSisaSaldoEmpty && savingsDanaDaruratInput === 0"
                 />
               </div>
               <span class="sp-existing-info"
@@ -556,6 +563,7 @@
                   (input)="onSavingsAmountInput('danaInvestasi', $event)"
                   placeholder="0"
                   class="sp-input"
+                  [disabled]="isSisaSaldoEmpty && savingsDanaInvestasiInput === 0"
                 />
               </div>
               <span class="sp-existing-info"
@@ -566,9 +574,10 @@
             }
           </div>
 
+          @if (!isSisaSaldoEmpty || savingsUsed > 0) {
           <div class="sp-total-bar">
             <div class="sp-total-label">
-              <span>Terpakai</span>
+              <span>Dialokasikan</span>
               <span
                 class="sp-total-value"
                 [class.sp-total-full]="isSavingsValid"
@@ -589,11 +598,11 @@
               class="sp-remaining-text"
               [class.sp-remaining-zero]="savingsRemaining === 0"
             >
-              Sisa: {{ formatRupiah(savingsRemaining) }}
+              Sisa setelah alokasi: {{ formatRupiah(savingsRemaining) }}
             </span>
           </div>
+          }
         </div>
-        }
       </div>
 
       <div class="modal-footer">

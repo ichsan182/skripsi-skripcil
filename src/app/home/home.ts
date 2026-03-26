@@ -168,12 +168,7 @@ export class Home {
           this.budgetWants = ba.wants;
           this.budgetSavings = ba.savings;
         }
-        if (user.financialData.savingsAllocation) {
-          const sa = user.financialData.savingsAllocation;
-          this.savingsTabunganInput = sa.tabungan;
-          this.savingsDanaDaruratInput = sa.danaDarurat;
-          this.savingsDanaInvestasiInput = sa.danaInvestasi;
-        }
+        // savings inputs always start at 0 (sisa saldo system)
       }
     } catch {
       // use defaults
@@ -196,13 +191,22 @@ export class Home {
     return 0;
   }
 
-  get sisaSaldo(): string {
-    if (!this.financialData) return this.formatRupiah(0);
+  get sisaSaldoAmount(): number {
+    if (!this.financialData) return 0;
     const sisa =
       this.financialData.pendapatan -
       this.financialData.pengeluaranWajib -
       this.financialData.hutangWajib;
-    return this.formatRupiah(sisa);
+    const allocated = this.financialData.savingsAllocation
+      ? this.financialData.savingsAllocation.tabungan +
+        this.financialData.savingsAllocation.danaDarurat +
+        this.financialData.savingsAllocation.danaInvestasi
+      : 0;
+    return Math.max(0, sisa - allocated);
+  }
+
+  get sisaSaldo(): string {
+    return this.formatRupiah(this.sisaSaldoAmount);
   }
 
   get pendapatanFormatted(): string {
@@ -238,7 +242,11 @@ export class Home {
   }
 
   get savingsTotalAmount(): number {
-    return Math.round((this.pendapatanInput * this.budgetSavings) / 100);
+    return this.sisaSaldoAmount;
+  }
+
+  get isSisaSaldoEmpty(): boolean {
+    return this.savingsTotalAmount <= 0;
   }
 
   get savingsUsed(): number {
@@ -307,13 +315,11 @@ export class Home {
         this.budgetWants = ba.wants;
         this.budgetSavings = ba.savings;
       }
-      if (this.financialData.savingsAllocation) {
-        const sa = this.financialData.savingsAllocation;
-        this.savingsTabunganInput = sa.tabungan;
-        this.savingsDanaDaruratInput = sa.danaDarurat;
-        this.savingsDanaInvestasiInput = sa.danaInvestasi;
-      }
     }
+    // savings inputs always start at 0 (sisa saldo system)
+    this.savingsTabunganInput = 0;
+    this.savingsDanaDaruratInput = 0;
+    this.savingsDanaInvestasiInput = 0;
     this.budgetLastEdited = null;
     this.showSettingPersenan = true;
   }
@@ -391,10 +397,15 @@ export class Home {
       wants: this.budgetWants,
       savings: this.budgetSavings,
     };
+    const existingSavingsAlloc = this.financialData?.savingsAllocation || {
+      tabungan: 0,
+      danaDarurat: 0,
+      danaInvestasi: 0,
+    };
     const savingsAllocation: SavingsAllocation = {
-      tabungan: this.savingsTabunganInput,
-      danaDarurat: this.savingsDanaDaruratInput,
-      danaInvestasi: this.savingsDanaInvestasiInput,
+      tabungan: existingSavingsAlloc.tabungan + this.savingsTabunganInput,
+      danaDarurat: existingSavingsAlloc.danaDarurat + this.savingsDanaDaruratInput,
+      danaInvestasi: existingSavingsAlloc.danaInvestasi + this.savingsDanaInvestasiInput,
     };
     const updatedFinancialData: FinancialData = {
       ...(this.financialData || {
