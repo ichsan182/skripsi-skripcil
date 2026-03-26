@@ -1,8 +1,25 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { Sidebar } from '../shared/components/sidebar/sidebar';
+import { JournalService } from '../core/services/journal.service';
 
 type ExpenseCategory = 'makanan' | 'travel' | 'entertainment' | 'subscription';
+
+interface BudgetAllocation {
+  mode: 2 | 3;
+  pengeluaran: number;
+  wants: number;
+  savings: number;
+}
+
+interface SavingsAllocation {
+  tabungan: number;
+  danaDarurat: number;
+  danaInvestasi: number;
+}
 
 interface FinancialData {
   pendapatan: number;
@@ -11,6 +28,9 @@ interface FinancialData {
   hutangWajib: number;
   estimasiTabungan: number;
   danaDarurat: number;
+  danaInvestasi?: number;
+  budgetAllocation?: BudgetAllocation;
+  savingsAllocation?: SavingsAllocation;
 }
 
 interface ExpenseRow {
@@ -34,11 +54,15 @@ interface StreakDay {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, Sidebar],
+  imports: [CommonModule, FormsModule, Sidebar],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
 export class Home {
+  private readonly journalService = inject(JournalService);
+  private readonly http = inject(HttpClient);
+  private readonly usersApiUrl = 'http://localhost:3000/users';
+
   userName = 'User';
   financialData: FinancialData | null = null;
 
@@ -53,6 +77,19 @@ export class Home {
   pemasukanPercentage = this.generatePercentage();
   pengeluaranPercentage = this.generatePercentage();
   hutangPercentage = this.generatePercentage();
+
+  Math = Math;
+  showSettingPersenan = false;
+  budgetMode: 2 | 3 = 2;
+  budgetPengeluaran = 80;
+  budgetWants = 0;
+  budgetSavings = 20;
+  budgetLastEdited: ('pengeluaran' | 'wants' | 'savings') | null = null;
+  savingsTabunganInput = 0;
+  savingsDanaDaruratInput = 0;
+  savingsDanaInvestasiInput = 0;
+  pendapatanInput = 0;
+  monthlyExpenseTotal = 0;
 
   currentLevel = 2;
   levelProgress = 60;
@@ -110,6 +147,7 @@ export class Home {
     this.loadUserData();
     this.refreshMonthlyExpenses();
     this.refreshStreakCalendar();
+    void this.loadMonthlyExpenseTotal();
   }
 
   private loadUserData(): void {
@@ -120,7 +158,23 @@ export class Home {
         this.currentLevel = user.level;
         this.levelProgress = this.calculateLevelProgress();
       }
-      if (user.financialData) this.financialData = user.financialData;
+      if (user.financialData) {
+        this.financialData = user.financialData;
+        this.pendapatanInput = user.financialData.pendapatan || 0;
+        if (user.financialData.budgetAllocation) {
+          const ba = user.financialData.budgetAllocation;
+          this.budgetMode = ba.mode;
+          this.budgetPengeluaran = ba.pengeluaran;
+          this.budgetWants = ba.wants;
+          this.budgetSavings = ba.savings;
+        }
+        if (user.financialData.savingsAllocation) {
+          const sa = user.financialData.savingsAllocation;
+          this.savingsTabunganInput = sa.tabungan;
+          this.savingsDanaDaruratInput = sa.danaDarurat;
+          this.savingsDanaInvestasiInput = sa.danaInvestasi;
+        }
+      }
     } catch {
       // use defaults
     }
@@ -155,8 +209,12 @@ export class Home {
     return this.formatRupiah(this.financialData?.pendapatan || 0);
   }
 
-  get pengeluaranFormatted(): string {
+  get pengeluaranWajibFormatted(): string {
     return this.formatRupiah(this.financialData?.pengeluaranWajib || 0);
+  }
+
+  get monthlyExpenseTotalFormatted(): string {
+    return this.formatRupiah(this.monthlyExpenseTotal);
   }
 
   get hutangFormatted(): string {
@@ -169,6 +227,42 @@ export class Home {
 
   get danaDaruratFormatted(): string {
     return this.formatRupiah(this.financialData?.danaDarurat || 0);
+  }
+
+  get danaInvestasiFormatted(): string {
+    return this.formatRupiah(this.financialData?.danaInvestasi || 0);
+  }
+
+  get showDanaInvestasi(): boolean {
+    return this.currentLevel >= 4;
+  }
+
+  get savingsTotalAmount(): number {
+    return Math.round((this.pendapatanInput * this.budgetSavings) / 100);
+  }
+
+  get savingsUsed(): number {
+    return (
+      this.savingsTabunganInput +
+      this.savingsDanaDaruratInput +
+      (this.currentLevel >= 4 ? this.savingsDanaInvestasiInput : 0)
+    );
+  }
+
+  get savingsRemaining(): number {
+    return Math.max(0, this.savingsTotalAmount - this.savingsUsed);
+  }
+
+  get isSavingsValid(): boolean {
+    return this.savingsUsed <= this.savingsTotalAmount;
+  }
+
+  get isSaveDisabled(): boolean {
+    const budgetTotal =
+      this.budgetPengeluaran + this.budgetWants + this.budgetSavings;
+    if (budgetTotal !== 100) return true;
+    if (this.budgetSavings > 0 && !this.isSavingsValid) return true;
+    return false;
   }
 
   get currentLevelImage(): string {
@@ -201,6 +295,140 @@ export class Home {
 
   get streakCalendarLabel(): string {
     return `${this.monthNames[this.streakCalendarMonth]} ${this.streakCalendarYear}`;
+  }
+
+  openSettingPersenan(): void {
+    if (this.financialData) {
+      this.pendapatanInput = this.financialData.pendapatan;
+      if (this.financialData.budgetAllocation) {
+        const ba = this.financialData.budgetAllocation;
+        this.budgetMode = ba.mode;
+        this.budgetPengeluaran = ba.pengeluaran;
+        this.budgetWants = ba.wants;
+        this.budgetSavings = ba.savings;
+      }
+      if (this.financialData.savingsAllocation) {
+        const sa = this.financialData.savingsAllocation;
+        this.savingsTabunganInput = sa.tabungan;
+        this.savingsDanaDaruratInput = sa.danaDarurat;
+        this.savingsDanaInvestasiInput = sa.danaInvestasi;
+      }
+    }
+    this.budgetLastEdited = null;
+    this.showSettingPersenan = true;
+  }
+
+  closeSettingPersenan(): void {
+    this.showSettingPersenan = false;
+  }
+
+  setBudgetMode(mode: 2 | 3): void {
+    this.budgetMode = mode;
+    this.budgetLastEdited = null;
+    if (mode === 2) {
+      this.budgetWants = 0;
+      this.budgetSavings = 100 - this.budgetPengeluaran;
+    }
+  }
+
+  onPendapatanInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const cleaned = input.value.replace(/[^0-9]/g, '');
+    this.pendapatanInput = parseInt(cleaned, 10) || 0;
+    input.value = this.formatNumber(this.pendapatanInput);
+  }
+
+  onBudgetPercentInput(
+    field: 'pengeluaran' | 'wants' | 'savings',
+    event: Event,
+  ): void {
+    const input = event.target as HTMLInputElement;
+    const cleaned = input.value.replace(/[^0-9]/g, '');
+    let value = parseInt(cleaned, 10) || 0;
+    if (value > 100) value = 100;
+    this.setBudgetField(field, value);
+    input.value = String(value);
+    this.autoFillBudget(field);
+    this.budgetLastEdited = field;
+  }
+
+  onSavingsAmountInput(
+    field: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
+    event: Event,
+  ): void {
+    const input = event.target as HTMLInputElement;
+    const cleaned = input.value.replace(/[^0-9]/g, '');
+    let value = parseInt(cleaned, 10) || 0;
+    const maxForField = this.getSavingsMaxForField(field);
+    if (value > maxForField) value = maxForField;
+    if (field === 'tabungan') this.savingsTabunganInput = value;
+    else if (field === 'danaDarurat') this.savingsDanaDaruratInput = value;
+    else this.savingsDanaInvestasiInput = value;
+    input.value = this.formatNumber(value);
+  }
+
+  async saveSettingPersenan(): Promise<void> {
+    const pendapatan = this.pendapatanInput;
+    const totalPengeluaranPct =
+      this.budgetMode === 3
+        ? this.budgetPengeluaran + this.budgetWants
+        : this.budgetPengeluaran;
+    const pengeluaranWajib = Math.round(
+      (pendapatan * totalPengeluaranPct) / 100,
+    );
+    const existingTabungan = this.financialData?.estimasiTabungan || 0;
+    const existingDanaDarurat = this.financialData?.danaDarurat || 0;
+    const existingDanaInvestasi = this.financialData?.danaInvestasi || 0;
+    const estimasiTabungan = existingTabungan + this.savingsTabunganInput;
+    const danaDarurat = existingDanaDarurat + this.savingsDanaDaruratInput;
+    const danaInvestasi =
+      this.currentLevel >= 4
+        ? existingDanaInvestasi + this.savingsDanaInvestasiInput
+        : existingDanaInvestasi;
+    const budgetAllocation: BudgetAllocation = {
+      mode: this.budgetMode,
+      pengeluaran: this.budgetPengeluaran,
+      wants: this.budgetWants,
+      savings: this.budgetSavings,
+    };
+    const savingsAllocation: SavingsAllocation = {
+      tabungan: this.savingsTabunganInput,
+      danaDarurat: this.savingsDanaDaruratInput,
+      danaInvestasi: this.savingsDanaInvestasiInput,
+    };
+    const updatedFinancialData: FinancialData = {
+      ...(this.financialData || {
+        pendapatan: 0,
+        pengeluaranWajib: 0,
+        tanggalPemasukan: 1,
+        hutangWajib: 0,
+        estimasiTabungan: 0,
+        danaDarurat: 0,
+      }),
+      pendapatan,
+      pengeluaranWajib,
+      estimasiTabungan,
+      danaDarurat,
+      danaInvestasi,
+      budgetAllocation,
+      savingsAllocation,
+    };
+    this.financialData = updatedFinancialData;
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    user.financialData = updatedFinancialData;
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    if (user.id) {
+      try {
+        await firstValueFrom(
+          this.http.patch(`${this.usersApiUrl}/${user.id}`, {
+            financialData: updatedFinancialData,
+          }),
+        );
+      } catch {
+        // silent
+      }
+    }
+    this.showSettingPersenan = false;
   }
 
   changeMonth(step: number): void {
@@ -364,13 +592,131 @@ export class Home {
     };
   }
 
-  private formatRupiah(amount: number): string {
+  private async loadMonthlyExpenseTotal(): Promise<void> {
+    if (!this.financialData) return;
+    const tanggalPemasukan = this.financialData.tanggalPemasukan || 1;
+    try {
+      const journal = await this.journalService.loadCurrentUserJournal();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      let periodStart: Date;
+      if (today.getDate() >= tanggalPemasukan) {
+        periodStart = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          tanggalPemasukan,
+        );
+      } else {
+        periodStart = new Date(
+          today.getFullYear(),
+          today.getMonth() - 1,
+          tanggalPemasukan,
+        );
+      }
+      periodStart.setHours(0, 0, 0, 0);
+      let total = 0;
+      for (const [dateKey, expenses] of Object.entries(
+        journal.expensesByDate,
+      )) {
+        const [y, m, d] = dateKey.split('-').map(Number);
+        const date = new Date(y, m - 1, d);
+        date.setHours(0, 0, 0, 0);
+        if (date >= periodStart && date <= today) {
+          total += expenses.reduce((sum, e) => sum + e.amount, 0);
+        }
+      }
+      this.monthlyExpenseTotal = total;
+    } catch {
+      // keep default 0
+    }
+  }
+
+  private setBudgetField(
+    field: 'pengeluaran' | 'wants' | 'savings',
+    value: number,
+  ): void {
+    if (field === 'pengeluaran') this.budgetPengeluaran = value;
+    else if (field === 'wants') this.budgetWants = value;
+    else this.budgetSavings = value;
+  }
+
+  private autoFillBudget(
+    editedField: 'pengeluaran' | 'wants' | 'savings',
+  ): void {
+    if (this.budgetMode === 2) {
+      const absorber =
+        editedField === 'pengeluaran' ? 'savings' : 'pengeluaran';
+      this.setBudgetField(
+        absorber,
+        Math.max(0, 100 - this.getBudgetFieldVal(editedField)),
+      );
+      return;
+    }
+    // 3-field mode: absorb remainder into the "other" field that wasn't just edited
+    // Priority: adjust the last field in order that isn't the edited one
+    const priority: ('pengeluaran' | 'wants' | 'savings')[] = [
+      'savings',
+      'wants',
+      'pengeluaran',
+    ];
+    // Pick absorber: prefer the previously-edited field if it exists and isn't current, else pick by priority
+    let absorber: 'pengeluaran' | 'wants' | 'savings';
+    if (this.budgetLastEdited && this.budgetLastEdited !== editedField) {
+      absorber = this.budgetLastEdited;
+    } else {
+      absorber = priority.find((f) => f !== editedField) || 'savings';
+    }
+    const thirdField = (['pengeluaran', 'wants', 'savings'] as const).find(
+      (f) => f !== editedField && f !== absorber,
+    )!;
+    const remainder =
+      100 -
+      this.getBudgetFieldVal(editedField) -
+      this.getBudgetFieldVal(thirdField);
+    if (remainder >= 0) {
+      this.setBudgetField(absorber, remainder);
+    } else {
+      // thirdField also too large, so zero the absorber and clamp thirdField
+      this.setBudgetField(absorber, 0);
+      this.setBudgetField(
+        thirdField,
+        Math.max(0, 100 - this.getBudgetFieldVal(editedField)),
+      );
+    }
+  }
+
+  private getBudgetFieldVal(
+    field: 'pengeluaran' | 'wants' | 'savings',
+  ): number {
+    if (field === 'pengeluaran') return this.budgetPengeluaran;
+    if (field === 'wants') return this.budgetWants;
+    return this.budgetSavings;
+  }
+
+  private getSavingsMaxForField(
+    field: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
+  ): number {
+    const total = this.savingsTotalAmount;
+    let othersSum = 0;
+    if (field !== 'tabungan') othersSum += this.savingsTabunganInput;
+    if (field !== 'danaDarurat') othersSum += this.savingsDanaDaruratInput;
+    if (field !== 'danaInvestasi' && this.currentLevel >= 4)
+      othersSum += this.savingsDanaInvestasiInput;
+    return Math.max(0, total - othersSum);
+  }
+
+  formatRupiah(amount: number): string {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+  }
+
+  formatNumber(value: number): string {
+    if (!value) return '';
+    return new Intl.NumberFormat('id-ID').format(value);
   }
 
   private toMonthInputValue(year: number, monthIndex: number): string {

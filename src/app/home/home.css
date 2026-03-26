@@ -886,3 +886,494 @@
     font-size: var(--font-size-2xs);
   }
 }
+
+/* ===== Expense Combined Display ===== */
+.expense-combined {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.expense-current {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-accent-red);
+}
+
+.expense-divider {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-gray);
+  margin: 0 2px;
+}
+
+.expense-budget {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-gray);
+}
+
+/* ===== Dana Investasi Card ===== */
+.savings-investasi {
+  border-left: 3px solid #1565c0;
+}
+
+.title-investasi h2 {
+  color: #1565c0 !important;
+}
+
+.img-investasi {
+  width: 24px;
+  height: 24px;
+  background-image: var(--asset-icon-savings);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  flex-shrink: 0;
+  filter: hue-rotate(200deg) saturate(1.5);
+}
+
+.savings-details-investasi {
+  border-color: #1565c0 !important;
+}
+
+.savings-details-investasi h2 {
+  color: #1565c0 !important;
+}
+
+.savings-details-investasi h5 {
+  color: #5b9bd5 !important;
+}
+
+/* ===== Setting Persenan Modal ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.setting-persenan-modal {
+  background: var(--color-white);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.25s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(3, 15, 15, 0.08);
+}
+
+.modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-title-row h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-black);
+  margin: 0;
+}
+
+.modal-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.modal-close-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: var(--color-input-bg);
+  border-radius: 50%;
+  font-size: 1.5rem;
+  color: var(--color-gray);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.modal-close-btn:hover {
+  background: rgba(3, 15, 15, 0.12);
+  color: var(--color-black);
+}
+
+.modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(3, 15, 15, 0.08);
+}
+
+/* ── Form Elements ── */
+.sp-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-black);
+  margin-bottom: 8px;
+}
+
+.sp-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.sp-currency-input {
+  display: flex;
+  align-items: center;
+  background: var(--color-input-bg);
+  border-radius: 10px;
+  border: 1px solid rgba(3, 15, 15, 0.1);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.sp-currency-input:focus-within {
+  border-color: var(--color-primary);
+}
+
+.sp-currency-prefix {
+  padding: 12px 14px;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-primary);
+  background: rgba(3, 98, 76, 0.06);
+  user-select: none;
+}
+
+.sp-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 12px 14px;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-black);
+  font-family: var(--font-family-base);
+}
+
+.sp-input::placeholder {
+  color: var(--color-gray);
+  font-weight: 400;
+}
+
+/* ── Mode Toggle ── */
+.sp-mode-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.sp-mode-toggle {
+  display: flex;
+  gap: 0;
+  background: var(--color-input-bg);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.sp-mode-toggle button {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-gray);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family-base);
+}
+
+.sp-mode-toggle button.active {
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: 0 2px 8px rgba(3, 98, 76, 0.25);
+}
+
+.sp-mode-toggle button:not(.active):hover {
+  color: var(--color-black);
+  background: rgba(3, 15, 15, 0.04);
+}
+
+/* ── Allocation Section ── */
+.sp-allocation-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  background: var(--color-input-bg);
+  border-radius: 12px;
+}
+
+.sp-savings-section {
+  background: rgba(3, 98, 76, 0.04);
+  border: 1px dashed rgba(3, 98, 76, 0.2);
+}
+
+.sp-section-title {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.sp-sub-info {
+  font-size: var(--font-size-xs);
+  color: var(--color-primary-light);
+  font-weight: 600;
+  margin: 0;
+}
+
+.sp-allocation-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sp-alloc-field {
+  flex: 1;
+  min-width: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sp-alloc-field label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-black);
+}
+
+.sp-percent-input {
+  display: flex;
+  align-items: center;
+  background: var(--color-white);
+  border-radius: 8px;
+  border: 1px solid rgba(3, 15, 15, 0.12);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.sp-percent-input:focus-within {
+  border-color: var(--color-primary);
+}
+
+.sp-input-percent {
+  width: 100%;
+  padding: 10px 8px;
+  font-size: var(--font-size-base);
+  text-align: center;
+}
+
+.sp-percent-suffix {
+  padding: 10px 10px 10px 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-primary);
+  user-select: none;
+}
+
+.sp-calc-amount {
+  font-size: var(--font-size-2xs);
+  color: var(--color-primary-light);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ── Total Bar ── */
+.sp-total-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sp-total-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-gray);
+}
+
+.sp-total-value {
+  color: var(--color-accent-red);
+  font-weight: 700;
+}
+
+.sp-total-value.sp-total-full {
+  color: var(--color-primary-light);
+}
+
+.sp-progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(3, 15, 15, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.sp-progress-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+  max-width: 100%;
+}
+
+/* ── Modal Buttons ── */
+.sp-btn-cancel {
+  padding: 10px 20px;
+  border: 1px solid rgba(3, 15, 15, 0.12);
+  border-radius: 10px;
+  background: transparent;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-gray);
+  cursor: pointer;
+  font-family: var(--font-family-base);
+  transition: all 0.2s;
+}
+
+.sp-btn-cancel:hover {
+  background: var(--color-input-bg);
+  color: var(--color-black);
+}
+
+.sp-btn-save {
+  padding: 10px 28px;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-white);
+  cursor: pointer;
+  font-family: var(--font-family-base);
+  transition: all 0.2s;
+}
+
+.sp-btn-save:hover {
+  background: var(--color-primary-dark);
+  box-shadow: 0 4px 16px rgba(3, 98, 76, 0.3);
+}
+
+.sp-btn-save:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── Savings Currency Input ── */
+.sp-currency-input-sm {
+  max-width: 180px;
+}
+
+.sp-existing-info {
+  display: block;
+  font-size: 11px;
+  color: var(--color-gray);
+  margin-top: 4px;
+}
+
+.sp-total-value.sp-total-over {
+  color: var(--color-accent-red);
+}
+
+.sp-progress-fill.sp-progress-over {
+  background: var(--color-accent-red);
+}
+
+.sp-remaining-text {
+  display: block;
+  font-size: 12px;
+  color: var(--color-gray);
+  margin-top: 4px;
+}
+
+.sp-remaining-text.sp-remaining-zero {
+  color: var(--color-primary-light);
+  font-weight: 600;
+}
+
+/* ── Responsive Modal ── */
+@media (max-width: 768px) {
+  .setting-persenan-modal {
+    max-height: 85vh;
+  }
+
+  .sp-allocation-grid {
+    flex-direction: column;
+  }
+
+  .sp-alloc-field {
+    min-width: 100%;
+  }
+
+  .modal-body {
+    padding: 16px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .setting-persenan-modal {
+    border-radius: 12px;
+  }
+
+  .modal-header {
+    padding: 16px 18px;
+  }
+
+  .modal-footer {
+    padding: 12px 18px;
+  }
+
+  .sp-mode-toggle button {
+    font-size: var(--font-size-xs);
+    padding: 8px 10px;
+  }
+}

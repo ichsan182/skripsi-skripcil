@@ -8,7 +8,8 @@ export type ExpenseCategory =
   | 'travel'
   | 'entertainment'
   | 'subscription'
-  | 'bills';
+  | 'bills'
+  | 'other';
 
 export interface ChatMessage {
   id: number;
@@ -284,7 +285,7 @@ export class JournalService {
       return 'bills';
     }
 
-    return 'makanan';
+    return 'other';
   }
 
   private getCurrentTimeLabel(): string {

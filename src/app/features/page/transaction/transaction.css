@@ -562,6 +562,16 @@
   );
 }
 
+.category-other {
+  color: var(--color-category-other);
+  border-color: var(--color-category-other);
+  background-color: color-mix(
+    in srgb,
+    var(--color-category-other) 20%,
+    transparent
+  );
+}
+
 @media (max-width: 1280px) {
   .top-containers,
   .bottom-containers {

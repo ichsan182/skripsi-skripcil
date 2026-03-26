@@ -367,6 +367,183 @@
           ]
         }
       }
+    },
+    {
+      "id": "3e26",
+      "name": "badut",
+      "email": "badut@gmail.com",
+      "phone": "1241241121212",
+      "password": "12211221212",
+      "onboardingCompleted": true,
+      "level": 3,
+      "journal": {
+        "nextChatMessageId": 17,
+        "chatByDate": {
+          "2026-03-26": [
+            {
+              "id": 1,
+              "sender": "user",
+              "text": "babi 10000",
+              "time": "20.45"
+            },
+            {
+              "id": 2,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"babi\" kategori makanan.",
+              "time": "20.45"
+            },
+            {
+              "id": 3,
+              "sender": "user",
+              "text": "bioskop 50000",
+              "time": "20.45"
+            },
+            {
+              "id": 4,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 50.000 untuk \"bioskop\" kategori entertainment.",
+              "time": "20.45"
+            },
+            {
+              "id": 5,
+              "sender": "user",
+              "text": "playzone 100000",
+              "time": "20.45"
+            },
+            {
+              "id": 6,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 100.000 untuk \"playzone\" kategori makanan.",
+              "time": "20.45"
+            },
+            {
+              "id": 7,
+              "sender": "user",
+              "text": "filem 10000",
+              "time": "20.46"
+            },
+            {
+              "id": 8,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"filem\" kategori makanan.",
+              "time": "20.46"
+            },
+            {
+              "id": 9,
+              "sender": "user",
+              "text": "maenan 10000",
+              "time": "20.46"
+            },
+            {
+              "id": 10,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"maenan\" kategori makanan.",
+              "time": "20.46"
+            },
+            {
+              "id": 11,
+              "sender": "user",
+              "text": "playdoh 295190",
+              "time": "20.47"
+            },
+            {
+              "id": 12,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 295.190 untuk \"playdoh\" kategori makanan.",
+              "time": "20.47"
+            },
+            {
+              "id": 13,
+              "sender": "user",
+              "text": "pergi 10000",
+              "time": "20.48"
+            },
+            {
+              "id": 14,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"pergi\" kategori makanan.",
+              "time": "20.48"
+            },
+            {
+              "id": 15,
+              "sender": "user",
+              "text": "yang bener 100000",
+              "time": "20.52"
+            },
+            {
+              "id": 16,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 100.000 untuk \"yang bener\" kategori other.",
+              "time": "20.52"
+            }
+          ]
+        },
+        "expensesByDate": {
+          "2026-03-26": [
+            {
+              "amount": 100000,
+              "description": "yang bener",
+              "category": "other"
+            },
+            {
+              "amount": 10000,
+              "description": "pergi",
+              "category": "makanan"
+            },
+            {
+              "amount": 295190,
+              "description": "playdoh",
+              "category": "makanan"
+            },
+            {
+              "amount": 10000,
+              "description": "maenan",
+              "category": "makanan"
+            },
+            {
+              "amount": 10000,
+              "description": "filem",
+              "category": "makanan"
+            },
+            {
+              "amount": 100000,
+              "description": "playzone",
+              "category": "makanan"
+            },
+            {
+              "amount": 50000,
+              "description": "bioskop",
+              "category": "entertainment"
+            },
+            {
+              "amount": 10000,
+              "description": "babi",
+              "category": "makanan"
+            }
+          ]
+        },
+        "incomesByDate": {}
+      },
+      "financialData": {
+        "pendapatan": 15000000,
+        "pengeluaranWajib": 3000000,
+        "tanggalPemasukan": 28,
+        "hutangWajib": 0,
+        "estimasiTabungan": 11770000,
+        "danaDarurat": 48530000,
+        "danaInvestasi": 0,
+        "budgetAllocation": {
+          "mode": 2,
+          "pengeluaran": 20,
+          "wants": 0,
+          "savings": 80
+        },
+        "savingsAllocation": {
+          "tabungan": 2300000,
+          "danaDarurat": 9700000,
+          "danaInvestasi": 0
+        }
+      }
     }
   ]
 }

@@ -48,7 +48,7 @@ const CATEGORY_META: Record<ExpenseCategory, CategoryMeta> = {
   entertainment: {
     label: 'Entertainment',
     className: 'category-entertainment',
-    colorVar: '--color-category-transport',
+    colorVar: '--color-category-entertainment',
   },
   subscription: {
     label: 'Subscription',
@@ -59,6 +59,11 @@ const CATEGORY_META: Record<ExpenseCategory, CategoryMeta> = {
     label: 'Bills',
     className: 'category-bills',
     colorVar: '--color-category-bills',
+  },
+  other: {
+    label: 'Other',
+    className: 'category-other',
+    colorVar: '--color-category-other',
   },
 };
 

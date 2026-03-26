@@ -59,8 +59,14 @@
                 {{ pengeluaranPercentage }}%
               </div>
             </div>
-            <div class="cards-value value-negative">
-              {{ pengeluaranFormatted }}
+            <div class="cards-value value-negative expense-combined">
+              <span class="expense-current"
+                >{{ monthlyExpenseTotalFormatted }}</span
+              >
+              <span class="expense-divider">/</span>
+              <span class="expense-budget"
+                >{{ pengeluaranWajibFormatted }}</span
+              >
             </div>
           </div>
           <p
@@ -93,7 +99,7 @@
         </div>
       </section>
       <section class="quick-actions-section">
-        <div class="card-add-or-edit">
+        <div class="card-add-or-edit" (click)="openSettingPersenan()">
           <img
             src="assets/symbol-setting_persenan.svg"
             alt="Description of image"
@@ -148,6 +154,22 @@
             <h5>Target: 3x pendapatan bulanan</h5>
           </div>
         </div>
+        @if (showDanaInvestasi) {
+        <div class="savings-container savings-investasi">
+          <div class="title-with-icon-savings title-investasi">
+            <div class="img img-investasi"></div>
+            <h2>Dana Investasi</h2>
+          </div>
+          <div class="subtitle-savings">
+            Mulai investasi untuk masa depanmu 🚀
+          </div>
+          <div class="savings-details savings-details-investasi">
+            <p>Dana investasi</p>
+            <h2>{{ danaInvestasiFormatted }}</h2>
+            <h5>Siap untuk berinvestasi!</h5>
+          </div>
+        </div>
+        }
       </section>
       <section class="insights-section">
         <div class="insight-card-streak">
@@ -334,4 +356,264 @@
       </section>
     </div>
   </section>
+
+  @if (showSettingPersenan) {
+  <div class="modal-overlay" (click)="closeSettingPersenan()">
+    <div
+      class="modal-content setting-persenan-modal"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <img
+            src="assets/symbol-setting_persenan.svg"
+            alt="Setting"
+            class="modal-icon"
+          />
+          <h2>Setting Persenan</h2>
+        </div>
+        <button
+          type="button"
+          class="modal-close-btn"
+          (click)="closeSettingPersenan()"
+          aria-label="Tutup"
+        >
+          &times;
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="sp-form-group">
+          <label class="sp-label">Pendapatan (Pemasukan)</label>
+          <div class="sp-currency-input">
+            <span class="sp-currency-prefix">Rp</span>
+            <input
+              type="text"
+              inputmode="numeric"
+              [value]="formatNumber(pendapatanInput)"
+              (input)="onPendapatanInput($event)"
+              placeholder="0"
+              class="sp-input"
+            />
+          </div>
+        </div>
+
+        <div class="sp-mode-section">
+          <label class="sp-label">Jumlah Porsi Alokasi</label>
+          <div class="sp-mode-toggle">
+            <button
+              type="button"
+              [class.active]="budgetMode === 2"
+              (click)="setBudgetMode(2)"
+            >
+              2 Porsi (80/20)
+            </button>
+            <button
+              type="button"
+              [class.active]="budgetMode === 3"
+              (click)="setBudgetMode(3)"
+            >
+              3 Porsi (50/30/20)
+            </button>
+          </div>
+        </div>
+
+        <div class="sp-allocation-section">
+          <h3 class="sp-section-title">Alokasi Anggaran</h3>
+          <div class="sp-allocation-grid">
+            <div class="sp-alloc-field">
+              <label
+                >{{ budgetMode === 3 ? 'Needs (Kebutuhan)' : 'Pengeluaran'
+                }}</label
+              >
+              <div class="sp-percent-input">
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  [value]="budgetPengeluaran"
+                  (input)="onBudgetPercentInput('pengeluaran', $event)"
+                  class="sp-input sp-input-percent"
+                />
+                <span class="sp-percent-suffix">%</span>
+              </div>
+              <span class="sp-calc-amount"
+                >{{ formatRupiah(pendapatanInput * budgetPengeluaran / 100)
+                }}</span
+              >
+            </div>
+
+            @if (budgetMode === 3) {
+            <div class="sp-alloc-field">
+              <label>Wants (Keinginan)</label>
+              <div class="sp-percent-input">
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  [value]="budgetWants"
+                  (input)="onBudgetPercentInput('wants', $event)"
+                  class="sp-input sp-input-percent"
+                />
+                <span class="sp-percent-suffix">%</span>
+              </div>
+              <span class="sp-calc-amount"
+                >{{ formatRupiah(pendapatanInput * budgetWants / 100) }}</span
+              >
+            </div>
+            }
+
+            <div class="sp-alloc-field">
+              <label>Tabungan / Sisa Saldo</label>
+              <div class="sp-percent-input">
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  [value]="budgetSavings"
+                  (input)="onBudgetPercentInput('savings', $event)"
+                  class="sp-input sp-input-percent"
+                />
+                <span class="sp-percent-suffix">%</span>
+              </div>
+              <span class="sp-calc-amount"
+                >{{ formatRupiah(pendapatanInput * budgetSavings / 100) }}</span
+              >
+            </div>
+          </div>
+
+          <div class="sp-total-bar">
+            <div class="sp-total-label">
+              <span>Total</span>
+              <span
+                class="sp-total-value"
+                [class.sp-total-full]="budgetPengeluaran + budgetWants + budgetSavings === 100"
+              >
+                {{ budgetPengeluaran + budgetWants + budgetSavings }}%
+              </span>
+            </div>
+            <div class="sp-progress-track">
+              <div
+                class="sp-progress-fill"
+                [style.width.%]="budgetPengeluaran + budgetWants + budgetSavings"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        @if (budgetSavings > 0) {
+        <div class="sp-allocation-section sp-savings-section">
+          <h3 class="sp-section-title">Alokasi Tabungan</h3>
+          <p class="sp-sub-info">
+            Sisa saldo untuk ditabung: {{ formatRupiah(savingsTotalAmount) }}
+          </p>
+
+          <div class="sp-allocation-grid">
+            <div class="sp-alloc-field">
+              <label>Tabungan Kamu</label>
+              <div class="sp-currency-input sp-currency-input-sm">
+                <span class="sp-currency-prefix">Rp</span>
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  [value]="formatNumber(savingsTabunganInput)"
+                  (input)="onSavingsAmountInput('tabungan', $event)"
+                  placeholder="0"
+                  class="sp-input"
+                />
+              </div>
+              <span class="sp-existing-info"
+                >Saat ini: {{ formatRupiah(financialData?.estimasiTabungan || 0)
+                }}</span
+              >
+            </div>
+
+            <div class="sp-alloc-field">
+              <label>Dana Darurat</label>
+              <div class="sp-currency-input sp-currency-input-sm">
+                <span class="sp-currency-prefix">Rp</span>
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  [value]="formatNumber(savingsDanaDaruratInput)"
+                  (input)="onSavingsAmountInput('danaDarurat', $event)"
+                  placeholder="0"
+                  class="sp-input"
+                />
+              </div>
+              <span class="sp-existing-info"
+                >Saat ini: {{ formatRupiah(financialData?.danaDarurat || 0)
+                }}</span
+              >
+            </div>
+
+            @if (currentLevel >= 4) {
+            <div class="sp-alloc-field">
+              <label>Dana Investasi</label>
+              <div class="sp-currency-input sp-currency-input-sm">
+                <span class="sp-currency-prefix">Rp</span>
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  [value]="formatNumber(savingsDanaInvestasiInput)"
+                  (input)="onSavingsAmountInput('danaInvestasi', $event)"
+                  placeholder="0"
+                  class="sp-input"
+                />
+              </div>
+              <span class="sp-existing-info"
+                >Saat ini: {{ formatRupiah(financialData?.danaInvestasi || 0)
+                }}</span
+              >
+            </div>
+            }
+          </div>
+
+          <div class="sp-total-bar">
+            <div class="sp-total-label">
+              <span>Terpakai</span>
+              <span
+                class="sp-total-value"
+                [class.sp-total-full]="isSavingsValid"
+                [class.sp-total-over]="!isSavingsValid"
+              >
+                {{ formatRupiah(savingsUsed) }} / {{
+                formatRupiah(savingsTotalAmount) }}
+              </span>
+            </div>
+            <div class="sp-progress-track">
+              <div
+                class="sp-progress-fill"
+                [class.sp-progress-over]="!isSavingsValid"
+                [style.width.%]="savingsTotalAmount > 0 ? Math.min(100, (savingsUsed / savingsTotalAmount) * 100) : 0"
+              ></div>
+            </div>
+            <span
+              class="sp-remaining-text"
+              [class.sp-remaining-zero]="savingsRemaining === 0"
+            >
+              Sisa: {{ formatRupiah(savingsRemaining) }}
+            </span>
+          </div>
+        </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="sp-btn-cancel"
+          (click)="closeSettingPersenan()"
+        >
+          Batal
+        </button>
+        <button
+          type="button"
+          class="sp-btn-save"
+          [disabled]="isSaveDisabled"
+          (click)="saveSettingPersenan()"
+        >
+          Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+  }
 </div>
