@@ -609,7 +609,7 @@
       "onboardingCompleted": true,
       "level": 4,
       "journal": {
-        "nextChatMessageId": 3,
+        "nextChatMessageId": 5,
         "chatByDate": {
           "2026-03-28": [
             {
@@ -623,11 +623,28 @@
               "sender": "assistant",
               "text": "Dicatat: Rp 10.000 untuk \"paten\" kategori other.",
               "time": "17.38"
+            },
+            {
+              "id": 3,
+              "sender": "user",
+              "text": "makan 1010020",
+              "time": "17.41"
+            },
+            {
+              "id": 4,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 1.010.020 untuk \"makan\" kategori makanan.",
+              "time": "17.41"
             }
           ]
         },
         "expensesByDate": {
           "2026-03-28": [
+            {
+              "amount": 1010020,
+              "description": "makan",
+              "category": "makanan"
+            },
             {
               "amount": 10000,
               "description": "paten",
