@@ -64,6 +64,7 @@
   --color-primary-dark: #023429;
   --color-primary-light: #0ca582;
   --color-primary-subtle: #9ac0b7;
+  --color-primary-red: #d92d20;
   --color-white: #fcfcfc;
   --color-gray: #aaabb2;
   --color-black: #030f0f;
@@ -90,9 +91,11 @@
   --btn-padding-x: clamp(16px, 2.5vw, 24px);
   --btn-min-height: 40px;
   --asset-icon-savings: url("/assets/savings.svg");
+  --asset-icon-dana-darurat: url("/assets/dana-darurat.svg");
   --asset-icon-streak: url("/assets/streak.svg");
   --asset-icon-level: url("/assets/level.svg");
   --asset-icon-pengeluaran: url("/assets/pengeluaran.svg");
+  --asset-icon-investasi: url("/assets/investing.svg");
   --asset-graphic-calculator-cuate: url("/assets/graphic/calculator-cuate.svg");
   --asset-graphic-investing-cuate: url("/assets/graphic/investing-cuate.svg");
 }

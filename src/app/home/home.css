@@ -174,7 +174,8 @@
   border-radius: 12px;
 }
 
-.title-with-icon-savings {
+.title-with-icon-savings,
+.title-with-icon-dana-darurat {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -192,8 +193,24 @@
   flex-shrink: 0;
 }
 
+.title-with-icon-dana-darurat .img-dana-darurat {
+  width: 24px;
+  height: 24px;
+  background-image: var(--asset-icon-dana-darurat);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  flex-shrink: 0;
+}
+
 .title-with-icon-savings h2 {
   color: var(--color-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.title-with-icon-dana-darurat h2 {
+  color: var(--color-primary-red);
   font-size: 1.25rem;
   font-weight: 600;
 }
@@ -915,23 +932,32 @@
 }
 
 /* ===== Dana Investasi Card ===== */
-.savings-investasi {
-  border-left: 3px solid #1565c0;
-}
 
 .title-investasi h2 {
   color: #1565c0 !important;
 }
 
-.img-investasi {
+.title-investasi .img-investasi {
   width: 24px;
   height: 24px;
-  background-image: var(--asset-icon-savings);
+  background-image: var(--asset-icon-investasi);
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
   flex-shrink: 0;
-  filter: hue-rotate(200deg) saturate(1.5);
+}
+
+/* ===== Dana Darurat Card ===== */
+.savings-details-darurat {
+  border-color: var(--color-primary-red) !important;
+}
+
+.savings-details-darurat h2 {
+  color: var(--color-primary-red) !important;
+}
+
+.savings-details-darurat h5 {
+  color: #f04438 !important;
 }
 
 .savings-details-investasi {

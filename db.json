@@ -599,6 +599,64 @@
           "danaInvestasi": 0
         }
       }
+    },
+    {
+      "id": "d622",
+      "name": "jennibotak",
+      "email": "jennibotak@gmail.com",
+      "phone": "1241241121212",
+      "password": "123456",
+      "onboardingCompleted": true,
+      "level": 4,
+      "journal": {
+        "nextChatMessageId": 3,
+        "chatByDate": {
+          "2026-03-28": [
+            {
+              "id": 1,
+              "sender": "user",
+              "text": "paten 10000",
+              "time": "17.38"
+            },
+            {
+              "id": 2,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"paten\" kategori other.",
+              "time": "17.38"
+            }
+          ]
+        },
+        "expensesByDate": {
+          "2026-03-28": [
+            {
+              "amount": 10000,
+              "description": "paten",
+              "category": "other"
+            }
+          ]
+        },
+        "incomesByDate": {}
+      },
+      "financialData": {
+        "pendapatan": 5000000,
+        "pengeluaranWajib": 4000000,
+        "tanggalPemasukan": 25,
+        "hutangWajib": 0,
+        "estimasiTabungan": 35000000,
+        "danaDarurat": 45000000,
+        "danaInvestasi": 3000000,
+        "budgetAllocation": {
+          "mode": 2,
+          "pengeluaran": 80,
+          "wants": 0,
+          "savings": 20
+        },
+        "savingsAllocation": {
+          "tabungan": 0,
+          "danaDarurat": 0,
+          "danaInvestasi": 3000000
+        }
+      }
     }
   ]
 }

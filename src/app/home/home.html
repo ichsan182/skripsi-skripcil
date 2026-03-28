@@ -141,14 +141,14 @@
           </div>
         </div>
         <div class="savings-container">
-          <div class="title-with-icon-savings">
-            <div class="img"></div>
+          <div class="title-with-icon-dana-darurat">
+            <div class="img-dana-darurat"></div>
             <h2>Dana Darurat</h2>
           </div>
           <div class="subtitle-savings">
             Dana darurat supaya kamu ga pusing 🙏
           </div>
-          <div class="savings-details">
+          <div class="savings-details savings-details-darurat">
             <p>Dana darurat</p>
             <h2>{{ danaDaruratFormatted }}</h2>
             <h5>Target: 3x pendapatan bulanan</h5>
@@ -157,7 +157,7 @@
         @if (showDanaInvestasi) {
         <div class="savings-container savings-investasi">
           <div class="title-with-icon-savings title-investasi">
-            <div class="img img-investasi"></div>
+            <div class="img-investasi"></div>
             <h2>Dana Investasi</h2>
           </div>
           <div class="subtitle-savings">
@@ -506,7 +506,8 @@
 
           @if (isSisaSaldoEmpty && savingsUsed === 0) {
           <div class="sp-warning-box">
-            ⚠️ Sisa saldo kamu sudah habis. Tidak bisa mengalokasikan tabungan lagi.
+            ⚠️ Sisa saldo kamu sudah habis. Tidak bisa mengalokasikan tabungan
+            lagi.
           </div>
           }
 
