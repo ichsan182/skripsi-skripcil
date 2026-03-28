@@ -404,8 +404,10 @@ export class Home {
     };
     const savingsAllocation: SavingsAllocation = {
       tabungan: existingSavingsAlloc.tabungan + this.savingsTabunganInput,
-      danaDarurat: existingSavingsAlloc.danaDarurat + this.savingsDanaDaruratInput,
-      danaInvestasi: existingSavingsAlloc.danaInvestasi + this.savingsDanaInvestasiInput,
+      danaDarurat:
+        existingSavingsAlloc.danaDarurat + this.savingsDanaDaruratInput,
+      danaInvestasi:
+        existingSavingsAlloc.danaInvestasi + this.savingsDanaInvestasiInput,
     };
     const updatedFinancialData: FinancialData = {
       ...(this.financialData || {
@@ -605,26 +607,10 @@ export class Home {
 
   private async loadMonthlyExpenseTotal(): Promise<void> {
     if (!this.financialData) return;
-    const tanggalPemasukan = this.financialData.tanggalPemasukan || 1;
     try {
       const journal = await this.journalService.loadCurrentUserJournal();
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      let periodStart: Date;
-      if (today.getDate() >= tanggalPemasukan) {
-        periodStart = new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          tanggalPemasukan,
-        );
-      } else {
-        periodStart = new Date(
-          today.getFullYear(),
-          today.getMonth() - 1,
-          tanggalPemasukan,
-        );
-      }
-      periodStart.setHours(0, 0, 0, 0);
       let total = 0;
       for (const [dateKey, expenses] of Object.entries(
         journal.expensesByDate,
@@ -632,7 +618,10 @@ export class Home {
         const [y, m, d] = dateKey.split('-').map(Number);
         const date = new Date(y, m - 1, d);
         date.setHours(0, 0, 0, 0);
-        if (date >= periodStart && date <= today) {
+        const isCurrentMonth =
+          date.getFullYear() === today.getFullYear() &&
+          date.getMonth() === today.getMonth();
+        if (isCurrentMonth && date <= today) {
           total += expenses.reduce((sum, e) => sum + e.amount, 0);
         }
       }

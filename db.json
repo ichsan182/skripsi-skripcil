@@ -377,7 +377,7 @@
       "onboardingCompleted": true,
       "level": 3,
       "journal": {
-        "nextChatMessageId": 17,
+        "nextChatMessageId": 23,
         "chatByDate": {
           "2026-03-26": [
             {
@@ -476,6 +476,44 @@
               "text": "Dicatat: Rp 100.000 untuk \"yang bener\" kategori other.",
               "time": "20.52"
             }
+          ],
+          "2026-03-28": [
+            {
+              "id": 17,
+              "sender": "user",
+              "text": "babi 10000",
+              "time": "15.40"
+            },
+            {
+              "id": 18,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"babi\" kategori other.",
+              "time": "15.40"
+            },
+            {
+              "id": 19,
+              "sender": "user",
+              "text": "bipang 10000",
+              "time": "15.40"
+            },
+            {
+              "id": 20,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"bipang\" kategori other.",
+              "time": "15.40"
+            },
+            {
+              "id": 21,
+              "sender": "user",
+              "text": "124124 youtube",
+              "time": "15.45"
+            },
+            {
+              "id": 22,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 124.124 untuk \"youtube\" kategori subscription.",
+              "time": "15.45"
+            }
           ]
         },
         "expensesByDate": {
@@ -519,6 +557,23 @@
               "amount": 10000,
               "description": "babi",
               "category": "makanan"
+            }
+          ],
+          "2026-03-28": [
+            {
+              "amount": 124124,
+              "description": "youtube",
+              "category": "subscription"
+            },
+            {
+              "amount": 10000,
+              "description": "bipang",
+              "category": "other"
+            },
+            {
+              "amount": 10000,
+              "description": "babi",
+              "category": "other"
             }
           ]
         },
