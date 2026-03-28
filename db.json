@@ -609,7 +609,7 @@
       "onboardingCompleted": true,
       "level": 4,
       "journal": {
-        "nextChatMessageId": 5,
+        "nextChatMessageId": 19,
         "chatByDate": {
           "2026-03-28": [
             {
@@ -635,11 +635,130 @@
               "sender": "assistant",
               "text": "Dicatat: Rp 1.010.020 untuk \"makan\" kategori makanan.",
               "time": "17.41"
+            },
+            {
+              "id": 5,
+              "sender": "user",
+              "text": "masa sih 10140",
+              "time": "19.14"
+            },
+            {
+              "id": 6,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.140 untuk \"masa sih\" kategori other.",
+              "time": "19.14"
+            },
+            {
+              "id": 7,
+              "sender": "user",
+              "text": "makan 1000",
+              "time": "19.14"
+            },
+            {
+              "id": 8,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 1.000 untuk \"makan\" kategori makanan.",
+              "time": "19.14"
+            },
+            {
+              "id": 9,
+              "sender": "user",
+              "text": "btak 129418",
+              "time": "19.17"
+            },
+            {
+              "id": 10,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 129.418 untuk \"btak\" kategori other.",
+              "time": "19.17"
+            },
+            {
+              "id": 11,
+              "sender": "user",
+              "text": "makan 129924",
+              "time": "19.17"
+            },
+            {
+              "id": 12,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 129.924 untuk \"makan\" kategori makanan.",
+              "time": "19.17"
+            },
+            {
+              "id": 13,
+              "sender": "user",
+              "text": "netflix 2847",
+              "time": "19.17"
+            },
+            {
+              "id": 14,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 2.847 untuk \"netflix\" kategori subscription.",
+              "time": "19.17"
+            },
+            {
+              "id": 15,
+              "sender": "user",
+              "text": "youtube 8788",
+              "time": "19.17"
+            },
+            {
+              "id": 16,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 8.788 untuk \"youtube\" kategori subscription.",
+              "time": "19.17"
+            },
+            {
+              "id": 17,
+              "sender": "user",
+              "text": "bpjs 50000",
+              "time": "19.20"
+            },
+            {
+              "id": 18,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 50.000 untuk \"bpjs\" kategori bills.",
+              "time": "19.20"
             }
           ]
         },
         "expensesByDate": {
           "2026-03-28": [
+            {
+              "amount": 50000,
+              "description": "bpjs",
+              "category": "bills"
+            },
+            {
+              "amount": 8788,
+              "description": "youtube",
+              "category": "subscription"
+            },
+            {
+              "amount": 2847,
+              "description": "netflix",
+              "category": "subscription"
+            },
+            {
+              "amount": 129924,
+              "description": "makan",
+              "category": "makanan"
+            },
+            {
+              "amount": 129418,
+              "description": "btak",
+              "category": "other"
+            },
+            {
+              "amount": 1000,
+              "description": "makan",
+              "category": "makanan"
+            },
+            {
+              "amount": 10140,
+              "description": "masa sih",
+              "category": "other"
+            },
             {
               "amount": 1010020,
               "description": "makan",

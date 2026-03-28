@@ -1,15 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import {
+  ExpenseCategory,
+  inferExpenseCategory,
+} from '../../shared/utils/expense-category';
 
 export type ChatSender = 'user' | 'assistant';
-export type ExpenseCategory =
-  | 'makanan'
-  | 'travel'
-  | 'entertainment'
-  | 'subscription'
-  | 'bills'
-  | 'other';
 
 export interface ChatMessage {
   id: number;
@@ -257,35 +254,7 @@ export class JournalService {
   }
 
   private inferCategory(description: string): ExpenseCategory {
-    if (/(makan|kuliner|sarapan|siang|malam|snack|kopi)/i.test(description)) {
-      return 'makanan';
-    }
-
-    if (
-      /(travel|transport|bensin|ojek|gojek|grab|tol|parkir)/i.test(description)
-    ) {
-      return 'travel';
-    }
-
-    if (
-      /(entertainment|hiburan|nonton|bioskop|game|rekreasi)/i.test(description)
-    ) {
-      return 'entertainment';
-    }
-
-    if (
-      /(subscription|langganan|netflix|spotify|youtube|chatgpt)/i.test(
-        description,
-      )
-    ) {
-      return 'subscription';
-    }
-
-    if (/(bill|tagihan|listrik|air|internet|pln|wifi|gas)/i.test(description)) {
-      return 'bills';
-    }
-
-    return 'other';
+    return inferExpenseCategory(description);
   }
 
   private getCurrentTimeLabel(): string {

@@ -5,8 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Sidebar } from '../shared/components/sidebar/sidebar';
 import { JournalService } from '../core/services/journal.service';
-
-type ExpenseCategory = 'makanan' | 'travel' | 'entertainment' | 'subscription';
+import { ExpenseCategory } from '../shared/utils/expense-category';
 
 interface BudgetAllocation {
   mode: 2 | 3;
@@ -544,7 +543,7 @@ export class Home {
       descriptions: string[];
     }> = [
       {
-        label: 'makanan',
+        label: ExpenseCategory.Makanan,
         className: 'category-makanan',
         descriptions: [
           'Makan siang kantor',
@@ -554,7 +553,7 @@ export class Home {
         ],
       },
       {
-        label: 'travel',
+        label: ExpenseCategory.Travel,
         className: 'category-travel',
         descriptions: [
           'Tiket perjalanan',
@@ -564,7 +563,7 @@ export class Home {
         ],
       },
       {
-        label: 'entertainment',
+        label: ExpenseCategory.Entertainment,
         className: 'category-entertainment',
         descriptions: [
           'Nonton bioskop',
@@ -574,7 +573,7 @@ export class Home {
         ],
       },
       {
-        label: 'subscription',
+        label: ExpenseCategory.Subscription,
         className: 'category-subscription',
         descriptions: [
           'Langganan aplikasi',

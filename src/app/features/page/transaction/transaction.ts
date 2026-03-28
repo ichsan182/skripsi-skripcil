@@ -3,13 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Sidebar } from '../../../shared/components/sidebar/sidebar';
 import {
-  ExpenseCategory,
   ExpenseEntry,
   IncomeEntry,
   ChatMessage,
   JournalService,
   UserJournal,
 } from '../../../core/services/journal.service';
+import { ExpenseCategory } from '../../../shared/utils/expense-category';
 
 interface CalendarCell {
   date: Date;
@@ -35,32 +35,32 @@ interface CategoryBreakdown {
 }
 
 const CATEGORY_META: Record<ExpenseCategory, CategoryMeta> = {
-  makanan: {
+  [ExpenseCategory.Makanan]: {
     label: 'Makanan',
     className: 'category-makanan',
     colorVar: '--color-primary-light',
   },
-  travel: {
+  [ExpenseCategory.Travel]: {
     label: 'Travel',
     className: 'category-travel',
     colorVar: '--color-category-travel',
   },
-  entertainment: {
+  [ExpenseCategory.Entertainment]: {
     label: 'Entertainment',
     className: 'category-entertainment',
     colorVar: '--color-category-entertainment',
   },
-  subscription: {
+  [ExpenseCategory.Subscription]: {
     label: 'Subscription',
     className: 'category-subscription',
     colorVar: '--color-category-subscription',
   },
-  bills: {
+  [ExpenseCategory.Bills]: {
     label: 'Bills',
     className: 'category-bills',
     colorVar: '--color-category-bills',
   },
-  other: {
+  [ExpenseCategory.Other]: {
     label: 'Other',
     className: 'category-other',
     colorVar: '--color-category-other',
@@ -79,12 +79,10 @@ export class Transaction {
 
   readonly weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   readonly categoryMeta = CATEGORY_META;
-  readonly categoryOptions = Object.entries(CATEGORY_META).map(
-    ([key, value]) => ({
-      key: key as ExpenseCategory,
-      label: value.label,
-    }),
-  );
+  readonly categoryOptions = Object.values(ExpenseCategory).map((key) => ({
+    key,
+    label: CATEGORY_META[key].label,
+  }));
 
   readonly today = this.normalizeDate(new Date());
 
@@ -106,7 +104,7 @@ export class Transaction {
   } = {
     description: '',
     amount: null,
-    category: 'makanan',
+    category: ExpenseCategory.Makanan,
   };
 
   incomeDraft: {
@@ -180,7 +178,7 @@ export class Transaction {
       return [];
     }
 
-    return (Object.keys(CATEGORY_META) as ExpenseCategory[])
+    return Object.values(ExpenseCategory)
       .map((key) => {
         const amount = this.selectedExpenses
           .filter((item) => item.category === key)
