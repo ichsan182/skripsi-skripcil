@@ -8,6 +8,28 @@
       "password": "12412441242",
       "onboardingCompleted": false,
       "level": 1,
+      "investmentWatchlist": {
+        "items": [
+          {
+            "symbol": "AAPL",
+            "name": "Apple Inc",
+            "type": "Equity",
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-03-30T08:00:00.000Z"
+          },
+          {
+            "symbol": "MSFT",
+            "name": "Microsoft Corporation",
+            "type": "Equity",
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-03-30T08:05:00.000Z"
+          }
+        ],
+        "selectedSymbol": "AAPL",
+        "updatedAt": "2026-03-30T08:05:00.000Z"
+      },
       "journal": {
         "nextChatMessageId": 1,
         "chatByDate": {},
@@ -21,13 +43,43 @@
       "email": "torik@gmail.com",
       "phone": "124124124",
       "password": "123456",
-      "onboardingCompleted": false,
-      "level": 1,
+      "onboardingCompleted": true,
+      "level": 4,
+      "investmentWatchlist": {
+        "items": [
+          {
+            "symbol": "TSLA",
+            "name": "Tesla Inc",
+            "type": "Equity",
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-03-30T08:10:00.000Z"
+          },
+          {
+            "symbol": "NVDA",
+            "name": "NVIDIA Corporation",
+            "type": "Equity",
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-03-30T08:12:00.000Z"
+          }
+        ],
+        "selectedSymbol": "TSLA",
+        "updatedAt": "2026-03-30T15:58:07.131Z"
+      },
       "journal": {
         "nextChatMessageId": 1,
         "chatByDate": {},
         "expensesByDate": {},
         "incomesByDate": {}
+      },
+      "financialData": {
+        "pendapatan": 25151335,
+        "pengeluaranWajib": 332,
+        "tanggalPemasukan": 12,
+        "hutangWajib": 0,
+        "estimasiTabungan": 2214412124412,
+        "danaDarurat": 12441224124124
       }
     },
     {
@@ -792,6 +844,28 @@
           "danaDarurat": 0,
           "danaInvestasi": 3000000
         }
+      },
+      "investmentWatchlist": {
+        "items": [
+          {
+            "symbol": "BBCA",
+            "name": "Bank Central Asia Tbk",
+            "type": "Common Stock",
+            "region": "Indonesia",
+            "currency": "IDR",
+            "createdAt": "2026-03-30T15:59:24.896Z"
+          },
+          {
+            "symbol": "AAPL",
+            "name": "Apple Inc.",
+            "type": "Common Stock",
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-03-30T15:58:34.019Z"
+          }
+        ],
+        "selectedSymbol": "AAPL",
+        "updatedAt": "2026-03-30T16:02:46.653Z"
       }
     }
   ]

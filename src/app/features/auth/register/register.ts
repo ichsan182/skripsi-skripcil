@@ -12,6 +12,11 @@ interface RegisterPayload {
   password: string;
   onboardingCompleted: boolean;
   level: number;
+  investmentWatchlist: {
+    items: never[];
+    selectedSymbol: null;
+    updatedAt: string;
+  };
   journal: {
     nextChatMessageId: number;
     chatByDate: Record<string, never[]>;
@@ -63,6 +68,11 @@ export class Register {
         password: formValues.password ?? '',
         onboardingCompleted: false,
         level: 1,
+        investmentWatchlist: {
+          items: [],
+          selectedSymbol: null,
+          updatedAt: new Date().toISOString(),
+        },
         journal: {
           nextChatMessageId: 1,
           chatByDate: {},

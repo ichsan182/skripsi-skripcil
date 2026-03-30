@@ -1,7 +1,294 @@
 <div class="page-container">
   <app-sidebar></app-sidebar>
-  <section class="page-content">
-    <h1>Investment</h1>
-    <p>Investment page content goes here</p>
+
+  <section class="page-content investment-page">
+    <header class="investment-header">
+      <p class="header-kicker">Twelve Data Watchlist</p>
+      <h1>Watchlist Saham Pribadi dengan Insight Real-World</h1>
+      <p class="header-caption">
+        Tambahkan symbol saham, lihat pergerakan harga, ringkasan perusahaan,
+        market news, indikator teknikal, dan indikator ekonomi dalam satu
+        dashboard.
+      </p>
+    </header>
+
+    <section class="investment-layout">
+      <aside class="watchlist-card">
+        <div class="card-head">
+          <h2>Watchlist Saya</h2>
+          <span>{{ watchlist.length }} symbol</span>
+        </div>
+
+        <form
+          class="search-form"
+          (submit)="$event.preventDefault(); onSearchSubmit()"
+        >
+          <label for="symbol-search">Cari Symbol</label>
+          <div class="search-input-wrap">
+            <input
+              id="symbol-search"
+              type="text"
+              [(ngModel)]="searchQuery"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Contoh: AAPL, TSLA, microsoft"
+            />
+            <button
+              type="button"
+              (click)="onSearchSubmit()"
+              [disabled]="isSearching"
+            >
+              {{ isSearching ? 'Mencari...' : 'Cari' }}
+            </button>
+          </div>
+          <p class="helper-text">
+            Gunakan endpoint SYMBOL_SEARCH untuk menemukan kode saham yang
+            valid.
+          </p>
+        </form>
+
+        <p class="inline-error" *ngIf="searchError">{{ searchError }}</p>
+
+        <div class="search-results" *ngIf="searchResults.length">
+          <h3>Hasil Pencarian</h3>
+          <button
+            type="button"
+            class="result-row"
+            *ngFor="let result of searchResults"
+            (click)="addToWatchlist(result)"
+          >
+            <span class="result-main">
+              <strong>{{ result.symbol }}</strong>
+              <small>{{ result.name }}</small>
+            </span>
+            <span class="result-meta"
+              >{{ result.region }} | {{ result.currency }}</span
+            >
+          </button>
+        </div>
+
+        <div
+          class="watchlist-list"
+          *ngIf="watchlist.length; else emptyWatchlist"
+        >
+          <button
+            type="button"
+            *ngFor="let item of watchlist; trackBy: trackBySymbol"
+            class="watchlist-item"
+            [class.watchlist-item--active]="isActiveSymbol(item.symbol)"
+            (click)="selectSymbol(item.symbol)"
+          >
+            <span class="item-main">
+              <strong>{{ item.symbol }}</strong>
+              <small>{{ item.name }}</small>
+            </span>
+            <span class="item-actions">
+              <em>{{ item.region }}</em>
+              <span
+                class="remove-btn"
+                role="button"
+                tabindex="0"
+                (click)="$event.stopPropagation(); removeFromWatchlist(item.symbol)"
+              >
+                Hapus
+              </span>
+            </span>
+          </button>
+        </div>
+
+        <ng-template #emptyWatchlist>
+          <div class="empty-state">
+            <h3>Watchlist masih kosong</h3>
+            <p>
+              Mulai dari cari symbol saham, lalu klik hasil pencarian untuk
+              menyimpannya ke watchlist Anda.
+            </p>
+          </div>
+        </ng-template>
+      </aside>
+
+      <article class="dashboard-card">
+        <div class="global-error" *ngIf="globalError">{{ globalError }}</div>
+
+        <div class="symbol-empty" *ngIf="!selectedSymbol">
+          <h2>Pilih Symbol dari Watchlist</h2>
+          <p>
+            Setelah symbol dipilih, Anda bisa melihat harga, chart, news,
+            technical indicators, dan economic indicators.
+          </p>
+        </div>
+
+        <div *ngIf="selectedSymbol" class="symbol-dashboard">
+          <section class="summary-card">
+            <div>
+              <p class="summary-kicker">Selected Symbol</p>
+              <h2>{{ selectedCompanyName }} ({{ selectedSymbol }})</h2>
+              <p class="summary-sub">
+                Last update: {{ quoteSummary ?
+                formatDate(quoteSummary.latestDate) : '-' }}
+              </p>
+            </div>
+
+            <div class="summary-price" *ngIf="quoteSummary as quote">
+              <strong>{{ formatCurrency(quote.price) }}</strong>
+              <span
+                [class.positive]="quote.change >= 0"
+                [class.negative]="quote.change < 0"
+              >
+                {{ formatCurrency(quote.change) }} ({{
+                formatPercent(quote.changePercent) }})
+              </span>
+            </div>
+
+            <div class="summary-loading" *ngIf="isLoadingSymbol">
+              Memuat data symbol...
+            </div>
+          </section>
+
+          <section class="chart-card" *ngIf="chartPath">
+            <div class="chart-head">
+              <h3>Price Chart (Daily, 60 titik terakhir)</h3>
+              <p>{{ chartStartLabel }} - {{ chartEndLabel }}</p>
+            </div>
+
+            <div class="chart-wrap">
+              <svg
+                viewBox="0 0 560 230"
+                preserveAspectRatio="none"
+                aria-label="grafik harga saham"
+              >
+                <line x1="16" y1="20" x2="544" y2="20" class="chart-grid" />
+                <line x1="16" y1="115" x2="544" y2="115" class="chart-grid" />
+                <line x1="16" y1="210" x2="544" y2="210" class="chart-grid" />
+                <path [attr.d]="chartPath" class="chart-line"></path>
+              </svg>
+            </div>
+
+            <div class="chart-scale">
+              <span>Low: {{ formatCurrency(chartMin) }}</span>
+              <span>High: {{ formatCurrency(chartMax) }}</span>
+            </div>
+          </section>
+
+          <section class="insight-grid">
+            <article class="insight-card">
+              <h3>Company Overview</h3>
+              <div
+                *ngIf="overview as info; else noOverview"
+                class="overview-list"
+              >
+                <div>
+                  <span>Sector</span><strong>{{ info.sector || '-' }}</strong>
+                </div>
+                <div>
+                  <span>Industry</span
+                  ><strong>{{ info.industry || '-' }}</strong>
+                </div>
+                <div>
+                  <span>Market Cap</span
+                  ><strong
+                    >{{ formatCompactNumber(info.marketCapitalization)
+                    }}</strong
+                  >
+                </div>
+                <div>
+                  <span>P/E Ratio</span
+                  ><strong>{{ info.peRatio || 0 | number:'1.2-2' }}</strong>
+                </div>
+                <div>
+                  <span>EPS</span
+                  ><strong>{{ info.eps || 0 | number:'1.2-2' }}</strong>
+                </div>
+                <div>
+                  <span>Dividend Yield</span
+                  ><strong
+                    >{{ info.dividendYield || 0 | number:'1.2-2' }}%</strong
+                  >
+                </div>
+              </div>
+              <ng-template #noOverview>
+                <p class="muted">Ringkasan perusahaan belum tersedia.</p>
+              </ng-template>
+            </article>
+
+            <article class="insight-card">
+              <h3>Technical Indicators</h3>
+              <div
+                *ngIf="technicalCards.length; else noTechnical"
+                class="technical-list"
+              >
+                <div *ngFor="let card of technicalCards" class="technical-row">
+                  <span>{{ card.label }}</span>
+                  <strong>{{ card.value | number:'1.2-2' }}</strong>
+                  <small>{{ formatDate(card.date) }}</small>
+                </div>
+              </div>
+              <ng-template #noTechnical>
+                <p class="muted">
+                  Belum ada indikator teknikal yang berhasil dimuat.
+                </p>
+              </ng-template>
+            </article>
+          </section>
+
+          <section class="insight-card news-card">
+            <h3>Market News</h3>
+            <div *ngIf="news.length; else noNews" class="news-list">
+              <a
+                *ngFor="let item of news; trackBy: trackByNewsLink"
+                [href]="item.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="news-item"
+              >
+                <strong>{{ item.title }}</strong>
+                <span>{{ item.source }} | {{ item.timePublished }}</span>
+                <p>{{ item.summary }}</p>
+              </a>
+            </div>
+            <ng-template #noNews>
+              <p class="muted">Belum ada news untuk symbol ini.</p>
+            </ng-template>
+          </section>
+        </div>
+      </article>
+    </section>
+
+    <section class="economic-card">
+      <div class="economic-head">
+        <h2>Economic Indicators</h2>
+        <span *ngIf="isLoadingEconomic">Memuat indikator ekonomi...</span>
+      </div>
+
+      <p class="economic-caption">
+        Data makro ini bisa dipakai sebagai konteks market saat mengevaluasi isi
+        watchlist, terutama untuk horizon investasi menengah-panjang.
+      </p>
+
+      <div class="economic-grid" *ngIf="economicCards.length; else noEconomic">
+        <article class="economic-item" *ngFor="let item of economicCards">
+          <h3>{{ item.label }}</h3>
+          <strong>{{ item.latest | number:'1.2-2' }}</strong>
+          <p>Prev: {{ item.previous | number:'1.2-2' }}</p>
+          <p
+            [class.positive]="item.delta >= 0"
+            [class.negative]="item.delta < 0"
+          >
+            Delta: {{ item.delta | number:'1.2-2' }}
+          </p>
+          <small>Last update: {{ formatDate(item.latestDate) }}</small>
+        </article>
+      </div>
+
+      <ng-template #noEconomic>
+        <p class="muted">Indikator ekonomi belum tersedia saat ini.</p>
+      </ng-template>
+    </section>
+
+    <p class="api-note">
+      Catatan integrasi API: dashboard ini memakai Twelve Data (symbol search,
+      chart, profile, RSI/SMA), FRED (economic indicators), dan NewsAPI
+      (headline berita) dengan endpoint free yang paling stabil untuk penggunaan
+      aplikasi ini.
+    </p>
   </section>
 </div>

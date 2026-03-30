@@ -7,5 +7,29 @@
       "X-RapidAPI-Key": "9b65cf3092msh2c17ac4169a9d86p19041ejsn6c9847a743a0",
       "X-RapidAPI-Host": "yahoo-finance15.p.rapidapi.com"
     }
+  },
+  "/alphavantage": {
+    "target": "https://www.alphavantage.co",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": { "^/alphavantage": "" }
+  },
+  "/twelvedata": {
+    "target": "https://api.twelvedata.com",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": { "^/twelvedata": "" }
+  },
+  "/fred": {
+    "target": "https://api.stlouisfed.org",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": { "^/fred": "" }
+  },
+  "/newsapi": {
+    "target": "https://newsapi.org",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": { "^/newsapi": "" }
   }
 }
