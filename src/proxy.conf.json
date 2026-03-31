@@ -8,12 +8,6 @@
       "X-RapidAPI-Host": "yahoo-finance15.p.rapidapi.com"
     }
   },
-  "/alphavantage": {
-    "target": "https://www.alphavantage.co",
-    "secure": true,
-    "changeOrigin": true,
-    "pathRewrite": { "^/alphavantage": "" }
-  },
   "/twelvedata": {
     "target": "https://api.twelvedata.com",
     "secure": true,

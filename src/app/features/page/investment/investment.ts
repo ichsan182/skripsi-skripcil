@@ -9,8 +9,8 @@ import {
   AlphaOverview,
   AlphaSearchMatch,
   AlphaTechnicalValue,
-  AlphaVantageService,
-} from '../../../core/services/alphavantage.service';
+  MarketDataService,
+} from '../../../core/services/market-data.service';
 import {
   InvestmentWatchlistService,
   WatchlistItem,
@@ -83,7 +83,7 @@ export class Investment implements OnInit {
   ];
 
   constructor(
-    private readonly alphaVantageService: AlphaVantageService,
+    private readonly marketDataService: MarketDataService,
     private readonly watchlistService: InvestmentWatchlistService,
   ) {}
 
@@ -105,7 +105,7 @@ export class Investment implements OnInit {
     this.isSearching = true;
     try {
       const result = await firstValueFrom(
-        this.alphaVantageService.searchSymbols(keyword),
+        this.marketDataService.searchSymbols(keyword),
       );
       this.searchResults = result.slice(0, 8);
       if (!this.searchResults.length) {
@@ -236,14 +236,14 @@ export class Investment implements OnInit {
     try {
       const [dailyResult, overviewResult, newsResult, rsiResult, smaResult] =
         await Promise.allSettled([
-          firstValueFrom(this.alphaVantageService.getDailySeries(symbol)),
-          firstValueFrom(this.alphaVantageService.getOverview(symbol)),
-          firstValueFrom(this.alphaVantageService.getNews(symbol, 6)),
+          firstValueFrom(this.marketDataService.getDailySeries(symbol)),
+          firstValueFrom(this.marketDataService.getOverview(symbol)),
+          firstValueFrom(this.marketDataService.getNews(symbol, 6)),
           firstValueFrom(
-            this.alphaVantageService.getTechnicalLatest(symbol, 'RSI', 14),
+            this.marketDataService.getTechnicalLatest(symbol, 'RSI', 14),
           ),
           firstValueFrom(
-            this.alphaVantageService.getTechnicalLatest(symbol, 'SMA', 20),
+            this.marketDataService.getTechnicalLatest(symbol, 'SMA', 20),
           ),
         ]);
 
@@ -293,7 +293,7 @@ export class Investment implements OnInit {
       const settled = await Promise.allSettled(
         this.economicFunctions.map(async (entry) => {
           const series = await firstValueFrom(
-            this.alphaVantageService.getEconomicSeries(entry.fn),
+            this.marketDataService.getEconomicSeries(entry.fn),
           );
 
           return this.toEconomicCard(entry.label, series);

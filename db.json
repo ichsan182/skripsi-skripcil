@@ -848,6 +848,14 @@
       "investmentWatchlist": {
         "items": [
           {
+            "symbol": "AMZN",
+            "name": "Amazon.com, Inc.",
+            "type": "Common Stock",
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-03-31T12:45:45.213Z"
+          },
+          {
             "symbol": "NVDA",
             "name": "NVIDIA Corporation",
             "type": "Common Stock",
@@ -864,8 +872,8 @@
             "createdAt": "2026-03-30T15:58:34.019Z"
           }
         ],
-        "selectedSymbol": "NVDA",
-        "updatedAt": "2026-03-31T12:21:30.586Z"
+        "selectedSymbol": "AMZN",
+        "updatedAt": "2026-03-31T12:45:45.220Z"
       }
     }
   ]

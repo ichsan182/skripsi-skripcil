@@ -53,7 +53,7 @@ export interface AlphaEconomicPoint {
 type GenericRecord = Record<string, unknown>;
 
 @Injectable({ providedIn: 'root' })
-export class AlphaVantageService {
+export class MarketDataService {
   private readonly twelveDataBaseUrl = '/twelvedata';
   private readonly fredBaseUrl = '/fred/fred';
   private readonly newsApiBaseUrl = '/newsapi/v2';
