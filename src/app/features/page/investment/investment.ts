@@ -31,6 +31,12 @@ interface TechnicalCard {
 }
 
 interface EconomicCard {
+  key: string;
+  seriesId: string;
+  category: EconomicCategory;
+  group: string;
+  description: string;
+  unit: string;
   label: string;
   latest: number;
   previous: number;
@@ -38,7 +44,17 @@ interface EconomicCard {
   latestDate: string;
 }
 
-type EconomicFunction = 'CPI' | 'FEDERAL_FUNDS_RATE' | 'UNEMPLOYMENT';
+type EconomicCategory = 'Sektor Riil' | 'Keuangan & Pasar' | 'Ekonomi Makro';
+
+interface EconomicIndicatorConfig {
+  key: string;
+  label: string;
+  seriesId: string;
+  category: EconomicCategory;
+  group: string;
+  description: string;
+  unit: string;
+}
 
 @Component({
   selector: 'app-investment',
@@ -60,6 +76,7 @@ export class Investment implements OnInit {
   protected news: AlphaNewsItem[] = [];
   protected technicalCards: TechnicalCard[] = [];
   protected economicCards: EconomicCard[] = [];
+  protected selectedEconomicCategory: EconomicCategory | 'ALL' = 'ALL';
 
   protected isSearching = false;
   protected isLoadingSymbol = false;
@@ -73,13 +90,413 @@ export class Investment implements OnInit {
   protected chartStartLabel = '-';
   protected chartEndLabel = '-';
 
-  private readonly economicFunctions: Array<{
-    fn: EconomicFunction;
+  protected readonly economicCategoryOptions: Array<{
+    key: EconomicCategory | 'ALL';
     label: string;
   }> = [
-    { fn: 'CPI', label: 'US CPI' },
-    { fn: 'FEDERAL_FUNDS_RATE', label: 'Fed Funds Rate' },
-    { fn: 'UNEMPLOYMENT', label: 'US Unemployment Rate' },
+    { key: 'ALL', label: 'Semua Kategori' },
+    { key: 'Sektor Riil', label: 'Sektor Riil' },
+    { key: 'Keuangan & Pasar', label: 'Keuangan & Pasar' },
+    { key: 'Ekonomi Makro', label: 'Ekonomi Makro' },
+  ];
+
+  private readonly economicIndicators: EconomicIndicatorConfig[] = [
+    {
+      key: 'indpro',
+      label: 'Industrial Production',
+      seriesId: 'INDPRO',
+      category: 'Sektor Riil',
+      group: 'Produksi',
+      description: 'Indeks produksi industri total.',
+      unit: 'index',
+    },
+    {
+      key: 'tcu',
+      label: 'Capacity Utilization',
+      seriesId: 'TCU',
+      category: 'Sektor Riil',
+      group: 'Produksi',
+      description: 'Kapasitas utilisasi sektor industri.',
+      unit: '%',
+    },
+    {
+      key: 'rsxfs',
+      label: 'Retail Sales Ex Food Services',
+      seriesId: 'RSXFS',
+      category: 'Sektor Riil',
+      group: 'Retail & Konsumsi',
+      description: 'Retail sales tanpa food services.',
+      unit: 'USD bn',
+    },
+    {
+      key: 'umcsent',
+      label: 'Consumer Sentiment',
+      seriesId: 'UMCSENT',
+      category: 'Sektor Riil',
+      group: 'Retail & Konsumsi',
+      description: 'Indeks sentimen konsumen Michigan.',
+      unit: 'index',
+    },
+    {
+      key: 'pce',
+      label: 'Personal Consumption Expenditures',
+      seriesId: 'PCE',
+      category: 'Sektor Riil',
+      group: 'Retail & Konsumsi',
+      description: 'Total pengeluaran konsumsi personal.',
+      unit: 'USD bn',
+    },
+    {
+      key: 'bopgstb',
+      label: 'Trade Balance',
+      seriesId: 'BOPGSTB',
+      category: 'Sektor Riil',
+      group: 'Perdagangan',
+      description: 'Neraca perdagangan barang dan jasa.',
+      unit: 'USD mn',
+    },
+    {
+      key: 'ieabcaa',
+      label: 'Current Account Balance',
+      seriesId: 'IEABCAA',
+      category: 'Sektor Riil',
+      group: 'Perdagangan',
+      description: 'Saldo current account Amerika Serikat.',
+      unit: 'USD bn',
+    },
+    {
+      key: 'gfdebtn',
+      label: 'Federal Debt Total Public Debt',
+      seriesId: 'GFDEBTN',
+      category: 'Sektor Riil',
+      group: 'Fiskal',
+      description: 'Total utang publik federal.',
+      unit: 'USD mn',
+    },
+    {
+      key: 'mtsds133fms',
+      label: 'Federal Surplus or Deficit',
+      seriesId: 'MTSDS133FMS',
+      category: 'Sektor Riil',
+      group: 'Fiskal',
+      description: 'Surplus/defisit anggaran federal bulanan.',
+      unit: 'USD mn',
+    },
+    {
+      key: 'ophnfb',
+      label: 'Labor Productivity Nonfarm',
+      seriesId: 'OPHNFB',
+      category: 'Sektor Riil',
+      group: 'Produktivitas',
+      description: 'Produktivitas tenaga kerja nonfarm business.',
+      unit: 'index',
+    },
+    {
+      key: 'ces0500000003',
+      label: 'Average Hourly Earnings',
+      seriesId: 'CES0500000003',
+      category: 'Sektor Riil',
+      group: 'Produktivitas',
+      description: 'Rata-rata upah per jam sektor private.',
+      unit: 'USD/hour',
+    },
+    {
+      key: 'usrec',
+      label: 'NBER Recession Indicator',
+      seriesId: 'USREC',
+      category: 'Sektor Riil',
+      group: 'Resesi',
+      description: 'Indikator biner fase resesi NBER.',
+      unit: 'binary',
+    },
+    {
+      key: 't10y2y',
+      label: '10Y-2Y Treasury Spread',
+      seriesId: 'T10Y2Y',
+      category: 'Sektor Riil',
+      group: 'Resesi',
+      description: 'Selisih yield 10 tahun dan 2 tahun.',
+      unit: 'bps',
+    },
+    {
+      key: 'sp500',
+      label: 'S&P 500',
+      seriesId: 'SP500',
+      category: 'Keuangan & Pasar',
+      group: 'Pasar Saham',
+      description: 'Indeks saham S&P 500.',
+      unit: 'index',
+    },
+    {
+      key: 'nasdaqcom',
+      label: 'NASDAQ Composite',
+      seriesId: 'NASDAQCOM',
+      category: 'Keuangan & Pasar',
+      group: 'Pasar Saham',
+      description: 'Indeks saham NASDAQ Composite.',
+      unit: 'index',
+    },
+    {
+      key: 'vixcls',
+      label: 'VIX Volatility Index',
+      seriesId: 'VIXCLS',
+      category: 'Keuangan & Pasar',
+      group: 'Pasar Saham',
+      description: 'Indeks volatilitas implied CBOE VIX.',
+      unit: 'index',
+    },
+    {
+      key: 'totalsl',
+      label: 'Total Consumer Credit',
+      seriesId: 'TOTALSL',
+      category: 'Keuangan & Pasar',
+      group: 'Kredit & Perbankan',
+      description: 'Total outstanding consumer credit.',
+      unit: 'USD bn',
+    },
+    {
+      key: 'dpsacbw027sbog',
+      label: 'Deposits at All Commercial Banks',
+      seriesId: 'DPSACBW027SBOG',
+      category: 'Keuangan & Pasar',
+      group: 'Kredit & Perbankan',
+      description: 'Total simpanan di bank komersial.',
+      unit: 'USD bn',
+    },
+    {
+      key: 'bamlh0a0hym2',
+      label: 'US High Yield Spread',
+      seriesId: 'BAMLH0A0HYM2',
+      category: 'Keuangan & Pasar',
+      group: 'Spread & Risiko',
+      description: 'Option-adjusted spread obligasi high yield.',
+      unit: 'bps',
+    },
+    {
+      key: 'tedrate',
+      label: 'TED Spread',
+      seriesId: 'TEDRATE',
+      category: 'Keuangan & Pasar',
+      group: 'Spread & Risiko',
+      description: 'Selisih 3M LIBOR dan 3M T-Bill.',
+      unit: 'bps',
+    },
+    {
+      key: 'csushpisa',
+      label: 'Case-Shiller Home Price Index',
+      seriesId: 'CSUSHPISA',
+      category: 'Keuangan & Pasar',
+      group: 'Properti',
+      description: 'Indeks harga rumah S&P CoreLogic Case-Shiller.',
+      unit: 'index',
+    },
+    {
+      key: 'mortgage30us',
+      label: '30-Year Mortgage Rate',
+      seriesId: 'MORTGAGE30US',
+      category: 'Keuangan & Pasar',
+      group: 'Properti',
+      description: 'Rata-rata suku bunga KPR 30 tahun fixed.',
+      unit: '%',
+    },
+    {
+      key: 'dcoilwtico',
+      label: 'WTI Crude Oil Price',
+      seriesId: 'DCOILWTICO',
+      category: 'Keuangan & Pasar',
+      group: 'Komoditas',
+      description: 'Harga minyak mentah WTI spot.',
+      unit: 'USD/barrel',
+    },
+    {
+      key: 'goldamgbd228nlbm',
+      label: 'Gold Price (London AM)',
+      seriesId: 'GOLDAMGBD228NLBM',
+      category: 'Keuangan & Pasar',
+      group: 'Komoditas',
+      description: 'Harga emas London Bullion Market AM.',
+      unit: 'USD/troy oz',
+    },
+    {
+      key: 'stlfsi4',
+      label: 'St. Louis Financial Stress Index',
+      seriesId: 'STLFSI4',
+      category: 'Keuangan & Pasar',
+      group: 'Financial Stress',
+      description: 'Indeks tekanan finansial dari St. Louis Fed.',
+      unit: 'index',
+    },
+    {
+      key: 'nfci',
+      label: 'Chicago Fed NFCI',
+      seriesId: 'NFCI',
+      category: 'Keuangan & Pasar',
+      group: 'Financial Stress',
+      description: 'National Financial Conditions Index.',
+      unit: 'index',
+    },
+    {
+      key: 'gdp',
+      label: 'Gross Domestic Product',
+      seriesId: 'GDP',
+      category: 'Ekonomi Makro',
+      group: 'GDP',
+      description: 'Nominal gross domestic product.',
+      unit: 'USD bn',
+    },
+    {
+      key: 'gdpc1',
+      label: 'Real GDP',
+      seriesId: 'GDPC1',
+      category: 'Ekonomi Makro',
+      group: 'GDP',
+      description: 'Real GDP chain-type quantity index.',
+      unit: 'USD bn (real)',
+    },
+    {
+      key: 'a191rl1q225sbea',
+      label: 'Real GDP Growth Rate',
+      seriesId: 'A191RL1Q225SBEA',
+      category: 'Ekonomi Makro',
+      group: 'GDP',
+      description: 'Pertumbuhan real GDP quarter-over-quarter annualized.',
+      unit: '%',
+    },
+    {
+      key: 'cpiaucsl',
+      label: 'CPI All Items',
+      seriesId: 'CPIAUCSL',
+      category: 'Ekonomi Makro',
+      group: 'Inflasi',
+      description: 'Consumer price index all urban consumers.',
+      unit: 'index',
+    },
+    {
+      key: 'cpilfesl',
+      label: 'Core CPI (Less Food & Energy)',
+      seriesId: 'CPILFESL',
+      category: 'Ekonomi Makro',
+      group: 'Inflasi',
+      description: 'Core CPI tanpa food dan energy.',
+      unit: 'index',
+    },
+    {
+      key: 'pcepi',
+      label: 'PCE Price Index',
+      seriesId: 'PCEPI',
+      category: 'Ekonomi Makro',
+      group: 'Inflasi',
+      description: 'Indeks harga personal consumption expenditures.',
+      unit: 'index',
+    },
+    {
+      key: 'unrate',
+      label: 'Unemployment Rate',
+      seriesId: 'UNRATE',
+      category: 'Ekonomi Makro',
+      group: 'Ketenagakerjaan',
+      description: 'Tingkat pengangguran nasional.',
+      unit: '%',
+    },
+    {
+      key: 'payems',
+      label: 'Nonfarm Payrolls',
+      seriesId: 'PAYEMS',
+      category: 'Ekonomi Makro',
+      group: 'Ketenagakerjaan',
+      description: 'Total payroll karyawan nonfarm.',
+      unit: 'thousand persons',
+    },
+    {
+      key: 'jtsjol',
+      label: 'Job Openings (JOLTS)',
+      seriesId: 'JTSJOL',
+      category: 'Ekonomi Makro',
+      group: 'Ketenagakerjaan',
+      description: 'Jumlah lowongan kerja dari survei JOLTS.',
+      unit: 'thousand jobs',
+    },
+    {
+      key: 'fedfunds',
+      label: 'Federal Funds Effective Rate',
+      seriesId: 'FEDFUNDS',
+      category: 'Ekonomi Makro',
+      group: 'Suku Bunga',
+      description: 'Suku bunga acuan efektif federal funds.',
+      unit: '%',
+    },
+    {
+      key: 'dgs10',
+      label: '10-Year Treasury Yield',
+      seriesId: 'DGS10',
+      category: 'Ekonomi Makro',
+      group: 'Suku Bunga',
+      description: 'Yield treasury tenor 10 tahun.',
+      unit: '%',
+    },
+    {
+      key: 'dgs2',
+      label: '2-Year Treasury Yield',
+      seriesId: 'DGS2',
+      category: 'Ekonomi Makro',
+      group: 'Suku Bunga',
+      description: 'Yield treasury tenor 2 tahun.',
+      unit: '%',
+    },
+    {
+      key: 'm1sl',
+      label: 'M1 Money Stock',
+      seriesId: 'M1SL',
+      category: 'Ekonomi Makro',
+      group: 'Moneter',
+      description: 'Uang beredar M1.',
+      unit: 'USD bn',
+    },
+    {
+      key: 'm2sl',
+      label: 'M2 Money Stock',
+      seriesId: 'M2SL',
+      category: 'Ekonomi Makro',
+      group: 'Moneter',
+      description: 'Uang beredar M2.',
+      unit: 'USD bn',
+    },
+    {
+      key: 'bogmbase',
+      label: 'Monetary Base',
+      seriesId: 'BOGMBASE',
+      category: 'Ekonomi Makro',
+      group: 'Moneter',
+      description: 'St. Louis adjusted monetary base.',
+      unit: 'USD mn',
+    },
+    {
+      key: 'dexuseu',
+      label: 'USD/EUR Exchange Rate',
+      seriesId: 'DEXUSEU',
+      category: 'Ekonomi Makro',
+      group: 'Nilai Tukar',
+      description: 'Nilai tukar dolar AS terhadap euro.',
+      unit: 'USD per EUR',
+    },
+    {
+      key: 'dexjpus',
+      label: 'JPY/USD Exchange Rate',
+      seriesId: 'DEXJPUS',
+      category: 'Ekonomi Makro',
+      group: 'Nilai Tukar',
+      description: 'Nilai tukar yen Jepang terhadap dolar AS.',
+      unit: 'JPY per USD',
+    },
+    {
+      key: 'dexchus',
+      label: 'CNY/USD Exchange Rate',
+      seriesId: 'DEXCHUS',
+      category: 'Ekonomi Makro',
+      group: 'Nilai Tukar',
+      description: 'Nilai tukar yuan Tiongkok terhadap dolar AS.',
+      unit: 'CNY per USD',
+    },
   ];
 
   constructor(
@@ -205,6 +622,41 @@ export class Investment implements OnInit {
     return item.url;
   }
 
+  protected trackByEconomicKey(_index: number, item: EconomicCard): string {
+    return item.key;
+  }
+
+  protected setEconomicCategory(category: EconomicCategory | 'ALL'): void {
+    this.selectedEconomicCategory = category;
+  }
+
+  protected get filteredEconomicCards(): EconomicCard[] {
+    if (this.selectedEconomicCategory === 'ALL') {
+      return this.economicCards;
+    }
+
+    return this.economicCards.filter(
+      (item) => item.category === this.selectedEconomicCategory,
+    );
+  }
+
+  protected get groupedEconomicCards(): Array<{
+    group: string;
+    items: EconomicCard[];
+  }> {
+    const groups = new Map<string, EconomicCard[]>();
+    for (const card of this.filteredEconomicCards) {
+      const existing = groups.get(card.group) ?? [];
+      existing.push(card);
+      groups.set(card.group, existing);
+    }
+
+    return Array.from(groups.entries()).map(([group, items]) => ({
+      group,
+      items,
+    }));
+  }
+
   private async initializeWatchlist(): Promise<void> {
     const state = await this.watchlistService.loadCurrentUserWatchlist();
     this.watchlist = state.items;
@@ -291,12 +743,12 @@ export class Investment implements OnInit {
 
     try {
       const settled = await Promise.allSettled(
-        this.economicFunctions.map(async (entry) => {
+        this.economicIndicators.map(async (entry) => {
           const series = await firstValueFrom(
-            this.marketDataService.getEconomicSeries(entry.fn),
+            this.marketDataService.getEconomicSeries(entry.seriesId),
           );
 
-          return this.toEconomicCard(entry.label, series);
+          return this.toEconomicCard(entry, series);
         }),
       );
 
@@ -367,7 +819,7 @@ export class Investment implements OnInit {
   }
 
   private toEconomicCard(
-    label: string,
+    indicator: EconomicIndicatorConfig,
     series: AlphaEconomicPoint[],
   ): EconomicCard | null {
     if (series.length < 2) {
@@ -378,7 +830,13 @@ export class Investment implements OnInit {
     const previous = series[series.length - 2];
 
     return {
-      label,
+      key: indicator.key,
+      seriesId: indicator.seriesId,
+      category: indicator.category,
+      group: indicator.group,
+      description: indicator.description,
+      unit: indicator.unit,
+      label: indicator.label,
       latest: latest.value,
       previous: previous.value,
       delta: latest.value - previous.value,

@@ -190,17 +190,9 @@ export class MarketDataService {
     );
   }
 
-  getEconomicSeries(
-    indicatorFunction: 'CPI' | 'FEDERAL_FUNDS_RATE' | 'UNEMPLOYMENT',
-  ): Observable<AlphaEconomicPoint[]> {
-    const fredSeriesMap: Record<typeof indicatorFunction, string> = {
-      CPI: 'CPIAUCSL',
-      FEDERAL_FUNDS_RATE: 'FEDFUNDS',
-      UNEMPLOYMENT: 'UNRATE',
-    };
-
+  getEconomicSeries(seriesId: string): Observable<AlphaEconomicPoint[]> {
     return this.callFredApi('/series/observations', {
-      series_id: fredSeriesMap[indicatorFunction],
+      series_id: seriesId,
       file_type: 'json',
       sort_order: 'asc',
     }).pipe(

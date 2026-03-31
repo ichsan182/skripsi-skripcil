@@ -157,7 +157,7 @@
 .search-results h3,
 .insight-card h3,
 .chart-head h3,
-.economic-item h3,
+.economic-group-head h3,
 .news-card h3 {
   color: var(--color-black);
   font-size: var(--font-size-base);
@@ -456,27 +456,118 @@
   font-size: var(--font-size-xl);
 }
 
-.economic-grid {
-  margin-top: 12px;
+.economic-filter-row {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.economic-filter-btn {
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary-subtle) 44%, transparent);
+  background: var(--color-white);
+  color: color-mix(in srgb, var(--color-black) 72%, var(--color-gray));
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.economic-filter-btn--active {
+  border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-white));
+  color: var(--color-primary-dark);
+}
+
+.economic-group {
+  margin-top: 14px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
+}
+
+.economic-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.economic-group-head span {
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-2xs);
+  font-weight: 700;
+}
+
+.economic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
 }
 
 .economic-item {
   display: grid;
-  gap: 4px;
+  gap: 7px;
 }
 
-.economic-item strong {
+.economic-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.economic-item-head h4 {
+  color: var(--color-black);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+}
+
+.series-pill {
+  border-radius: 999px;
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary-subtle) 48%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--color-primary-subtle) 14%,
+    var(--color-white)
+  );
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-2xs);
+  padding: 3px 8px;
+  font-weight: 700;
+}
+
+.economic-item-desc,
+.economic-prev,
+.economic-item small {
+  color: color-mix(in srgb, var(--color-black) 61%, var(--color-gray));
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+}
+
+.economic-values {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.economic-values strong {
   color: var(--color-primary-dark);
   font-size: var(--font-size-xl);
 }
 
-.economic-item p,
-.economic-item small {
-  color: color-mix(in srgb, var(--color-black) 61%, var(--color-gray));
+.economic-values small {
+  color: color-mix(in srgb, var(--color-black) 58%, var(--color-gray));
+  font-size: var(--font-size-2xs);
+}
+
+.economic-delta {
   font-size: var(--font-size-xs);
+  font-weight: 700;
 }
 
 .api-note {
@@ -497,8 +588,7 @@
 }
 
 @media (max-width: 900px) {
-  .insight-grid,
-  .economic-grid {
+  .insight-grid {
     grid-template-columns: 1fr;
   }
 }
