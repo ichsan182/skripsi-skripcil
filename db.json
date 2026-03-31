@@ -848,12 +848,12 @@
       "investmentWatchlist": {
         "items": [
           {
-            "symbol": "BBCA",
-            "name": "Bank Central Asia Tbk",
+            "symbol": "NVDA",
+            "name": "NVIDIA Corporation",
             "type": "Common Stock",
-            "region": "Indonesia",
-            "currency": "IDR",
-            "createdAt": "2026-03-30T15:59:24.896Z"
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-03-31T12:13:58.031Z"
           },
           {
             "symbol": "AAPL",
@@ -864,8 +864,8 @@
             "createdAt": "2026-03-30T15:58:34.019Z"
           }
         ],
-        "selectedSymbol": "AAPL",
-        "updatedAt": "2026-03-30T16:02:46.653Z"
+        "selectedSymbol": "NVDA",
+        "updatedAt": "2026-03-31T12:21:30.586Z"
       }
     }
   ]

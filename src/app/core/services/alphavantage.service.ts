@@ -58,8 +58,8 @@ export class AlphaVantageService {
   private readonly fredBaseUrl = '/fred/fred';
   private readonly newsApiBaseUrl = '/newsapi/v2';
   private readonly twelveDataApiKey = '841550e787a3463d8d0103ae144e6573';
-  private readonly fredApiKey = '841550e787a3463d8d0103ae144e6573';
-  private readonly newsApiKey = '841550e787a3463d8d0103ae144e6573';
+  private readonly fredApiKey = '50a0b45bb3a983d28871cbc1b6596ea3';
+  private readonly newsApiKey = '9c8f914b3e8d4b32a4b6a00bd0247c99';
 
   constructor(private readonly http: HttpClient) {}
 

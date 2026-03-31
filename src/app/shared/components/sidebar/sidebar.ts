@@ -12,7 +12,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 export class Sidebar {
   protected profileName = 'John Doe';
   protected profileEmail = 'john@example.com';
-  protected profileImage = 'assets/profile-avatar.png';
+  protected profileImage = 'assets/user.svg';
 
   protected navItems = [
     { path: '/home', label: 'Home', icon: 'assets/material-symbols_home.svg' },
