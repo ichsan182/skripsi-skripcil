@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { USERS_API_URL } from '../../../core/config/app-api.config';
 
 interface RegisterPayload {
   name: string;
@@ -32,7 +33,6 @@ interface RegisterPayload {
   styleUrl: './register.css',
 })
 export class Register {
-  private readonly usersApiUrl = 'http://localhost:3000/users';
   private readonly formBuilder = inject(FormBuilder);
   private readonly httpClient = inject(HttpClient);
 
@@ -83,7 +83,7 @@ export class Register {
 
       const existingUser = await firstValueFrom(
         this.httpClient.get<RegisterPayload[]>(
-          `${this.usersApiUrl}?email=${encodeURIComponent(payload.email)}`,
+          `${USERS_API_URL}?email=${encodeURIComponent(payload.email)}`,
         ),
       );
 
@@ -93,7 +93,7 @@ export class Register {
         return;
       }
 
-      await firstValueFrom(this.httpClient.post(this.usersApiUrl, payload));
+      await firstValueFrom(this.httpClient.post(USERS_API_URL, payload));
 
       this.successMessage =
         'Registrasi berhasil. Silakan login menggunakan akun baru.';

@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { Sidebar } from '../shared/components/sidebar/sidebar';
 import { JournalService } from '../core/services/journal.service';
 import { ExpenseCategory } from '../shared/utils/expense-category';
+import { USERS_API_URL } from '../core/config/app-api.config';
 
 interface BudgetAllocation {
   mode: 2 | 3;
@@ -60,7 +61,6 @@ interface StreakDay {
 export class Home {
   private readonly journalService = inject(JournalService);
   private readonly http = inject(HttpClient);
-  private readonly usersApiUrl = 'http://localhost:3000/users';
 
   userName = 'User';
   financialData: FinancialData | null = null;
@@ -432,7 +432,7 @@ export class Home {
     if (user.id) {
       try {
         await firstValueFrom(
-          this.http.patch(`${this.usersApiUrl}/${user.id}`, {
+          this.http.patch(`${USERS_API_URL}/${user.id}`, {
             financialData: updatedFinancialData,
           }),
         );

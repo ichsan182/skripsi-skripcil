@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { USERS_API_URL } from '../config/app-api.config';
 import {
   ExpenseCategory,
   inferExpenseCategory,
@@ -48,7 +49,6 @@ interface UserRecord {
 })
 export class JournalService {
   private readonly httpClient = inject(HttpClient);
-  private readonly usersApiUrl = 'http://localhost:3000/users';
 
   async loadCurrentUserJournal(): Promise<UserJournal> {
     const userId = this.getCurrentUserId();
@@ -57,7 +57,7 @@ export class JournalService {
     }
 
     const user = await firstValueFrom(
-      this.httpClient.get<UserRecord>(`${this.usersApiUrl}/${userId}`),
+      this.httpClient.get<UserRecord>(`${USERS_API_URL}/${userId}`),
     );
 
     const journal = this.normalizeJournal(user.journal);
@@ -149,7 +149,7 @@ export class JournalService {
     journal: UserJournal,
   ): Promise<void> {
     await firstValueFrom(
-      this.httpClient.patch(`${this.usersApiUrl}/${userId}`, {
+      this.httpClient.patch(`${USERS_API_URL}/${userId}`, {
         journal,
       }),
     );

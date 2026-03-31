@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
+import { MARKET_DATA_API } from '../config/app-api.config';
 
 export interface AlphaSearchMatch {
   symbol: string;
@@ -54,13 +55,6 @@ type GenericRecord = Record<string, unknown>;
 
 @Injectable({ providedIn: 'root' })
 export class MarketDataService {
-  private readonly twelveDataBaseUrl = '/twelvedata';
-  private readonly fredBaseUrl = '/fred/fred';
-  private readonly newsApiBaseUrl = '/newsapi/v2';
-  private readonly twelveDataApiKey = '841550e787a3463d8d0103ae144e6573';
-  private readonly fredApiKey = '50a0b45bb3a983d28871cbc1b6596ea3';
-  private readonly newsApiKey = '9c8f914b3e8d4b32a4b6a00bd0247c99';
-
   constructor(private readonly http: HttpClient) {}
 
   searchSymbols(keywords: string): Observable<AlphaSearchMatch[]> {
@@ -213,13 +207,16 @@ export class MarketDataService {
     path: string,
     params: Record<string, string>,
   ): Observable<GenericRecord> {
-    let httpParams = new HttpParams().set('apikey', this.twelveDataApiKey);
+    let httpParams = new HttpParams().set(
+      'apikey',
+      MARKET_DATA_API.twelvedata.apiKey,
+    );
     for (const [key, value] of Object.entries(params)) {
       httpParams = httpParams.set(key, value);
     }
 
     return this.http
-      .get<GenericRecord>(`${this.twelveDataBaseUrl}${path}`, {
+      .get<GenericRecord>(`${MARKET_DATA_API.twelvedata.baseUrl}${path}`, {
         params: httpParams,
       })
       .pipe(map((raw) => this.assertTwelveDataResponse(raw)));
@@ -229,13 +226,16 @@ export class MarketDataService {
     path: string,
     params: Record<string, string>,
   ): Observable<GenericRecord> {
-    let httpParams = new HttpParams().set('api_key', this.fredApiKey);
+    let httpParams = new HttpParams().set(
+      'api_key',
+      MARKET_DATA_API.fred.apiKey,
+    );
     for (const [key, value] of Object.entries(params)) {
       httpParams = httpParams.set(key, value);
     }
 
     return this.http
-      .get<GenericRecord>(`${this.fredBaseUrl}${path}`, {
+      .get<GenericRecord>(`${MARKET_DATA_API.fred.baseUrl}${path}`, {
         params: httpParams,
       })
       .pipe(map((raw) => this.assertFredResponse(raw)));
@@ -245,13 +245,16 @@ export class MarketDataService {
     path: string,
     params: Record<string, string>,
   ): Observable<GenericRecord> {
-    let httpParams = new HttpParams().set('apiKey', this.newsApiKey);
+    let httpParams = new HttpParams().set(
+      'apiKey',
+      MARKET_DATA_API.newsApi.apiKey,
+    );
     for (const [key, value] of Object.entries(params)) {
       httpParams = httpParams.set(key, value);
     }
 
     return this.http
-      .get<GenericRecord>(`${this.newsApiBaseUrl}${path}`, {
+      .get<GenericRecord>(`${MARKET_DATA_API.newsApi.baseUrl}${path}`, {
         params: httpParams,
       })
       .pipe(map((raw) => this.assertValidResponse(raw)));

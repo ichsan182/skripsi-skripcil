@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { USERS_API_URL } from '../../../core/config/app-api.config';
 
 @Component({
   selector: 'app-questionnaire',
@@ -16,7 +17,6 @@ export class Questionnaire {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
-  private readonly usersApiUrl = 'http://localhost:3000/users';
 
   currentStep = 1;
   isSubmitting = false;
@@ -96,7 +96,7 @@ export class Questionnaire {
       const level = this.calculateLevel(financialData);
 
       await firstValueFrom(
-        this.http.patch(`${this.usersApiUrl}/${user.id}`, {
+        this.http.patch(`${USERS_API_URL}/${user.id}`, {
           onboardingCompleted: true,
           financialData,
           level,

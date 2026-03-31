@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
+import { RAPIDAPI_PROXY_BASE_URL } from '../config/app-api.config';
 
 export interface PriceData {
   date: string;
@@ -37,9 +38,6 @@ interface YahooQuoteResponse {
 
 @Injectable({ providedIn: 'root' })
 export class YahooFinanceService {
-  // Lewat proxy saat dev — ubah ke backend URL saat production
-  private readonly BASE = '/rapidapi';
-
   constructor(private http: HttpClient) {}
 
   // Ambil data historis EOD
@@ -51,7 +49,7 @@ export class YahooFinanceService {
   ): Observable<PriceData[]> {
     void range;
 
-    const url = `${this.BASE}/api/v1/markets/stock/history`;
+    const url = `${RAPIDAPI_PROXY_BASE_URL}/api/v1/markets/stock/history`;
     const params = {
       symbol,
       interval,
@@ -83,7 +81,7 @@ export class YahooFinanceService {
   getCurrentPrice(
     symbol: string,
   ): Observable<{ price: number; change: number; changePercent: number }> {
-    const url = `${this.BASE}/api/v1/markets/stock/quotes`;
+    const url = `${RAPIDAPI_PROXY_BASE_URL}/api/v1/markets/stock/quotes`;
     return this.http
       .get<YahooQuoteResponse>(url, { params: { ticker: symbol } })
       .pipe(

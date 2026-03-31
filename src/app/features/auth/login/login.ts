@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { USERS_API_URL } from '../../../core/config/app-api.config';
 
 interface User {
   id?: number | string;
@@ -30,7 +31,6 @@ interface User {
   styleUrl: './login.css',
 })
 export class Login {
-  private readonly usersApiUrl = 'http://localhost:3000/users';
   private readonly formBuilder = inject(FormBuilder);
   private readonly httpClient = inject(HttpClient);
   private readonly router = inject(Router);
@@ -71,7 +71,7 @@ export class Login {
       const normalizedPassword = (password ?? '').trim();
 
       const users = await firstValueFrom(
-        this.httpClient.get<User[]>(this.usersApiUrl),
+        this.httpClient.get<User[]>(USERS_API_URL),
       );
       const user = users.find(
         (item) =>
@@ -115,7 +115,7 @@ export class Login {
         .trim()
         .toLowerCase();
       const users = await firstValueFrom(
-        this.httpClient.get<User[]>(this.usersApiUrl),
+        this.httpClient.get<User[]>(USERS_API_URL),
       );
       const user = users.find(
         (item) => item.email.trim().toLowerCase() === email,

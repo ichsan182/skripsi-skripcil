@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { USERS_API_URL } from '../config/app-api.config';
 
 export interface WatchlistItem {
   symbol: string;
@@ -30,7 +31,6 @@ interface UserRecord {
 @Injectable({ providedIn: 'root' })
 export class InvestmentWatchlistService {
   private readonly httpClient = inject(HttpClient);
-  private readonly usersApiUrl = 'http://localhost:3000/users';
 
   async loadCurrentUserWatchlist(): Promise<InvestmentWatchlistState> {
     const userId = this.getCurrentUserId();
@@ -39,7 +39,7 @@ export class InvestmentWatchlistService {
     }
 
     const user = await firstValueFrom(
-      this.httpClient.get<UserRecord>(`${this.usersApiUrl}/${userId}`),
+      this.httpClient.get<UserRecord>(`${USERS_API_URL}/${userId}`),
     );
 
     const state = this.normalizeState(user.investmentWatchlist);
@@ -148,7 +148,7 @@ export class InvestmentWatchlistService {
     state: InvestmentWatchlistState,
   ): Promise<void> {
     await firstValueFrom(
-      this.httpClient.patch(`${this.usersApiUrl}/${userId}`, {
+      this.httpClient.patch(`${USERS_API_URL}/${userId}`, {
         investmentWatchlist: state,
       }),
     );
