@@ -418,6 +418,28 @@
             }
           ]
         }
+      },
+      "investmentWatchlist": {
+        "items": [
+          {
+            "symbol": "BBCA",
+            "name": "Bank Central Asia Tbk",
+            "type": "Common Stock",
+            "region": "Indonesia",
+            "currency": "IDR",
+            "createdAt": "2026-03-31T14:08:31.342Z"
+          },
+          {
+            "symbol": "TSLA",
+            "name": "Tesla, Inc.",
+            "type": "Common Stock",
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-03-31T14:08:22.450Z"
+          }
+        ],
+        "selectedSymbol": "TSLA",
+        "updatedAt": "2026-03-31T14:08:38.227Z"
       }
     },
     {
@@ -661,7 +683,7 @@
       "onboardingCompleted": true,
       "level": 4,
       "journal": {
-        "nextChatMessageId": 19,
+        "nextChatMessageId": 35,
         "chatByDate": {
           "2026-03-28": [
             {
@@ -772,6 +794,104 @@
               "text": "Dicatat: Rp 50.000 untuk \"bpjs\" kategori bills.",
               "time": "19.20"
             }
+          ],
+          "2026-03-31": [
+            {
+              "id": 19,
+              "sender": "user",
+              "text": "babi 100",
+              "time": "20.42"
+            },
+            {
+              "id": 20,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 100 untuk \"babi\" kategori other.",
+              "time": "20.42"
+            },
+            {
+              "id": 21,
+              "sender": "user",
+              "text": "makan 1200",
+              "time": "20.42"
+            },
+            {
+              "id": 22,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 1.200 untuk \"makan\" kategori makanan.",
+              "time": "20.42"
+            },
+            {
+              "id": 23,
+              "sender": "user",
+              "text": "traveling 288",
+              "time": "20.42"
+            },
+            {
+              "id": 24,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 288 untuk \"traveling\" kategori travel.",
+              "time": "20.42"
+            },
+            {
+              "id": 25,
+              "sender": "user",
+              "text": "netflix 19580",
+              "time": "20.42"
+            },
+            {
+              "id": 26,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 19.580 untuk \"netflix\" kategori subscription.",
+              "time": "20.42"
+            },
+            {
+              "id": 27,
+              "sender": "user",
+              "text": "makan 129499",
+              "time": "20.42"
+            },
+            {
+              "id": 28,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 129.499 untuk \"makan\" kategori makanan.",
+              "time": "20.42"
+            },
+            {
+              "id": 29,
+              "sender": "user",
+              "text": "nyeneyeny 129418",
+              "time": "20.42"
+            },
+            {
+              "id": 30,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 129.418 untuk \"nyeneyeny\" kategori other.",
+              "time": "20.42"
+            },
+            {
+              "id": 31,
+              "sender": "user",
+              "text": "jepang 29999",
+              "time": "20.42"
+            },
+            {
+              "id": 32,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 29.999 untuk \"jepang\" kategori other.",
+              "time": "20.42"
+            },
+            {
+              "id": 33,
+              "sender": "user",
+              "text": "jepang 12849902",
+              "time": "20.44"
+            },
+            {
+              "id": 34,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 12.849.902 untuk \"jepang\" kategori other.",
+              "time": "20.44"
+            }
           ]
         },
         "expensesByDate": {
@@ -819,6 +939,48 @@
             {
               "amount": 10000,
               "description": "paten",
+              "category": "other"
+            }
+          ],
+          "2026-03-31": [
+            {
+              "amount": 12849902,
+              "description": "jepang",
+              "category": "other"
+            },
+            {
+              "amount": 29999,
+              "description": "jepang",
+              "category": "other"
+            },
+            {
+              "amount": 129418,
+              "description": "nyeneyeny",
+              "category": "other"
+            },
+            {
+              "amount": 129499,
+              "description": "makan",
+              "category": "makanan"
+            },
+            {
+              "amount": 19580,
+              "description": "netflix",
+              "category": "subscription"
+            },
+            {
+              "amount": 288,
+              "description": "traveling",
+              "category": "travel"
+            },
+            {
+              "amount": 1200,
+              "description": "makan",
+              "category": "makanan"
+            },
+            {
+              "amount": 100,
+              "description": "babi",
               "category": "other"
             }
           ]
@@ -872,8 +1034,8 @@
             "createdAt": "2026-03-30T15:58:34.019Z"
           }
         ],
-        "selectedSymbol": "AMZN",
-        "updatedAt": "2026-03-31T13:00:37.036Z"
+        "selectedSymbol": "NVDA",
+        "updatedAt": "2026-03-31T14:07:45.866Z"
       }
     }
   ]
