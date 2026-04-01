@@ -1,5 +1,13 @@
 <div class="home-container">
-  <app-sidebar></app-sidebar>
+  <app-sidebar
+    [showRollingBudgetPanel]="true"
+    [rollingTotalBudget]="rollingTotalBudget"
+    [rollingUsedBudget]="rollingUsedBudget"
+    [rollingBudgetRemaining]="rollingBudgetRemaining"
+    [rollingDaysRemaining]="rollingDaysRemaining"
+    [rollingBudgetToday]="rollingBudgetToday"
+    [formatRupiahFn]="formatRupiah.bind(this)"
+  ></app-sidebar>
   <section class="home-page">
     <h1>Selamat Datang, {{ userName }}!</h1>
     <p>Cek status kamu hari ini yuk!</p>
@@ -178,7 +186,15 @@
             <h2>{{ streakCount }} Hari Streak!</h2>
           </div>
           <div class="insight-card-subtitle">
-            Catat pengeluaran mu setiap hari untuk mendapatkan streak !
+            Jaga ritme pencatatan dan tetap di bawah jatah rolling harian.
+          </div>
+          <div class="streak-stats-row">
+            <div class="streak-stat-pill">
+              Rekor terbaik: <strong>{{ longestStreak }} hari</strong>
+            </div>
+            <div class="streak-stat-pill streak-milestone">
+              Badge aktif: <strong>{{ activeStreakMilestone }}</strong>
+            </div>
           </div>
           <div class="streak-calendar">
             <div class="streak-month-nav">
@@ -210,10 +226,12 @@
               <div
                 class="streak-day-cell"
                 [class.streak-empty]="cell.day === null"
-                [class.streak-in-range]="cell.isInRange && !cell.isStart && !cell.isEnd"
-                [class.streak-start]="cell.isStart"
-                [class.streak-end]="cell.isEnd"
+                [class.streak-success]="cell.isSuccess"
+                [class.streak-skipped]="cell.isSkipped"
+                [class.streak-failed]="cell.isFailed"
+                [class.streak-before-start]="cell.isBeforeStart"
                 [class.streak-disabled]="cell.isDisabled"
+                [class.streak-today]="cell.isToday"
               >
                 @if (cell.day !== null) {
                 <span>{{ cell.day }}</span>

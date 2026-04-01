@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
@@ -10,6 +10,20 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './sidebar.css',
 })
 export class Sidebar {
+  @Input() showRollingBudgetPanel = false;
+  @Input() rollingTotalBudget = 0;
+  @Input() rollingUsedBudget = 0;
+  @Input() rollingBudgetRemaining = 0;
+  @Input() rollingDaysRemaining = 0;
+  @Input() rollingBudgetToday = 0;
+  @Input() formatRupiahFn: (amount: number) => string = (amount: number) =>
+    new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+
   protected profileName = 'John Doe';
   protected profileEmail = 'john@example.com';
   protected profileImage = 'assets/user.svg';

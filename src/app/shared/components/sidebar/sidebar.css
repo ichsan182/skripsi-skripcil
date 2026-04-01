@@ -177,6 +177,53 @@
   font-weight: 600;
 }
 
+/* ── Rolling Budget Panel ───────────────────────────────── */
+.rolling-sidebar-panel {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.rolling-sidebar-panel h2 {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-white);
+  font-weight: 700;
+}
+
+.rolling-sidebar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--font-size-xs);
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.rolling-sidebar-row strong {
+  color: var(--color-white);
+  font-weight: 600;
+}
+
+.rolling-sidebar-highlight {
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--color-white);
+  font-size: var(--font-size-xs);
+  padding: 8px 10px;
+}
+
+.rolling-sidebar-highlight strong {
+  font-weight: 700;
+}
+
 /* ── Profile ─────────────────────────────────────────────── */
 .sidebar-profile {
   display: flex;
@@ -304,6 +351,10 @@
     padding-top: 12px;
     padding-left: 16px;
     margin-top: 0;
+  }
+
+  .rolling-sidebar-panel {
+    display: none;
   }
 
   .profile-info {

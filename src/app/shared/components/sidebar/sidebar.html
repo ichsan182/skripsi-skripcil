@@ -25,6 +25,31 @@
     </ul>
   </nav>
 
+  @if (showRollingBudgetPanel) {
+  <section class="rolling-sidebar-panel" aria-label="Ringkasan budget rolling">
+    <h2>Rolling Budget</h2>
+    <div class="rolling-sidebar-row">
+      <span>Budget periode</span>
+      <strong>{{ formatRupiahFn(rollingTotalBudget) }}</strong>
+    </div>
+    <div class="rolling-sidebar-row">
+      <span>Terpakai</span>
+      <strong>{{ formatRupiahFn(rollingUsedBudget) }}</strong>
+    </div>
+    <div class="rolling-sidebar-row">
+      <span>Sisa budget</span>
+      <strong>{{ formatRupiahFn(rollingBudgetRemaining) }}</strong>
+    </div>
+    <div class="rolling-sidebar-row">
+      <span>Sisa hari</span>
+      <strong>{{ rollingDaysRemaining }} hari</strong>
+    </div>
+    <div class="rolling-sidebar-highlight">
+      Jatah hari ini: <strong>{{ formatRupiahFn(rollingBudgetToday) }}</strong>
+    </div>
+  </section>
+  }
+
   <!-- Profile -->
   <div class="sidebar-profile">
     <img [src]="profileImage" alt="Profile" class="profile-avatar" />

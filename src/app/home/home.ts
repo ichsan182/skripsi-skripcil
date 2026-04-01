@@ -9,6 +9,7 @@ import {
   FinancialData,
   JournalService,
   SavingsAllocation,
+  UserJournal,
 } from '../core/services/journal.service';
 import { ExpenseCategory } from '../shared/utils/expense-category';
 import { USERS_API_URL } from '../core/config/app-api.config';
@@ -26,9 +27,25 @@ interface StreakDay {
   day: number | null;
   date: Date | null;
   isDisabled: boolean;
-  isInRange: boolean;
-  isStart: boolean;
-  isEnd: boolean;
+  isSuccess: boolean;
+  isSkipped: boolean;
+  isFailed: boolean;
+  isBeforeStart: boolean;
+  isToday: boolean;
+}
+
+type StreakDayStatus =
+  | 'success'
+  | 'skipped'
+  | 'failed'
+  | 'before-start'
+  | 'future';
+
+interface UserStreak {
+  current: number;
+  longest: number;
+  lastActiveDate: string;
+  freezeUsed: boolean;
 }
 
 @Component({
@@ -41,9 +58,29 @@ interface StreakDay {
 export class Home {
   private readonly journalService = inject(JournalService);
   private readonly http = inject(HttpClient);
+  private journal: UserJournal = {
+    nextChatMessageId: 1,
+    chatByDate: {},
+    expensesByDate: {},
+    incomesByDate: {},
+  };
+  private readonly noExpensePolicy: 'allow-no-expense' | 'require-entry' =
+    'require-entry';
 
   userName = 'User';
   financialData: FinancialData | null = null;
+  userId: string | number | null = null;
+  streakState: UserStreak = {
+    current: 0,
+    longest: 0,
+    lastActiveDate: '',
+    freezeUsed: false,
+  };
+  rollingBudgetToday = 0;
+  rollingBudgetRemaining = 0;
+  rollingDaysRemaining = 0;
+  rollingTotalBudget = 0;
+  rollingUsedBudget = 0;
 
   showMentions = {
     saldo: false,
@@ -121,12 +158,11 @@ export class Home {
   streakCalendarYear: number = new Date().getFullYear();
   streakCalendarMonth: number = new Date().getMonth();
   streakCalendarDays: StreakDay[] = [];
+  firstRecordDate: Date | null = null;
 
   constructor() {
     this.loadUserData();
-    this.refreshMonthlyExpenses();
-    this.refreshStreakCalendar();
-    void this.loadMonthlyExpenseTotal();
+    void this.initializeDashboard();
   }
 
   private loadUserData(): void {
@@ -278,15 +314,19 @@ export class Home {
   }
 
   get streakCount(): number {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const start = new Date(this.streakStartDate);
-    start.setHours(0, 0, 0, 0);
-    if (today < start) return 0;
-    return (
-      Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) +
-      1
-    );
+    return this.streakState.current;
+  }
+
+  get longestStreak(): number {
+    return this.streakState.longest;
+  }
+
+  get activeStreakMilestone(): string {
+    if (this.streakState.current >= 100) return 'Legenda';
+    if (this.streakState.current >= 30) return 'Master Keuangan';
+    if (this.streakState.current >= 7) return 'Seminggu Solid';
+    if (this.streakState.current >= 3) return 'Mulai Konsisten';
+    return 'Pemanasan';
   }
 
   get streakCalendarLabel(): string {
@@ -487,8 +527,6 @@ export class Home {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const start = new Date(this.streakStartDate);
-    start.setHours(0, 0, 0, 0);
 
     const days: StreakDay[] = [];
 
@@ -497,22 +535,27 @@ export class Home {
         day: null,
         date: null,
         isDisabled: false,
-        isInRange: false,
-        isStart: false,
-        isEnd: false,
+        isSuccess: false,
+        isSkipped: false,
+        isFailed: false,
+        isBeforeStart: false,
+        isToday: false,
       });
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(year, month, d);
       date.setHours(0, 0, 0, 0);
+      const dayStatus = this.getStreakDayStatus(date);
       days.push({
         day: d,
         date,
         isDisabled: date > today,
-        isInRange: date >= start && date <= today,
-        isStart: date.getTime() === start.getTime(),
-        isEnd: date.getTime() === today.getTime(),
+        isSuccess: dayStatus === 'success',
+        isSkipped: dayStatus === 'skipped',
+        isFailed: dayStatus === 'failed',
+        isBeforeStart: dayStatus === 'before-start',
+        isToday: date.getTime() === today.getTime(),
       });
     }
 
@@ -520,85 +563,39 @@ export class Home {
   }
 
   private refreshMonthlyExpenses(): void {
-    const daysInMonth = new Date(
-      this.selectedYear,
-      this.selectedMonthIndex + 1,
-      0,
-    ).getDate();
-    const totalRows = this.randomInRange(10, 18);
+    const rows: ExpenseRow[] = [];
+    for (const [dateKey, expenses] of Object.entries(
+      this.journal.expensesByDate,
+    )) {
+      const [yearRaw, monthRaw, dayRaw] = dateKey.split('-');
+      const year = Number(yearRaw);
+      const month = Number(monthRaw) - 1;
+      const day = Number(dayRaw);
+      if (
+        Number.isNaN(year) ||
+        Number.isNaN(month) ||
+        Number.isNaN(day) ||
+        year !== this.selectedYear ||
+        month !== this.selectedMonthIndex
+      ) {
+        continue;
+      }
 
-    this.monthlyExpenses = Array.from({ length: totalRows }, () =>
-      this.createRandomExpense(daysInMonth),
-    ).sort((a, b) => a.day - b.day);
-  }
+      for (const expense of expenses) {
+        rows.push({
+          day,
+          date: `${String(day).padStart(2, '0')} ${
+            this.monthNames[this.selectedMonthIndex]
+          } ${this.selectedYear}`,
+          amount: this.formatRupiah(expense.amount),
+          description: expense.description,
+          categoryLabel: expense.category,
+          categoryClass: this.getCategoryClass(expense.category),
+        });
+      }
+    }
 
-  private createRandomExpense(daysInMonth: number): ExpenseRow {
-    const day = this.randomInRange(1, daysInMonth);
-    const categories: Array<{
-      label: ExpenseCategory;
-      className: string;
-      descriptions: string[];
-    }> = [
-      {
-        label: ExpenseCategory.Makanan,
-        className: 'category-makanan',
-        descriptions: [
-          'Makan siang kantor',
-          'Belanja bahan dapur',
-          'Ngopi sore',
-          'Makan malam keluarga',
-        ],
-      },
-      {
-        label: ExpenseCategory.Travel,
-        className: 'category-travel',
-        descriptions: [
-          'Tiket perjalanan',
-          'Biaya hotel',
-          'Transportasi bandara',
-          'Biaya tol perjalanan',
-        ],
-      },
-      {
-        label: ExpenseCategory.Entertainment,
-        className: 'category-entertainment',
-        descriptions: [
-          'Nonton bioskop',
-          'Main game online',
-          'Langganan streaming',
-          'Beli buku hiburan',
-        ],
-      },
-      {
-        label: ExpenseCategory.Subscription,
-        className: 'category-subscription',
-        descriptions: [
-          'Langganan aplikasi',
-          'Paket cloud storage',
-          'Biaya premium musik',
-          'Langganan tools kerja',
-        ],
-      },
-    ];
-
-    const chosenCategory =
-      categories[this.randomInRange(0, categories.length - 1)];
-    const description =
-      chosenCategory.descriptions[
-        this.randomInRange(0, chosenCategory.descriptions.length - 1)
-      ];
-    const amount = this.randomInRange(25000, 850000);
-
-    return {
-      day,
-      date: `${String(day).padStart(2, '0')} ${
-        this.monthNames[this.selectedMonthIndex]
-      } ${this.selectedYear}`,
-      amount: this.formatRupiah(amount),
-      description,
-      categoryLabel: chosenCategory.label,
-      categoryClass: chosenCategory.className,
-    };
+    this.monthlyExpenses = rows.sort((a, b) => a.day - b.day);
   }
 
   private async loadMonthlyExpenseTotal(): Promise<void> {
@@ -607,10 +604,393 @@ export class Home {
       this.monthlyExpenseTotal = summary.monthlyExpenseTotal;
       if (summary.financialData) {
         this.financialData = summary.financialData;
+        this.computeRollingBudgetToday();
       }
     } catch {
       // keep default 0
     }
+  }
+
+  private async initializeDashboard(): Promise<void> {
+    await this.loadMonthlyExpenseTotal();
+    this.journal = await this.journalService.loadCurrentUserJournal();
+    this.firstRecordDate = this.getFirstRecordDate();
+    await this.syncDailyStreakState();
+    this.refreshMonthlyExpenses();
+    this.refreshStreakCalendar();
+  }
+
+  private async syncDailyStreakState(): Promise<void> {
+    const today = this.startOfDay(new Date());
+    const todayKey = this.toDateKey(today);
+    const currentUserStreak = this.normalizeStreak(
+      JSON.parse(localStorage.getItem('currentUser') || '{}').streak,
+    );
+
+    if (!this.firstRecordDate) {
+      const emptyStreak: UserStreak = {
+        current: 0,
+        longest: 0,
+        lastActiveDate: todayKey,
+        freezeUsed: currentUserStreak.freezeUsed,
+      };
+      this.streakState = emptyStreak;
+      await this.persistStreak(emptyStreak);
+      return;
+    }
+
+    let runningCurrent = 0;
+    let runningLongest = 0;
+    let consecutiveMissOrFail = 0;
+    let cursor = this.startOfDay(new Date(this.firstRecordDate));
+
+    while (cursor <= today) {
+      const status = this.getStreakDayStatus(cursor);
+      if (status === 'success') {
+        runningCurrent += 1;
+        runningLongest = Math.max(runningLongest, runningCurrent);
+        consecutiveMissOrFail = 0;
+      } else if (status === 'skipped' || status === 'failed') {
+        consecutiveMissOrFail += 1;
+        if (consecutiveMissOrFail >= 3) {
+          runningCurrent = 0;
+        }
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    const updated: UserStreak = {
+      current: runningCurrent,
+      longest: Math.max(currentUserStreak.longest, runningLongest),
+      lastActiveDate: todayKey,
+      freezeUsed: currentUserStreak.freezeUsed,
+    };
+    this.streakState = updated;
+    await this.persistStreak(updated);
+  }
+
+  private async persistStreak(streak: UserStreak): Promise<void> {
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const updatedUser = {
+      ...user,
+      streak,
+    };
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    if (user.id) {
+      try {
+        await firstValueFrom(
+          this.http.patch(`${USERS_API_URL}/${user.id}`, {
+            streak,
+          }),
+        );
+      } catch {
+        // silent
+      }
+    }
+  }
+
+  private normalizeStreak(value: unknown): UserStreak {
+    if (!value || typeof value !== 'object') {
+      return {
+        current: 0,
+        longest: 0,
+        lastActiveDate: '',
+        freezeUsed: false,
+      };
+    }
+
+    const raw = value as Partial<UserStreak>;
+    return {
+      current: Math.max(0, Math.floor(raw.current || 0)),
+      longest: Math.max(0, Math.floor(raw.longest || 0)),
+      lastActiveDate: raw.lastActiveDate || '',
+      freezeUsed: Boolean(raw.freezeUsed),
+    };
+  }
+
+  private computeRollingBudgetToday(): void {
+    if (
+      !this.financialData?.currentCycleStart ||
+      !this.financialData.currentCycleEnd
+    ) {
+      this.rollingBudgetToday = 0;
+      this.rollingBudgetRemaining = 0;
+      this.rollingDaysRemaining = 0;
+      this.rollingTotalBudget = 0;
+      this.rollingUsedBudget = 0;
+      return;
+    }
+
+    const cycleStart = this.parseDateKey(this.financialData.currentCycleStart);
+    const cycleEnd = this.parseDateKey(this.financialData.currentCycleEnd);
+    if (!cycleStart || !cycleEnd) {
+      return;
+    }
+
+    const today = this.startOfDay(new Date());
+    const dayBeforeToday = new Date(today);
+    dayBeforeToday.setDate(dayBeforeToday.getDate() - 1);
+    const usedBeforeToday = this.sumExpensesInRange(cycleStart, dayBeforeToday);
+    const totalBudget =
+      this.financialData.currentPengeluaranLimit ??
+      this.financialData.pengeluaranWajib;
+    const remainingBudget = Math.max(0, totalBudget - usedBeforeToday);
+    const remainingDays = Math.max(1, this.daysBetween(today, cycleEnd) + 1);
+
+    this.rollingTotalBudget = totalBudget;
+    this.rollingUsedBudget = this.financialData.currentPengeluaranUsed || 0;
+    this.rollingBudgetRemaining = Math.max(
+      0,
+      totalBudget - this.rollingUsedBudget,
+    );
+    this.rollingDaysRemaining = remainingDays;
+    this.rollingBudgetToday = Math.max(
+      0,
+      Math.floor(remainingBudget / remainingDays),
+    );
+  }
+
+  private getStreakDayStatus(date: Date): StreakDayStatus {
+    const day = this.startOfDay(date);
+    const today = this.startOfDay(new Date());
+    if (day > today) {
+      return 'future';
+    }
+
+    if (!this.firstRecordDate || day < this.firstRecordDate) {
+      return 'before-start';
+    }
+
+    const hasEntry = this.getTotalEntryCountByDate(day) > 0;
+    if (!hasEntry && this.noExpensePolicy === 'require-entry') {
+      return 'skipped';
+    }
+
+    const rolling = this.computeRollingBudgetForDate(day);
+    if (!rolling.hasBudget) {
+      return hasEntry ? 'success' : 'skipped';
+    }
+
+    const spentToday = this.getTotalExpenseByDate(day);
+    const isWithinBudget = spentToday <= rolling.dailyBudget;
+    return isWithinBudget ? 'success' : 'failed';
+  }
+
+  private computeRollingBudgetForDate(date: Date): {
+    hasBudget: boolean;
+    dailyBudget: number;
+  } {
+    if (!this.financialData) {
+      return { hasBudget: false, dailyBudget: 0 };
+    }
+
+    const cycle = this.resolveCycleRangeByDate(date);
+    const totalBudget = this.getCycleBudgetByDate(date);
+    if (totalBudget <= 0) {
+      return { hasBudget: false, dailyBudget: 0 };
+    }
+
+    const dayBefore = new Date(date);
+    dayBefore.setDate(dayBefore.getDate() - 1);
+    const usedBefore = this.sumExpensesInRange(cycle.start, dayBefore);
+    const remainingBudget = Math.max(0, totalBudget - usedBefore);
+    const remainingDays = Math.max(1, this.daysBetween(date, cycle.end) + 1);
+    return {
+      hasBudget: true,
+      dailyBudget: Math.floor(remainingBudget / remainingDays),
+    };
+  }
+
+  private resolveCycleRangeByDate(referenceDate: Date): {
+    start: Date;
+    end: Date;
+  } {
+    const intendedDay = Math.max(
+      1,
+      Math.min(
+        31,
+        Math.floor(
+          this.financialData?.intendedTanggalPemasukan ||
+            this.financialData?.tanggalPemasukan ||
+            1,
+        ),
+      ),
+    );
+    const resetDayThisMonth = this.resolveResetDay(
+      referenceDate.getFullYear(),
+      referenceDate.getMonth(),
+      intendedDay,
+    );
+    const thisMonthResetDate = new Date(
+      referenceDate.getFullYear(),
+      referenceDate.getMonth(),
+      resetDayThisMonth,
+    );
+    const start =
+      referenceDate >= thisMonthResetDate
+        ? thisMonthResetDate
+        : new Date(
+            referenceDate.getFullYear(),
+            referenceDate.getMonth() - 1,
+            this.resolveResetDay(
+              referenceDate.getFullYear(),
+              referenceDate.getMonth() - 1,
+              intendedDay,
+            ),
+          );
+    const nextStart = new Date(
+      start.getFullYear(),
+      start.getMonth() + 1,
+      this.resolveResetDay(
+        start.getFullYear(),
+        start.getMonth() + 1,
+        intendedDay,
+      ),
+    );
+    const end = new Date(nextStart);
+    end.setDate(end.getDate() - 1);
+    return {
+      start: this.startOfDay(start),
+      end: this.startOfDay(end),
+    };
+  }
+
+  private resolveResetDay(
+    year: number,
+    monthIndex: number,
+    intendedDay: number,
+  ): number {
+    const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+    return Math.min(intendedDay, lastDay);
+  }
+
+  private getCycleBudgetByDate(date: Date): number {
+    if (!this.financialData) {
+      return 0;
+    }
+
+    const targetDateKey = this.toDateKey(date);
+    if (
+      this.financialData.currentCycleStart &&
+      this.financialData.currentCycleEnd &&
+      targetDateKey >= this.financialData.currentCycleStart &&
+      targetDateKey <= this.financialData.currentCycleEnd
+    ) {
+      return (
+        this.financialData.currentPengeluaranLimit ??
+        this.financialData.pengeluaranWajib
+      );
+    }
+
+    return this.financialData.pengeluaranWajib;
+  }
+
+  private getTotalExpenseByDate(date: Date): number {
+    const key = this.toDateKey(date);
+    const expenses = this.journal.expensesByDate[key] || [];
+    return expenses.reduce((sum, item) => sum + item.amount, 0);
+  }
+
+  private getTotalEntryCountByDate(date: Date): number {
+    const key = this.toDateKey(date);
+    const expenses = this.journal.expensesByDate[key]?.length || 0;
+    const incomes = this.journal.incomesByDate[key]?.length || 0;
+    return expenses + incomes;
+  }
+
+  private getFirstRecordDate(): Date | null {
+    const dateKeys = new Set<string>();
+
+    for (const [key, entries] of Object.entries(this.journal.expensesByDate)) {
+      if (entries.length > 0) {
+        dateKeys.add(key);
+      }
+    }
+
+    for (const [key, entries] of Object.entries(this.journal.incomesByDate)) {
+      if (entries.length > 0) {
+        dateKeys.add(key);
+      }
+    }
+
+    let earliest: Date | null = null;
+    for (const key of dateKeys) {
+      const parsed = this.parseDateKey(key);
+      if (!parsed) {
+        continue;
+      }
+      if (!earliest || parsed < earliest) {
+        earliest = parsed;
+      }
+    }
+    return earliest;
+  }
+
+  private sumExpensesInRange(start: Date, end: Date): number {
+    if (end < start) {
+      return 0;
+    }
+    let total = 0;
+    for (const [dateKey, expenses] of Object.entries(
+      this.journal.expensesByDate,
+    )) {
+      const date = this.parseDateKey(dateKey);
+      if (!date) {
+        continue;
+      }
+      if (date >= start && date <= end) {
+        total += expenses.reduce((sum, item) => sum + item.amount, 0);
+      }
+    }
+    return total;
+  }
+
+  private getCategoryClass(category: ExpenseCategory): string {
+    if (category === ExpenseCategory.Makanan) return 'category-makanan';
+    if (category === ExpenseCategory.Travel) return 'category-travel';
+    if (category === ExpenseCategory.Entertainment)
+      return 'category-entertainment';
+    if (category === ExpenseCategory.Subscription)
+      return 'category-subscription';
+    if (category === ExpenseCategory.Bills) return 'category-bills';
+    return 'category-other';
+  }
+
+  private startOfDay(date: Date): Date {
+    const normalized = new Date(date);
+    normalized.setHours(0, 0, 0, 0);
+    return normalized;
+  }
+
+  private parseDateKey(dateKey: string): Date | null {
+    const [yearRaw, monthRaw, dayRaw] = dateKey.split('-');
+    const year = Number(yearRaw);
+    const month = Number(monthRaw);
+    const day = Number(dayRaw);
+    if (
+      Number.isNaN(year) ||
+      Number.isNaN(month) ||
+      Number.isNaN(day) ||
+      month < 1 ||
+      month > 12 ||
+      day < 1 ||
+      day > 31
+    ) {
+      return null;
+    }
+    return this.startOfDay(new Date(year, month - 1, day));
+  }
+
+  private toDateKey(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private daysBetween(from: Date, to: Date): number {
+    const ms = this.startOfDay(to).getTime() - this.startOfDay(from).getTime();
+    return Math.floor(ms / (1000 * 60 * 60 * 24));
   }
 
   private setBudgetField(
@@ -703,10 +1083,6 @@ export class Home {
 
   private toMonthInputValue(year: number, monthIndex: number): string {
     return `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
-  }
-
-  private randomInRange(min: number, max: number): number {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
   private generatePercentage(): number {
