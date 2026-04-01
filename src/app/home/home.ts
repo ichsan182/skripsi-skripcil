@@ -4,34 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Sidebar } from '../shared/components/sidebar/sidebar';
-import { JournalService } from '../core/services/journal.service';
+import {
+  BudgetAllocation,
+  FinancialData,
+  JournalService,
+  SavingsAllocation,
+} from '../core/services/journal.service';
 import { ExpenseCategory } from '../shared/utils/expense-category';
 import { USERS_API_URL } from '../core/config/app-api.config';
-
-interface BudgetAllocation {
-  mode: 2 | 3;
-  pengeluaran: number;
-  wants: number;
-  savings: number;
-}
-
-interface SavingsAllocation {
-  tabungan: number;
-  danaDarurat: number;
-  danaInvestasi: number;
-}
-
-interface FinancialData {
-  pendapatan: number;
-  pengeluaranWajib: number;
-  tanggalPemasukan: number;
-  hutangWajib: number;
-  estimasiTabungan: number;
-  danaDarurat: number;
-  danaInvestasi?: number;
-  budgetAllocation?: BudgetAllocation;
-  savingsAllocation?: SavingsAllocation;
-}
 
 interface ExpenseRow {
   date: string;
@@ -192,16 +172,21 @@ export class Home {
 
   get sisaSaldoAmount(): number {
     if (!this.financialData) return 0;
-    const sisa =
+    if (this.financialData.currentSisaSaldoPool !== undefined) {
+      return Math.max(0, this.financialData.currentSisaSaldoPool);
+    }
+    const budget = this.financialData.budgetAllocation;
+    if (budget) {
+      return Math.max(
+        0,
+        Math.round((this.financialData.pendapatan * budget.savings) / 100),
+      );
+    }
+    const fallback =
       this.financialData.pendapatan -
       this.financialData.pengeluaranWajib -
       this.financialData.hutangWajib;
-    const allocated = this.financialData.savingsAllocation
-      ? this.financialData.savingsAllocation.tabungan +
-        this.financialData.savingsAllocation.danaDarurat +
-        this.financialData.savingsAllocation.danaInvestasi
-      : 0;
-    return Math.max(0, sisa - allocated);
+    return Math.max(0, fallback);
   }
 
   get sisaSaldo(): string {
@@ -213,7 +198,11 @@ export class Home {
   }
 
   get pengeluaranWajibFormatted(): string {
-    return this.formatRupiah(this.financialData?.pengeluaranWajib || 0);
+    return this.formatRupiah(
+      this.financialData?.currentPengeluaranLimit ??
+        this.financialData?.pengeluaranWajib ??
+        0,
+    );
   }
 
   get monthlyExpenseTotalFormatted(): string {
@@ -424,6 +413,14 @@ export class Home {
       danaInvestasi,
       budgetAllocation,
       savingsAllocation,
+      currentPengeluaranLimit: pengeluaranWajib,
+      currentSisaSaldoPool: Math.max(
+        0,
+        Math.round((pendapatan * this.budgetSavings) / 100) -
+          (this.savingsTabunganInput +
+            this.savingsDanaDaruratInput +
+            this.savingsDanaInvestasiInput),
+      ),
     };
     this.financialData = updatedFinancialData;
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
@@ -605,26 +602,12 @@ export class Home {
   }
 
   private async loadMonthlyExpenseTotal(): Promise<void> {
-    if (!this.financialData) return;
     try {
-      const journal = await this.journalService.loadCurrentUserJournal();
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      let total = 0;
-      for (const [dateKey, expenses] of Object.entries(
-        journal.expensesByDate,
-      )) {
-        const [y, m, d] = dateKey.split('-').map(Number);
-        const date = new Date(y, m - 1, d);
-        date.setHours(0, 0, 0, 0);
-        const isCurrentMonth =
-          date.getFullYear() === today.getFullYear() &&
-          date.getMonth() === today.getMonth();
-        if (isCurrentMonth && date <= today) {
-          total += expenses.reduce((sum, e) => sum + e.amount, 0);
-        }
+      const summary = await this.journalService.getCurrentCycleSummary();
+      this.monthlyExpenseTotal = summary.monthlyExpenseTotal;
+      if (summary.financialData) {
+        this.financialData = summary.financialData;
       }
-      this.monthlyExpenseTotal = total;
     } catch {
       // keep default 0
     }

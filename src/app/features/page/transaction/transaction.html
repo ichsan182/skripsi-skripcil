@@ -168,6 +168,10 @@
                 >{{ formatPercent(item.percent) }}%</span
               >
             </div>
+
+            <div class="cycle-warning" *ngIf="cycleTopUpWarningText">
+              {{ cycleTopUpWarningText }}
+            </div>
           </div>
         </article>
 
@@ -342,3 +346,75 @@
     </div>
   </section>
 </div>
+
+@if (topUpModalOpen && budgetPrompt && pendingExpenseEntry) {
+<div class="modal-overlay" (click)="closeTopUpModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Limit Pengeluaran Sudah Penuh</h3>
+      <button type="button" class="modal-close" (click)="closeTopUpModal()">
+        &times;
+      </button>
+    </div>
+    <p class="modal-desc">
+      Pengeluaran periode ini sudah mencapai {{
+      formatCurrency(budgetPrompt.monthlyExpenseUsed) }} dari limit {{
+      formatCurrency(budgetPrompt.monthlyExpenseLimit) }}.
+    </p>
+    <p class="modal-desc">
+      Kekurangan untuk transaksi ini: {{ formatCurrency(budgetPrompt.shortage)
+      }}
+    </p>
+
+    <div class="source-switch">
+      <button
+        type="button"
+        [class.active]="topUpSource === 'tabungan'"
+        [disabled]="budgetPrompt.maxTopUpFromTabungan <= 0"
+        (click)="topUpSource = 'tabungan'"
+      >
+        Tabungan (Maks: {{ formatCurrency(budgetPrompt.maxTopUpFromTabungan) }})
+      </button>
+      <button
+        type="button"
+        [class.active]="topUpSource === 'danaDarurat'"
+        [disabled]="budgetPrompt.maxTopUpFromDanaDarurat <= 0"
+        (click)="topUpSource = 'danaDarurat'"
+      >
+        Dana Darurat (Maks: {{
+        formatCurrency(budgetPrompt.maxTopUpFromDanaDarurat) }})
+      </button>
+    </div>
+
+    <label class="modal-label">Nominal top up</label>
+    <input
+      type="number"
+      min="1"
+      [max]="currentTopUpMax"
+      [(ngModel)]="topUpAmountInput"
+      class="topup-input"
+      placeholder="Masukkan nominal"
+    />
+
+    <p class="modal-note" *ngIf="topUpSource === 'tabungan'">
+      Sisa penarikan Tabungan periode ini: {{
+      budgetPrompt.tabunganTopUpRemainingCount }}x dari {{
+      budgetPrompt.tabunganTopUpAllowedCount }}x.
+    </p>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" (click)="closeTopUpModal()">
+        Nanti saja
+      </button>
+      <button
+        type="button"
+        class="btn-confirm"
+        [disabled]="!canSubmitTopUp"
+        (click)="confirmTopUpAndRetry()"
+      >
+        Tambah Limit dan Simpan
+      </button>
+    </div>
+  </div>
+</div>
+}

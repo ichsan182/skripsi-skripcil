@@ -133,3 +133,67 @@
     </div>
   </section>
 </div>
+
+@if (topUpModalOpen && budgetPrompt && pendingExpenseEntry) {
+<div class="modal-overlay" (click)="closeTopUpModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Pengeluaran Melebihi Limit Periode</h3>
+      <button type="button" class="modal-close" (click)="closeTopUpModal()">
+        &times;
+      </button>
+    </div>
+    <p class="modal-desc">
+      Kamu perlu tambahan {{ formatCurrency(budgetPrompt.shortage) }} untuk
+      menyimpan transaksi ini.
+    </p>
+    <div class="source-switch">
+      <button
+        type="button"
+        [class.active]="topUpSource === 'tabungan'"
+        [disabled]="budgetPrompt.maxTopUpFromTabungan <= 0"
+        (click)="topUpSource = 'tabungan'"
+      >
+        Tabungan (maks {{ formatCurrency(budgetPrompt.maxTopUpFromTabungan) }})
+      </button>
+      <button
+        type="button"
+        [class.active]="topUpSource === 'danaDarurat'"
+        [disabled]="budgetPrompt.maxTopUpFromDanaDarurat <= 0"
+        (click)="topUpSource = 'danaDarurat'"
+      >
+        Dana Darurat (maks {{
+        formatCurrency(budgetPrompt.maxTopUpFromDanaDarurat) }})
+      </button>
+    </div>
+
+    <label class="modal-label">Nominal top up</label>
+    <input
+      type="number"
+      min="1"
+      [max]="currentTopUpMax"
+      [(ngModel)]="topUpAmountInput"
+      class="topup-input"
+      placeholder="Masukkan nominal"
+    />
+
+    <p class="modal-note" *ngIf="topUpSource === 'tabungan'">
+      Sisa penarikan Tabungan: {{ budgetPrompt.tabunganTopUpRemainingCount }}x.
+    </p>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" (click)="closeTopUpModal()">
+        Tutup
+      </button>
+      <button
+        type="button"
+        class="btn-confirm"
+        [disabled]="!canSubmitTopUp"
+        (click)="confirmTopUpAndRetry()"
+      >
+        Top Up dan Simpan
+      </button>
+    </div>
+  </div>
+</div>
+}

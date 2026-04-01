@@ -438,8 +438,8 @@
             "createdAt": "2026-03-31T14:08:22.450Z"
           }
         ],
-        "selectedSymbol": "TSLA",
-        "updatedAt": "2026-03-31T14:08:38.227Z"
+        "selectedSymbol": "BBCA",
+        "updatedAt": "2026-03-31T14:31:55.570Z"
       }
     },
     {
@@ -683,7 +683,7 @@
       "onboardingCompleted": true,
       "level": 4,
       "journal": {
-        "nextChatMessageId": 35,
+        "nextChatMessageId": 39,
         "chatByDate": {
           "2026-03-28": [
             {
@@ -892,6 +892,32 @@
               "text": "Dicatat: Rp 12.849.902 untuk \"jepang\" kategori other.",
               "time": "20.44"
             }
+          ],
+          "2026-04-01": [
+            {
+              "id": 35,
+              "sender": "user",
+              "text": "babi",
+              "time": "21.18"
+            },
+            {
+              "id": 36,
+              "sender": "assistant",
+              "text": "Catatan untuk Rabu, 1 April 2026 sudah disimpan.",
+              "time": "21.18"
+            },
+            {
+              "id": 37,
+              "sender": "user",
+              "text": "babi 120000",
+              "time": "21.18"
+            },
+            {
+              "id": 38,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 120.000 untuk \"babi\" kategori other.",
+              "time": "21.18"
+            }
           ]
         },
         "expensesByDate": {
@@ -983,6 +1009,13 @@
               "description": "babi",
               "category": "other"
             }
+          ],
+          "2026-04-01": [
+            {
+              "amount": 120000,
+              "description": "babi",
+              "category": "other"
+            }
           ]
         },
         "incomesByDate": {}
@@ -1005,7 +1038,19 @@
           "tabungan": 0,
           "danaDarurat": 0,
           "danaInvestasi": 3000000
-        }
+        },
+        "intendedTanggalPemasukan": 25,
+        "currentPengeluaranLimit": 4000000,
+        "currentPengeluaranUsed": 14632123,
+        "currentSisaSaldoPool": 1000000,
+        "monthlyTopUp": {
+          "cycleKey": "2026-03-25",
+          "fromTabunganCount": 0,
+          "totalFromTabungan": 0,
+          "totalFromDanaDarurat": 0
+        },
+        "currentCycleStart": "2026-03-25",
+        "currentCycleEnd": "2026-04-24"
       },
       "investmentWatchlist": {
         "items": [
@@ -1035,7 +1080,241 @@
           }
         ],
         "selectedSymbol": "NVDA",
-        "updatedAt": "2026-03-31T14:07:45.866Z"
+        "updatedAt": "2026-04-01T14:19:51.301Z"
+      }
+    },
+    {
+      "id": "e152",
+      "name": "badut ancol",
+      "email": "testtanggal1@gmail.com",
+      "phone": "082112488179",
+      "password": "123456",
+      "onboardingCompleted": true,
+      "level": 2,
+      "investmentWatchlist": {
+        "items": [],
+        "selectedSymbol": null,
+        "updatedAt": "2026-04-01T14:58:56.068Z"
+      },
+      "journal": {
+        "nextChatMessageId": 1,
+        "chatByDate": {},
+        "expensesByDate": {},
+        "incomesByDate": {}
+      },
+      "financialData": {
+        "pendapatan": 15000000,
+        "pengeluaranWajib": 5000000,
+        "tanggalPemasukan": 25,
+        "intendedTanggalPemasukan": 25,
+        "hutangWajib": 200000,
+        "estimasiTabungan": 25000000,
+        "danaDarurat": 40000000,
+        "budgetAllocation": {
+          "mode": 2,
+          "pengeluaran": 33,
+          "wants": 0,
+          "savings": 67
+        },
+        "currentPengeluaranLimit": 4950000,
+        "currentPengeluaranUsed": 0,
+        "currentSisaSaldoPool": 10050000,
+        "monthlyTopUp": {
+          "cycleKey": "2026-03-25",
+          "fromTabunganCount": 0,
+          "totalFromTabungan": 0,
+          "totalFromDanaDarurat": 0
+        },
+        "currentCycleStart": "2026-03-25",
+        "currentCycleEnd": "2026-04-24"
+      }
+    },
+    {
+      "id": "700e",
+      "name": "aneh",
+      "email": "aneh@gmail.com",
+      "phone": "1241241121212",
+      "password": "123456",
+      "onboardingCompleted": true,
+      "level": 4,
+      "investmentWatchlist": {
+        "items": [],
+        "selectedSymbol": null,
+        "updatedAt": "2026-04-01T15:01:08.174Z"
+      },
+      "journal": {
+        "nextChatMessageId": 17,
+        "chatByDate": {
+          "2026-04-01": [
+            {
+              "id": 1,
+              "sender": "user",
+              "text": "traveling 2000000",
+              "time": "22.02"
+            },
+            {
+              "id": 2,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 2.000.000 untuk \"traveling\" kategori travel.",
+              "time": "22.02"
+            },
+            {
+              "id": 3,
+              "sender": "user",
+              "text": "makan 500000",
+              "time": "22.02"
+            },
+            {
+              "id": 4,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "22.02"
+            },
+            {
+              "id": 7,
+              "sender": "user",
+              "text": "2144122 nonton",
+              "time": "22.08"
+            },
+            {
+              "id": 8,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "22.08"
+            },
+            {
+              "id": 9,
+              "sender": "user",
+              "text": "5000000 nonton",
+              "time": "22.08"
+            },
+            {
+              "id": 10,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "22.08"
+            },
+            {
+              "id": 11,
+              "sender": "user",
+              "text": "5000000 nonton",
+              "time": "22.09"
+            },
+            {
+              "id": 12,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "22.09"
+            },
+            {
+              "id": 13,
+              "sender": "user",
+              "text": "50000 nonton",
+              "time": "22.09"
+            },
+            {
+              "id": 14,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 50.000 untuk \"nonton\" kategori entertainment.",
+              "time": "22.09"
+            },
+            {
+              "id": 15,
+              "sender": "user",
+              "text": "200000 berantem",
+              "time": "22.09"
+            },
+            {
+              "id": 16,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 200.000 untuk \"berantem\" kategori other.",
+              "time": "22.09"
+            }
+          ],
+          "2026-05-25": [
+            {
+              "id": 5,
+              "sender": "user",
+              "text": "rumah sakit 23000000",
+              "time": "06.01"
+            },
+            {
+              "id": 6,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "06.01"
+            }
+          ]
+        },
+        "expensesByDate": {
+          "2026-04-01": [
+            {
+              "amount": 200000,
+              "description": "berantem",
+              "category": "other"
+            },
+            {
+              "amount": 50000,
+              "description": "nonton",
+              "category": "entertainment"
+            },
+            {
+              "amount": 2144122,
+              "description": "nonton",
+              "category": "entertainment"
+            },
+            {
+              "amount": 500000,
+              "description": "makan",
+              "category": "makanan"
+            },
+            {
+              "amount": 2000000,
+              "description": "traveling",
+              "category": "travel"
+            }
+          ],
+          "2026-05-25": [
+            {
+              "amount": 23000000,
+              "description": "rumah sakit",
+              "category": "other"
+            }
+          ]
+        },
+        "incomesByDate": {}
+      },
+      "financialData": {
+        "pendapatan": 8000000,
+        "pengeluaranWajib": 2480000,
+        "tanggalPemasukan": 25,
+        "intendedTanggalPemasukan": 25,
+        "hutangWajib": 0,
+        "estimasiTabungan": 34840000,
+        "danaDarurat": 10000000,
+        "budgetAllocation": {
+          "mode": 2,
+          "pengeluaran": 31,
+          "wants": 0,
+          "savings": 69
+        },
+        "currentPengeluaranLimit": 7440000,
+        "currentPengeluaranUsed": 4894122,
+        "currentSisaSaldoPool": 5520000,
+        "monthlyTopUp": {
+          "cycleKey": "2026-03-25",
+          "fromTabunganCount": 2,
+          "totalFromTabungan": 4960000,
+          "totalFromDanaDarurat": 0
+        },
+        "currentCycleStart": "2026-03-25",
+        "currentCycleEnd": "2026-04-24",
+        "danaInvestasi": 5520000,
+        "savingsAllocation": {
+          "tabungan": 0,
+          "danaDarurat": 0,
+          "danaInvestasi": 5520000
+        }
       }
     }
   ]

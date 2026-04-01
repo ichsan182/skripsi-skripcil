@@ -24,7 +24,10 @@ export class Questionnaire {
   form1 = this.fb.group({
     pendapatan: ['', [Validators.required]],
     pengeluaranWajib: ['', [Validators.required]],
-    tanggalPemasukan: ['', [Validators.required]],
+    tanggalPemasukan: [
+      '',
+      [Validators.required, Validators.pattern(/^[0-9]{1,2}$/)],
+    ],
     hutangWajib: ['', [Validators.required]],
   });
 
@@ -77,15 +80,34 @@ export class Questionnaire {
     this.isSubmitting = true;
     try {
       const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      const tanggalPemasukan = this.parseNumber(
+        this.form1.value.tanggalPemasukan || '',
+      );
+
+      if (tanggalPemasukan < 1 || tanggalPemasukan > 31) {
+        this.form1.get('tanggalPemasukan')?.setErrors({ invalidDay: true });
+        this.form1.get('tanggalPemasukan')?.markAsTouched();
+        this.currentStep = 1;
+        return;
+      }
+
+      if (tanggalPemasukan >= 29) {
+        const isConfirmed = window.confirm(
+          'Di bulan yang tidak memiliki tanggal ini, reset akan dilakukan pada hari terakhir bulan tersebut. Apakah kamu setuju?',
+        );
+        if (!isConfirmed) {
+          this.currentStep = 1;
+          return;
+        }
+      }
 
       const financialData = {
         pendapatan: this.parseNumber(this.form1.value.pendapatan || ''),
         pengeluaranWajib: this.parseNumber(
           this.form1.value.pengeluaranWajib || '',
         ),
-        tanggalPemasukan: this.parseNumber(
-          this.form1.value.tanggalPemasukan || '',
-        ),
+        tanggalPemasukan,
+        intendedTanggalPemasukan: tanggalPemasukan,
         hutangWajib: this.parseNumber(this.form1.value.hutangWajib || ''),
         estimasiTabungan: this.parseNumber(
           this.form2.value.estimasiTabungan || '',

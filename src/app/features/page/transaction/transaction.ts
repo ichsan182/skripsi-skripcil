@@ -4,9 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { Sidebar } from '../../../shared/components/sidebar/sidebar';
 import {
   ExpenseEntry,
+  ExpenseBudgetPrompt,
+  FinancialData,
   IncomeEntry,
   ChatMessage,
   JournalService,
+  TopUpSource,
   UserJournal,
 } from '../../../core/services/journal.service';
 import { ExpenseCategory } from '../../../shared/utils/expense-category';
@@ -96,6 +99,15 @@ export class Transaction {
   calendarCells: CalendarCell[] = [];
 
   messageInput = '';
+  currentFinancialData: FinancialData | null = null;
+  budgetPrompt: ExpenseBudgetPrompt | null = null;
+  topUpModalOpen = false;
+  topUpSource: TopUpSource = 'tabungan';
+  topUpAmountInput: number | null = null;
+  pendingExpenseEntry: ExpenseEntry | null = null;
+  pendingChatText = '';
+  pendingFromChat = false;
+  topUpNotice = '';
 
   expenseDraft: {
     description: string;
@@ -127,6 +139,60 @@ export class Transaction {
   constructor() {
     this.rebuildCalendar();
     void this.initializeData();
+  }
+
+  get canSubmitTopUp(): boolean {
+    if (
+      !this.budgetPrompt ||
+      !this.topUpAmountInput ||
+      this.topUpAmountInput <= 0
+    ) {
+      return false;
+    }
+    return this.topUpAmountInput <= this.currentTopUpMax;
+  }
+
+  get currentTopUpMax(): number {
+    if (!this.budgetPrompt) {
+      return 0;
+    }
+    return this.topUpSource === 'tabungan'
+      ? this.budgetPrompt.maxTopUpFromTabungan
+      : this.budgetPrompt.maxTopUpFromDanaDarurat;
+  }
+
+  get cycleTopUpWarningText(): string {
+    if (!this.currentFinancialData?.monthlyTopUp) {
+      return '';
+    }
+    const summary = this.currentFinancialData.monthlyTopUp;
+    if (summary.totalFromTabungan <= 0) {
+      return '';
+    }
+
+    const monthLabel = new Intl.DateTimeFormat('id-ID', {
+      month: 'long',
+      year: 'numeric',
+    }).format(this.selectedDate);
+    const allowed =
+      this.currentFinancialData.estimasiTabungan >= this.baseExpenseLimit * 3
+        ? 2
+        : 1;
+    const remainingCount = Math.max(0, allowed - summary.fromTabunganCount);
+
+    return `Pada periode ${monthLabel}, kamu sudah menarik ${this.formatCurrency(summary.totalFromTabungan)} dari Tabungan untuk menambah limit pengeluaran. Sisa kesempatan penarikan Tabungan: ${remainingCount}x.`;
+  }
+
+  get baseExpenseLimit(): number {
+    const data = this.currentFinancialData;
+    if (!data?.budgetAllocation) {
+      return data?.pengeluaranWajib ?? 0;
+    }
+    const pct =
+      data.budgetAllocation.mode === 3
+        ? data.budgetAllocation.pengeluaran + data.budgetAllocation.wants
+        : data.budgetAllocation.pengeluaran;
+    return Math.round((data.pendapatan * pct) / 100);
   }
 
   get monthYearLabel(): string {
@@ -242,6 +308,8 @@ export class Transaction {
       );
       this.rebuildCalendar();
     }
+
+    void this.refreshPromptState();
   }
 
   isSameDate(dateA: Date, dateB: Date): boolean {
@@ -261,11 +329,19 @@ export class Transaction {
     const todayKey = this.selectedDateKey;
     this.messageInput = '';
 
-    this.journal = await this.journalService.addChatMessageWithAutoExpense(
+    const result = await this.journalService.addChatMessageWithAutoExpense(
       todayKey,
       text,
       this.selectedDateLabel,
     );
+    this.journal = result.journal;
+    this.currentFinancialData = result.financialData;
+
+    if (result.requiresTopUp && result.prompt && result.pendingExpense) {
+      this.openTopUpModal(result.prompt, result.pendingExpense, text, true);
+    } else {
+      await this.refreshPromptState();
+    }
   }
 
   async addExpense(): Promise<void> {
@@ -280,14 +356,23 @@ export class Transaction {
       return;
     }
 
-    this.journal = await this.journalService.addExpense(this.selectedDateKey, {
+    const result = await this.journalService.addExpense(this.selectedDateKey, {
       description,
       amount,
       category: this.expenseDraft.category,
     });
 
+    this.journal = result.journal;
+    this.currentFinancialData = result.financialData;
+
+    if (result.requiresTopUp && result.prompt && result.pendingExpense) {
+      this.openTopUpModal(result.prompt, result.pendingExpense, '', false);
+      return;
+    }
+
     this.expenseDraft.description = '';
     this.expenseDraft.amount = null;
+    await this.refreshPromptState();
   }
 
   async addIncome(): Promise<void> {
@@ -342,6 +427,89 @@ export class Transaction {
 
   private async initializeData(): Promise<void> {
     this.journal = await this.journalService.loadCurrentUserJournal();
+    const cycle = await this.journalService.getCurrentCycleSummary(
+      this.selectedDate,
+    );
+    this.currentFinancialData = cycle.financialData;
+    this.budgetPrompt = await this.journalService.getExpensePromptForDate(
+      this.selectedDateKey,
+    );
+  }
+
+  async confirmTopUpAndRetry(): Promise<void> {
+    if (
+      !this.pendingExpenseEntry ||
+      !this.canSubmitTopUp ||
+      !this.topUpAmountInput
+    ) {
+      return;
+    }
+
+    if (this.pendingFromChat) {
+      const result = await this.journalService.addExpense(
+        this.selectedDateKey,
+        this.pendingExpenseEntry,
+        {
+          allowTopUp: true,
+          topUpSource: this.topUpSource,
+          topUpAmount: this.topUpAmountInput,
+        },
+      );
+      this.journal = result.journal;
+      this.currentFinancialData = result.financialData;
+      this.closeTopUpModal();
+      await this.refreshPromptState();
+      return;
+    }
+
+    const result = await this.journalService.addExpense(
+      this.selectedDateKey,
+      this.pendingExpenseEntry,
+      {
+        allowTopUp: true,
+        topUpSource: this.topUpSource,
+        topUpAmount: this.topUpAmountInput,
+      },
+    );
+
+    this.journal = result.journal;
+    this.currentFinancialData = result.financialData;
+    if (!result.requiresTopUp) {
+      this.expenseDraft.description = '';
+      this.expenseDraft.amount = null;
+      this.closeTopUpModal();
+      await this.refreshPromptState();
+    }
+  }
+
+  closeTopUpModal(): void {
+    this.topUpModalOpen = false;
+    this.pendingExpenseEntry = null;
+    this.topUpAmountInput = null;
+    this.pendingChatText = '';
+    this.pendingFromChat = false;
+  }
+
+  private openTopUpModal(
+    prompt: ExpenseBudgetPrompt,
+    pendingExpense: ExpenseEntry,
+    rawChatText: string,
+    fromChat: boolean,
+  ): void {
+    this.budgetPrompt = prompt;
+    this.pendingExpenseEntry = pendingExpense;
+    this.pendingFromChat = fromChat;
+    this.pendingChatText = rawChatText;
+    this.topUpSource =
+      prompt.maxTopUpFromTabungan > 0 ? 'tabungan' : 'danaDarurat';
+    this.topUpAmountInput = null;
+    this.topUpModalOpen = true;
+  }
+
+  private async refreshPromptState(): Promise<void> {
+    this.budgetPrompt = await this.journalService.getExpensePromptForDate(
+      this.selectedDateKey,
+    );
   }
 
   private rebuildCalendar(): void {

@@ -3,7 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Sidebar } from '../../../shared/components/sidebar/sidebar';
 import {
+  ExpenseBudgetPrompt,
+  ExpenseEntry,
   ChatMessage,
+  TopUpSource,
   JournalService,
   UserJournal,
 } from '../../../core/services/journal.service';
@@ -46,6 +49,11 @@ export class Chat {
 
   calendarCells: CalendarCell[] = [];
   messageInput = '';
+  topUpModalOpen = false;
+  topUpSource: TopUpSource = 'tabungan';
+  topUpAmountInput: number | null = null;
+  budgetPrompt: ExpenseBudgetPrompt | null = null;
+  pendingExpenseEntry: ExpenseEntry | null = null;
 
   private journal: UserJournal = {
     nextChatMessageId: 1,
@@ -57,6 +65,22 @@ export class Chat {
   constructor() {
     this.rebuildCalendar();
     void this.initializeData();
+  }
+
+  get currentTopUpMax(): number {
+    if (!this.budgetPrompt) {
+      return 0;
+    }
+    return this.topUpSource === 'tabungan'
+      ? this.budgetPrompt.maxTopUpFromTabungan
+      : this.budgetPrompt.maxTopUpFromDanaDarurat;
+  }
+
+  get canSubmitTopUp(): boolean {
+    if (!this.topUpAmountInput || this.topUpAmountInput <= 0) {
+      return false;
+    }
+    return this.topUpAmountInput <= this.currentTopUpMax;
   }
 
   get monthYearLabel(): string {
@@ -113,6 +137,10 @@ export class Chat {
     return this.toDateKey(dateA) === this.toDateKey(dateB);
   }
 
+  formatCurrency(amount: number): string {
+    return `Rp ${new Intl.NumberFormat('id-ID').format(amount)}`;
+  }
+
   async sendMessage(): Promise<void> {
     if (!this.isSelectedDateToday) {
       return;
@@ -123,16 +151,58 @@ export class Chat {
       return;
     }
 
+    const rawText = this.messageInput;
     this.messageInput = '';
-    this.journal = await this.journalService.addChatMessageWithAutoExpense(
+    const result = await this.journalService.addChatMessageWithAutoExpense(
       this.selectedDateKey,
       text,
       this.selectedDateLabel,
     );
+    this.journal = result.journal;
+
+    if (result.requiresTopUp && result.prompt && result.pendingExpense) {
+      this.budgetPrompt = result.prompt;
+      this.pendingExpenseEntry = result.pendingExpense;
+      this.topUpSource =
+        result.prompt.maxTopUpFromTabungan > 0 ? 'tabungan' : 'danaDarurat';
+      this.topUpAmountInput = null;
+      this.topUpModalOpen = true;
+      this.messageInput = rawText;
+    }
   }
 
   private async initializeData(): Promise<void> {
     this.journal = await this.journalService.loadCurrentUserJournal();
+  }
+
+  async confirmTopUpAndRetry(): Promise<void> {
+    if (
+      !this.pendingExpenseEntry ||
+      !this.canSubmitTopUp ||
+      !this.topUpAmountInput
+    ) {
+      return;
+    }
+
+    const result = await this.journalService.addExpense(
+      this.selectedDateKey,
+      this.pendingExpenseEntry,
+      {
+        allowTopUp: true,
+        topUpSource: this.topUpSource,
+        topUpAmount: this.topUpAmountInput,
+      },
+    );
+
+    this.journal = result.journal;
+    this.closeTopUpModal();
+    this.messageInput = '';
+  }
+
+  closeTopUpModal(): void {
+    this.topUpModalOpen = false;
+    this.pendingExpenseEntry = null;
+    this.topUpAmountInput = null;
   }
 
   private rebuildCalendar(): void {
