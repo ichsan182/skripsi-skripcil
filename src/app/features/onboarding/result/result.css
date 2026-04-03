@@ -92,6 +92,7 @@
   align-self: flex-start;
   min-width: 200px;
   margin-top: 10px;
+  width: 100%;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
