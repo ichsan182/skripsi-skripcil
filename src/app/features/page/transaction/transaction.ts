@@ -13,6 +13,18 @@ import {
   UserJournal,
 } from '../../../core/services/journal.service';
 import { ExpenseCategory } from '../../../shared/utils/expense-category';
+import {
+  normalizeDate,
+  toDateKey,
+  parseDateKey,
+  daysBetween,
+} from '../../../core/utils/date.utils';
+import {
+  formatCurrency,
+  formatCompactCurrency,
+  formatPercent,
+} from '../../../core/utils/format.utils';
+import { RollingBudgetService } from '../../../core/utils/rolling-budget.service';
 
 interface CalendarCell {
   date: Date;
@@ -79,6 +91,7 @@ const CATEGORY_META: Record<ExpenseCategory, CategoryMeta> = {
 })
 export class Transaction {
   private readonly journalService = inject(JournalService);
+  private readonly rollingBudgetService = inject(RollingBudgetService);
 
   rollingBudgetToday = 0;
   rollingBudgetRemaining = 0;
@@ -408,29 +421,15 @@ export class Transaction {
   }
 
   formatCurrency(amount: number): string {
-    return `Rp ${new Intl.NumberFormat('id-ID').format(amount)}`;
+    return formatCurrency(amount);
   }
 
   formatCompactCurrency(amount: number): string {
-    if (amount >= 1_000_000_000) {
-      return `${this.trimTrailingZero(amount / 1_000_000_000)} M`;
-    }
-
-    if (amount >= 1_000_000) {
-      return `${this.trimTrailingZero(amount / 1_000_000)} Jt`;
-    }
-
-    if (amount >= 1_000) {
-      return `${this.trimTrailingZero(amount / 1_000)} Rb`;
-    }
-
-    return this.formatCurrency(amount);
+    return formatCompactCurrency(amount);
   }
 
   formatPercent(value: number): string {
-    const normalized = Number.isFinite(value) ? value : 0;
-    const safe = Math.min(100, Math.max(0, normalized));
-    return this.trimTrailingZero(safe);
+    return formatPercent(value);
   }
 
   private async initializeData(): Promise<void> {
@@ -559,10 +558,6 @@ export class Transaction {
     const month = `${date.getMonth() + 1}`.padStart(2, '0');
     const day = `${date.getDate()}`.padStart(2, '0');
     return `${year}-${month}-${day}`;
-  }
-
-  private trimTrailingZero(value: number): string {
-    return value.toFixed(1).replace('.0', '');
   }
 
   private computeRollingBudgetToday(): void {

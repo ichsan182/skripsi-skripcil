@@ -40,3 +40,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+ARCHITECTURE_BEST_PRACTICES.md
+MIGRATION_CHECKLIST.md
+REFACTORING_GUIDE.md

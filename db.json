@@ -683,7 +683,7 @@
       "onboardingCompleted": true,
       "level": 4,
       "journal": {
-        "nextChatMessageId": 39,
+        "nextChatMessageId": 43,
         "chatByDate": {
           "2026-03-28": [
             {
@@ -918,6 +918,32 @@
               "text": "Dicatat: Rp 120.000 untuk \"babi\" kategori other.",
               "time": "21.18"
             }
+          ],
+          "2026-04-03": [
+            {
+              "id": 39,
+              "sender": "user",
+              "text": "makan 12000",
+              "time": "21.52"
+            },
+            {
+              "id": 40,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "21.52"
+            },
+            {
+              "id": 41,
+              "sender": "user",
+              "text": "makan 12000",
+              "time": "21.52"
+            },
+            {
+              "id": 42,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "21.52"
+            }
           ]
         },
         "expensesByDate": {
@@ -1025,7 +1051,7 @@
         "pengeluaranWajib": 4000000,
         "tanggalPemasukan": 25,
         "hutangWajib": 0,
-        "estimasiTabungan": 35000000,
+        "estimasiTabungan": 34985000,
         "danaDarurat": 45000000,
         "danaInvestasi": 3000000,
         "budgetAllocation": {
@@ -1040,13 +1066,13 @@
           "danaInvestasi": 3000000
         },
         "intendedTanggalPemasukan": 25,
-        "currentPengeluaranLimit": 4000000,
+        "currentPengeluaranLimit": 4015000,
         "currentPengeluaranUsed": 14632123,
         "currentSisaSaldoPool": 1000000,
         "monthlyTopUp": {
           "cycleKey": "2026-03-25",
-          "fromTabunganCount": 0,
-          "totalFromTabungan": 0,
+          "fromTabunganCount": 1,
+          "totalFromTabungan": 15000,
           "totalFromDanaDarurat": 0
         },
         "currentCycleStart": "2026-03-25",
@@ -1080,7 +1106,7 @@
           }
         ],
         "selectedSymbol": "NVDA",
-        "updatedAt": "2026-04-03T14:10:40.876Z"
+        "updatedAt": "2026-04-03T14:56:47.613Z"
       },
       "streak": {
         "current": 0,

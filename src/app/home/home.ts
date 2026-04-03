@@ -13,6 +13,20 @@ import {
 } from '../core/services/journal.service';
 import { ExpenseCategory } from '../shared/utils/expense-category';
 import { USERS_API_URL } from '../core/config/app-api.config';
+import {
+  normalizeDate,
+  toDateKey,
+  parseDateKey,
+  daysBetween,
+  toMonthInputValue,
+} from '../core/utils/date.utils';
+import {
+  formatCurrency,
+  formatNumber,
+  formatCompactCurrency,
+  formatPercent,
+} from '../core/utils/format.utils';
+import { RollingBudgetService } from '../core/utils/rolling-budget.service';
 
 interface ExpenseRow {
   date: string;
@@ -58,6 +72,7 @@ interface UserStreak {
 export class Home {
   private readonly journalService = inject(JournalService);
   private readonly http = inject(HttpClient);
+  private readonly rollingBudgetService = inject(RollingBudgetService);
   private journal: UserJournal = {
     nextChatMessageId: 1,
     chatByDate: {},
@@ -709,45 +724,15 @@ export class Home {
   }
 
   private computeRollingBudgetToday(): void {
-    if (
-      !this.financialData?.currentCycleStart ||
-      !this.financialData.currentCycleEnd
-    ) {
-      this.rollingBudgetToday = 0;
-      this.rollingBudgetRemaining = 0;
-      this.rollingDaysRemaining = 0;
-      this.rollingTotalBudget = 0;
-      this.rollingUsedBudget = 0;
-      return;
-    }
-
-    const cycleStart = this.parseDateKey(this.financialData.currentCycleStart);
-    const cycleEnd = this.parseDateKey(this.financialData.currentCycleEnd);
-    if (!cycleStart || !cycleEnd) {
-      return;
-    }
-
-    const today = this.startOfDay(new Date());
-    const dayBeforeToday = new Date(today);
-    dayBeforeToday.setDate(dayBeforeToday.getDate() - 1);
-    const usedBeforeToday = this.sumExpensesInRange(cycleStart, dayBeforeToday);
-    const totalBudget =
-      this.financialData.currentPengeluaranLimit ??
-      this.financialData.pengeluaranWajib;
-    const remainingBudget = Math.max(0, totalBudget - usedBeforeToday);
-    const remainingDays = Math.max(1, this.daysBetween(today, cycleEnd) + 1);
-
-    this.rollingTotalBudget = totalBudget;
-    this.rollingUsedBudget = this.financialData.currentPengeluaranUsed || 0;
-    this.rollingBudgetRemaining = Math.max(
-      0,
-      totalBudget - this.rollingUsedBudget,
+    const state = this.rollingBudgetService.computeRollingBudgetState(
+      this.financialData,
+      this.journal,
     );
-    this.rollingDaysRemaining = remainingDays;
-    this.rollingBudgetToday = Math.max(
-      0,
-      Math.floor(remainingBudget / remainingDays),
-    );
+    this.rollingTotalBudget = state.rollingTotalBudget;
+    this.rollingUsedBudget = state.rollingUsedBudget;
+    this.rollingBudgetRemaining = state.rollingBudgetRemaining;
+    this.rollingDaysRemaining = state.rollingDaysRemaining;
+    this.rollingBudgetToday = state.rollingBudgetToday;
   }
 
   private getStreakDayStatus(date: Date): StreakDayStatus {
