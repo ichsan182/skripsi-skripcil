@@ -691,8 +691,71 @@
 
 .normal-grid {
   display: grid;
-  grid-template-columns: 1fr 140px 1fr;
+  grid-template-columns: 1fr 220px 1fr;
   gap: 12px;
+}
+
+.normal-operator-field {
+  align-content: end;
+}
+
+.normal-operator-buttons {
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary-subtle) 40%, transparent);
+  background: color-mix(in srgb, var(--color-white) 90%, var(--color-input-bg));
+}
+
+.normal-operator-btn {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: color-mix(in srgb, var(--color-black) 78%, var(--color-gray));
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.normal-operator-btn:hover {
+  background: color-mix(
+    in srgb,
+    var(--color-primary-subtle) 20%,
+    var(--color-white)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--color-primary-subtle) 55%,
+    transparent
+  );
+}
+
+.normal-operator-btn:active {
+  transform: translateY(1px);
+}
+
+.normal-operator-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
+  outline-offset: 1px;
+}
+
+.normal-operator-btn.active {
+  background: var(--color-primary);
+  color: var(--color-white);
+  border-color: color-mix(in srgb, var(--color-primary-dark) 60%, transparent);
+  box-shadow: 0 8px 18px
+    color-mix(in srgb, var(--color-primary) 28%, transparent);
 }
 
 .normal-result {
@@ -713,6 +776,41 @@
 .normal-result strong {
   color: var(--color-primary-dark);
   font-size: var(--font-size-xl);
+}
+
+.normal-equation {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.normal-equation strong {
+  font-size: var(--font-size-lg);
+  color: var(--color-primary-dark);
+}
+
+.normal-equation b,
+.normal-equation i {
+  font-style: normal;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: color-mix(in srgb, var(--color-black) 68%, var(--color-gray));
+}
+
+.normal-equation strong:last-child {
+  color: var(--color-black);
+  background: color-mix(
+    in srgb,
+    var(--color-progress-bar-bg) 80%,
+    var(--color-white)
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary-subtle) 48%, transparent);
+  border-radius: 10px;
+  padding: 6px 10px;
 }
 
 .normal-result p {
@@ -750,6 +848,10 @@
 
   .normal-grid {
     grid-template-columns: 1fr;
+  }
+
+  .normal-operator-buttons {
+    grid-template-columns: repeat(4, minmax(44px, 1fr));
   }
 }
 

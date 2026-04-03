@@ -30,6 +30,16 @@ export function parseCurrencyInput(
   return clampCurrencyAmount(Number(digitsOnly), maxAmount);
 }
 
+export function parseCurrencyInputUncapped(rawValue: string): number {
+  const digitsOnly = (rawValue || '').replace(/[^0-9]/g, '');
+  if (!digitsOnly) {
+    return 0;
+  }
+
+  const parsed = Number(digitsOnly);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+}
+
 export function formatCurrencyPlain(
   amount: number,
   options: CurrencyFormatOptions = {},

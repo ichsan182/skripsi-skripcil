@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import {
   formatCurrencyPlain,
   parseCurrencyInput,
+  parseCurrencyInputUncapped,
 } from '../../../../core/utils/format.utils';
 
 type SavingsFrequency =
@@ -149,8 +150,11 @@ export class ToolsCalculator {
 
   protected normalLeft = 0;
   protected normalRight = 0;
+  protected normalLeftInput = '';
+  protected normalRightInput = '';
   protected normalOperator: NormalOperator = 'add';
   protected normalResult = 0;
+  protected normalResultLabel = '0';
   protected normalError = '';
 
   protected projection: ProjectionResult = {
@@ -179,6 +183,7 @@ export class ToolsCalculator {
   constructor() {
     this.syncDepositWithSavings();
     this.syncCurrencyInputsFromNumbers();
+    this.syncNormalInputsFromNumbers();
   }
 
   protected get savingsAmount(): number {
@@ -353,9 +358,45 @@ export class ToolsCalculator {
   }
 
   protected onNormalFieldChange(): void {
-    this.normalLeft = this.ensureFinite(this.normalLeft);
-    this.normalRight = this.ensureFinite(this.normalRight);
     this.calculateNormal();
+  }
+
+  protected onNormalLeftInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const parsed = parseCurrencyInputUncapped(input.value);
+    this.normalLeft = parsed;
+    this.normalLeftInput = parsed ? this.formatCurrencyInput(parsed) : '';
+    input.value = this.normalLeftInput;
+    this.calculateNormal();
+  }
+
+  protected onNormalRightInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const parsed = parseCurrencyInputUncapped(input.value);
+    this.normalRight = parsed;
+    this.normalRightInput = parsed ? this.formatCurrencyInput(parsed) : '';
+    input.value = this.normalRightInput;
+    this.calculateNormal();
+  }
+
+  protected setNormalOperator(operator: NormalOperator): void {
+    this.normalOperator = operator;
+    this.calculateNormal();
+  }
+
+  protected getNormalOperatorLabel(operator: NormalOperator): string {
+    switch (operator) {
+      case 'add':
+        return '+';
+      case 'subtract':
+        return '-';
+      case 'multiply':
+        return 'x';
+      case 'divide':
+        return '/';
+      default:
+        return '+';
+    }
   }
 
   protected formatCurrency(amount: number): string {
@@ -549,6 +590,7 @@ export class ToolsCalculator {
       case 'divide':
         if (right === 0) {
           this.normalResult = 0;
+          this.normalResultLabel = '0';
           this.normalError = 'Pembagian dengan angka 0 tidak diperbolehkan.';
           return;
         }
@@ -558,6 +600,13 @@ export class ToolsCalculator {
         this.normalResult = 0;
         break;
     }
+
+    const normalizedResult = this.ensureFinite(this.normalResult);
+    const hasDecimal = !Number.isInteger(normalizedResult);
+    this.normalResultLabel = formatCurrencyPlain(normalizedResult, {
+      minimumFractionDigits: hasDecimal ? 2 : 0,
+      maximumFractionDigits: hasDecimal ? 2 : 0,
+    });
   }
 
   private calculateProjection(): ProjectionResult {
@@ -937,6 +986,16 @@ export class ToolsCalculator {
     this.depositAmountInput = this.depositAmount
       ? this.formatCurrencyInput(this.depositAmount)
       : '';
+  }
+
+  private syncNormalInputsFromNumbers(): void {
+    this.normalLeftInput = this.normalLeft
+      ? this.formatCurrencyInput(this.normalLeft)
+      : '';
+    this.normalRightInput = this.normalRight
+      ? this.formatCurrencyInput(this.normalRight)
+      : '';
+    this.calculateNormal();
   }
 
   private roundCurrency(value: number): number {

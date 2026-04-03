@@ -405,41 +405,59 @@
     <div class="normal-grid">
       <label class="field-control">
         <span>Angka pertama</span>
-        <input
-          type="number"
-          [(ngModel)]="normalLeft"
-          (ngModelChange)="onNormalFieldChange()"
-        />
+        <div class="currency-input">
+          <input
+            type="text"
+            inputmode="numeric"
+            [value]="normalLeftInput"
+            (input)="onNormalLeftInput($event)"
+            placeholder="0"
+          />
+        </div>
       </label>
 
-      <label class="field-control">
+      <div class="field-control normal-operator-field">
         <span>Operator</span>
-        <select
-          [(ngModel)]="normalOperator"
-          (ngModelChange)="onNormalFieldChange()"
+        <div
+          class="normal-operator-buttons"
+          role="group"
+          aria-label="Pilih operator kalkulasi"
         >
-          <option
+          <button
+            type="button"
             *ngFor="let option of normalOperatorOptions"
-            [ngValue]="option.value"
+            class="normal-operator-btn"
+            [class.active]="normalOperator === option.value"
+            (click)="setNormalOperator(option.value)"
           >
             {{ option.label }}
-          </option>
-        </select>
-      </label>
+          </button>
+        </div>
+      </div>
 
       <label class="field-control">
         <span>Angka kedua</span>
-        <input
-          type="number"
-          [(ngModel)]="normalRight"
-          (ngModelChange)="onNormalFieldChange()"
-        />
+        <div class="currency-input">
+          <input
+            type="text"
+            inputmode="numeric"
+            [value]="normalRightInput"
+            (input)="onNormalRightInput($event)"
+            placeholder="0"
+          />
+        </div>
       </label>
     </div>
 
     <div class="normal-result">
-      <span>Hasil</span>
-      <strong>{{ normalResult }}</strong>
+      <span>Hasil Perhitungan</span>
+      <p class="normal-equation">
+        <strong>{{ normalLeftInput || '0' }}</strong>
+        <b>{{ getNormalOperatorLabel(normalOperator) }}</b>
+        <strong>{{ normalRightInput || '0' }}</strong>
+        <i>=</i>
+        <strong>{{ normalResultLabel }}</strong>
+      </p>
       @if (normalError) {
       <p>{{ normalError }}</p>
       }
