@@ -80,6 +80,12 @@ const CATEGORY_META: Record<ExpenseCategory, CategoryMeta> = {
 export class Transaction {
   private readonly journalService = inject(JournalService);
 
+  rollingBudgetToday = 0;
+  rollingBudgetRemaining = 0;
+  rollingDaysRemaining = 0;
+  rollingTotalBudget = 0;
+  rollingUsedBudget = 0;
+
   readonly weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   readonly categoryMeta = CATEGORY_META;
   readonly categoryOptions = Object.values(ExpenseCategory).map((key) => ({
@@ -336,6 +342,7 @@ export class Transaction {
     );
     this.journal = result.journal;
     this.currentFinancialData = result.financialData;
+    this.computeRollingBudgetToday();
 
     if (result.requiresTopUp && result.prompt && result.pendingExpense) {
       this.openTopUpModal(result.prompt, result.pendingExpense, text, true);
@@ -364,6 +371,7 @@ export class Transaction {
 
     this.journal = result.journal;
     this.currentFinancialData = result.financialData;
+    this.computeRollingBudgetToday();
 
     if (result.requiresTopUp && result.prompt && result.pendingExpense) {
       this.openTopUpModal(result.prompt, result.pendingExpense, '', false);
@@ -431,6 +439,7 @@ export class Transaction {
       this.selectedDate,
     );
     this.currentFinancialData = cycle.financialData;
+    this.computeRollingBudgetToday();
     this.budgetPrompt = await this.journalService.getExpensePromptForDate(
       this.selectedDateKey,
     );
@@ -458,6 +467,7 @@ export class Transaction {
       this.journal = result.journal;
       this.currentFinancialData = result.financialData;
       this.closeTopUpModal();
+      this.computeRollingBudgetToday();
       await this.refreshPromptState();
       return;
     }
@@ -474,6 +484,7 @@ export class Transaction {
 
     this.journal = result.journal;
     this.currentFinancialData = result.financialData;
+    this.computeRollingBudgetToday();
     if (!result.requiresTopUp) {
       this.expenseDraft.description = '';
       this.expenseDraft.amount = null;
@@ -552,5 +563,94 @@ export class Transaction {
 
   private trimTrailingZero(value: number): string {
     return value.toFixed(1).replace('.0', '');
+  }
+
+  private computeRollingBudgetToday(): void {
+    if (
+      !this.currentFinancialData?.currentCycleStart ||
+      !this.currentFinancialData.currentCycleEnd
+    ) {
+      this.rollingBudgetToday = 0;
+      this.rollingBudgetRemaining = 0;
+      this.rollingDaysRemaining = 0;
+      this.rollingTotalBudget = 0;
+      this.rollingUsedBudget = 0;
+      return;
+    }
+
+    const cycleStart = this.parseDateKey(
+      this.currentFinancialData.currentCycleStart,
+    );
+    const cycleEnd = this.parseDateKey(
+      this.currentFinancialData.currentCycleEnd,
+    );
+    if (!cycleStart || !cycleEnd) {
+      return;
+    }
+
+    const today = this.normalizeDate(new Date());
+    const dayBeforeToday = new Date(today);
+    dayBeforeToday.setDate(dayBeforeToday.getDate() - 1);
+
+    const usedBeforeToday = this.sumExpensesInRange(cycleStart, dayBeforeToday);
+    const totalBudget =
+      this.currentFinancialData.currentPengeluaranLimit ??
+      this.currentFinancialData.pengeluaranWajib;
+    const remainingBudget = Math.max(0, totalBudget - usedBeforeToday);
+    const remainingDays = Math.max(1, this.daysBetween(today, cycleEnd) + 1);
+
+    this.rollingTotalBudget = totalBudget;
+    this.rollingUsedBudget =
+      this.currentFinancialData.currentPengeluaranUsed || 0;
+    this.rollingBudgetRemaining = Math.max(
+      0,
+      totalBudget - this.rollingUsedBudget,
+    );
+    this.rollingDaysRemaining = remainingDays;
+    this.rollingBudgetToday = Math.max(
+      0,
+      Math.floor(remainingBudget / remainingDays),
+    );
+  }
+
+  private sumExpensesInRange(start: Date, end: Date): number {
+    if (end < start) {
+      return 0;
+    }
+
+    let total = 0;
+    for (const [dateKey, entries] of Object.entries(
+      this.journal.expensesByDate,
+    )) {
+      const date = this.parseDateKey(dateKey);
+      if (!date) {
+        continue;
+      }
+
+      if (date >= start && date <= end) {
+        total += entries.reduce((acc, item) => acc + item.amount, 0);
+      }
+    }
+
+    return total;
+  }
+
+  private parseDateKey(dateKey: string): Date | null {
+    const [yearRaw, monthRaw, dayRaw] = dateKey.split('-');
+    const year = Number(yearRaw);
+    const month = Number(monthRaw);
+    const day = Number(dayRaw);
+    if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) {
+      return null;
+    }
+
+    return new Date(year, month - 1, day);
+  }
+
+  private daysBetween(start: Date, end: Date): number {
+    const startMs = this.normalizeDate(start).getTime();
+    const endMs = this.normalizeDate(end).getTime();
+    const dayMs = 24 * 60 * 60 * 1000;
+    return Math.floor((endMs - startMs) / dayMs);
   }
 }

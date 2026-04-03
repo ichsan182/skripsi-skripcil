@@ -1080,7 +1080,13 @@
           }
         ],
         "selectedSymbol": "NVDA",
-        "updatedAt": "2026-04-01T14:19:51.301Z"
+        "updatedAt": "2026-04-03T14:10:40.876Z"
+      },
+      "streak": {
+        "current": 0,
+        "longest": 0,
+        "lastActiveDate": "2026-04-03",
+        "freezeUsed": false
       }
     },
     {
