@@ -273,21 +273,25 @@
 
       <div class="result-highlight">
         <span>Future investment value</span>
-        <strong>{{ formatCurrency(projection.futureValue) }}</strong>
+        <strong>{{ formatCurrencyWithRp(projection.futureValue) }}</strong>
       </div>
 
       <div class="result-list">
         <div class="result-row">
           <span>Total interest earned</span>
-          <strong>{{ formatCurrency(projection.totalInterestEarned) }}</strong>
+          <strong
+            >{{ formatCurrencyWithRp(projection.totalInterestEarned) }}</strong
+          >
         </div>
         <div class="result-row">
           <span>Initial balance</span>
-          <strong>{{ formatCurrency(projection.initialBalance) }}</strong>
+          <strong>{{ formatCurrencyWithRp(projection.initialBalance) }}</strong>
         </div>
         <div class="result-row">
           <span>Total regular contributions</span>
-          <strong>{{ formatCurrency(projection.totalContributions) }}</strong>
+          <strong
+            >{{ formatCurrencyWithRp(projection.totalContributions) }}</strong
+          >
         </div>
         <div class="result-row">
           <span>All time rate of return (RoR)</span>

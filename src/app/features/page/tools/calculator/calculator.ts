@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   formatCurrencyPlain,
+  formatCurrencyWithPrefix,
   parseCurrencyInput,
   parseCurrencyInputUncapped,
 } from '../../../../core/utils/format.utils';
@@ -401,6 +402,13 @@ export class ToolsCalculator {
 
   protected formatCurrency(amount: number): string {
     return formatCurrencyPlain(this.ensureFinite(amount), {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  }
+
+  protected formatCurrencyWithRp(amount: number): string {
+    return formatCurrencyWithPrefix(this.ensureFinite(amount), 'Rp ', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
