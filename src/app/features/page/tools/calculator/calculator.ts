@@ -930,9 +930,7 @@ export class ToolsCalculator {
   }
 
   private syncCurrencyInputsFromNumbers(): void {
-    this.incomeInput = this.income
-      ? this.formatCurrencyInput(this.income)
-      : '';
+    this.incomeInput = this.income ? this.formatCurrencyInput(this.income) : '';
     this.initialInvestmentInput = this.initialInvestment
       ? this.formatCurrencyInput(this.initialInvestment)
       : '';

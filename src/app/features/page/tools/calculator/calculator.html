@@ -35,14 +35,18 @@
 
       <label class="field-control">
         <span>Income (penghasilan)</span>
-        <input
-          type="text"
-          inputmode="numeric"
-          class="currency-input"
-          [value]="incomeInput"
-          (input)="onIncomeInput($event)"
-          placeholder="1.000.000"
-        />
+
+        <div class="input-prefix-wrap">
+          <i>Rp</i>
+          <input
+            type="text"
+            inputmode="numeric"
+            class="currency-input"
+            [value]="incomeInput"
+            (input)="onIncomeInput($event)"
+            placeholder="1.000.000"
+          />
+        </div>
       </label>
 
       <label class="field-control">
