@@ -10,6 +10,43 @@ export interface CurrencyFormatOptions {
   maximumFractionDigits?: number;
 }
 
+export enum CurrencyCode {
+  IDR = 'IDR',
+  USD = 'USD',
+  EUR = 'EUR',
+  JPY = 'JPY',
+  CNY = 'CNY',
+  CHF = 'CHF',
+  GBP = 'GBP',
+  SGD = 'SGD',
+  AUD = 'AUD',
+  CAD = 'CAD',
+}
+
+export const DEFAULT_CURRENCY_CODE = CurrencyCode.IDR;
+
+const CURRENCY_PREFIX_MAP: Record<CurrencyCode, string> = {
+  [CurrencyCode.IDR]: 'Rp ',
+  [CurrencyCode.USD]: '$ ',
+  [CurrencyCode.EUR]: '€ ',
+  [CurrencyCode.JPY]: '¥ ',
+  [CurrencyCode.CNY]: 'CN¥ ',
+  [CurrencyCode.CHF]: 'CHF ',
+  [CurrencyCode.GBP]: '£ ',
+  [CurrencyCode.SGD]: 'S$ ',
+  [CurrencyCode.AUD]: 'A$ ',
+  [CurrencyCode.CAD]: 'C$ ',
+};
+
+export function getCurrencyPrefix(
+  currencyCode: CurrencyCode = DEFAULT_CURRENCY_CODE,
+): string {
+  return (
+    CURRENCY_PREFIX_MAP[currencyCode] ??
+    CURRENCY_PREFIX_MAP[DEFAULT_CURRENCY_CODE]
+  );
+}
+
 export function clampCurrencyAmount(
   amount: number,
   maxAmount: number = MAX_CURRENCY_AMOUNT,
@@ -56,10 +93,22 @@ export function formatCurrencyPlain(
 
 export function formatCurrencyWithPrefix(
   amount: number,
-  prefix: string = 'Rp ',
+  prefix: string = getCurrencyPrefix(DEFAULT_CURRENCY_CODE),
   options: CurrencyFormatOptions = {},
 ): string {
   return `${prefix}${formatCurrencyPlain(amount, options)}`;
+}
+
+export function formatCurrencyByCode(
+  amount: number,
+  currencyCode: CurrencyCode = DEFAULT_CURRENCY_CODE,
+  options: CurrencyFormatOptions = {},
+): string {
+  return formatCurrencyWithPrefix(
+    amount,
+    getCurrencyPrefix(currencyCode),
+    options,
+  );
 }
 
 /**
@@ -68,7 +117,7 @@ export function formatCurrencyWithPrefix(
  * @returns Formatted currency string (Rp format)
  */
 export function formatCurrency(amount: number): string {
-  return formatCurrencyWithPrefix(amount);
+  return formatCurrencyByCode(amount, DEFAULT_CURRENCY_CODE);
 }
 
 /**

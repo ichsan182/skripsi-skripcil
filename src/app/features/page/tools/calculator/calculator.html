@@ -9,6 +9,26 @@
     </p>
   </header>
 
+  <div class="currency-strip">
+    <span class="currency-strip-label">Mata uang</span>
+    <div
+      class="currency-strip-options"
+      role="group"
+      aria-label="Pilih mata uang"
+    >
+      <button
+        type="button"
+        *ngFor="let option of currencyOptions"
+        class="currency-strip-btn"
+        [class.active]="selectedCurrency === option.value"
+        [title]="option.label"
+        (click)="selectedCurrency = option.value"
+      >
+        {{ option.symbol }}
+      </button>
+    </div>
+  </div>
+
   <article class="savings-card">
     <div class="card-title-wrap">
       <h2>Kalkulator Tabungan</h2>
@@ -37,7 +57,7 @@
         <span>Income (penghasilan)</span>
 
         <div class="input-prefix-wrap">
-          <i>Rp</i>
+          <i>{{ activeCurrencySymbol }}</i>
           <input
             type="text"
             inputmode="numeric"
@@ -110,7 +130,7 @@
         <label class="field-control">
           <span>Initial investment</span>
           <div class="input-prefix-wrap">
-            <i>Rp</i>
+            <i>{{ activeCurrencySymbol }}</i>
             <input
               type="text"
               inputmode="numeric"
@@ -188,7 +208,7 @@
         <label class="field-control">
           <span>Regular contributions (deposit amount)</span>
           <div class="input-prefix-wrap">
-            <i>Rp</i>
+            <i>{{ activeCurrencySymbol }}</i>
             <input
               type="text"
               inputmode="numeric"

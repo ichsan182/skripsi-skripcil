@@ -3,8 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
+  CurrencyCode,
+  formatCurrencyByCode,
   formatCurrencyPlain,
   formatCurrencyWithPrefix,
+  getCurrencyPrefix,
   parseCurrencyInput,
   parseCurrencyInputUncapped,
 } from '../../../../core/utils/format.utils';
@@ -126,6 +129,25 @@ export class ToolsCalculator {
     { value: 'multiply', label: 'x' },
     { value: 'divide', label: '/' },
   ];
+
+  protected readonly currencyOptions: Array<{
+    value: CurrencyCode;
+    label: string;
+    symbol: string;
+  }> = [
+    { value: CurrencyCode.IDR, label: 'IDR – Rupiah', symbol: 'Rp' },
+    { value: CurrencyCode.USD, label: 'USD – Dollar', symbol: '$' },
+    { value: CurrencyCode.EUR, label: 'EUR – Euro', symbol: '€' },
+    { value: CurrencyCode.GBP, label: 'GBP – Pound', symbol: '£' },
+    { value: CurrencyCode.JPY, label: 'JPY – Yen', symbol: '¥' },
+    { value: CurrencyCode.CNY, label: 'CNY – Yuan', symbol: 'CN¥' },
+    { value: CurrencyCode.CHF, label: 'CHF – Franc', symbol: 'CHF' },
+    { value: CurrencyCode.SGD, label: 'SGD – S$ Dollar', symbol: 'S$' },
+    { value: CurrencyCode.AUD, label: 'AUD – A$ Dollar', symbol: 'A$' },
+    { value: CurrencyCode.CAD, label: 'CAD – C$ Dollar', symbol: 'C$' },
+  ];
+
+  protected selectedCurrency: CurrencyCode = CurrencyCode.IDR;
 
   protected savingsRate = 20;
   protected income = 1_000_000;
@@ -400,18 +422,23 @@ export class ToolsCalculator {
     }
   }
 
+  protected get activeCurrencySymbol(): string {
+    return getCurrencyPrefix(this.selectedCurrency).trim();
+  }
+
   protected formatCurrency(amount: number): string {
-    return formatCurrencyPlain(this.ensureFinite(amount), {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+    return formatCurrencyByCode(
+      this.ensureFinite(amount),
+      this.selectedCurrency,
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      },
+    );
   }
 
   protected formatCurrencyWithRp(amount: number): string {
-    return formatCurrencyWithPrefix(this.ensureFinite(amount), 'Rp ', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+    return this.formatCurrency(amount);
   }
 
   protected formatPercent(percentValue: number): string {
