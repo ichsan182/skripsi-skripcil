@@ -43,11 +43,14 @@
           <input
             type="text"
             formControlName="pendapatan"
-            placeholder="Contoh: 5.000.000"
+            placeholder="Contoh: Rp 5.000.000"
             inputmode="numeric"
+            (input)="onCurrencyInput('form1', 'pendapatan')"
           />
         </div>
-        @if (showError('form1', 'pendapatan')) {
+        @if (hasControlError('form1', 'pendapatan', 'maxAmount')) {
+        <small class="error">Maksimal nominal adalah Rp 1.000.000.000.</small>
+        } @if (showError('form1', 'pendapatan')) {
         <small class="error">Wajib diisi.</small>
         }
       </div>
@@ -62,11 +65,14 @@
           <input
             type="text"
             formControlName="pengeluaranWajib"
-            placeholder="Contoh: 2.000.000"
+            placeholder="Contoh: Rp 2.000.000"
             inputmode="numeric"
+            (input)="onCurrencyInput('form1', 'pengeluaranWajib')"
           />
         </div>
-        @if (showError('form1', 'pengeluaranWajib')) {
+        @if (hasControlError('form1', 'pengeluaranWajib', 'maxAmount')) {
+        <small class="error">Maksimal nominal adalah Rp 1.000.000.000.</small>
+        } @if (showError('form1', 'pengeluaranWajib')) {
         <small class="error">Wajib diisi.</small>
         }
       </div>
@@ -87,9 +93,14 @@
             formControlName="tanggalPemasukan"
             placeholder="Contoh: 25"
             inputmode="numeric"
+            maxlength="2"
+            (input)="onTanggalPemasukanInput()"
           />
         </div>
-        @if (showError('form1', 'tanggalPemasukan')) {
+        @if (hasControlError('form1', 'tanggalPemasukan', 'invalidDay') ||
+        hasControlError('form1', 'tanggalPemasukan', 'max')) {
+        <small class="error">Tanggal maksimal adalah 31.</small>
+        } @if (showError('form1', 'tanggalPemasukan')) {
         <small class="error">Wajib diisi.</small>
         }
       </div>
@@ -104,11 +115,14 @@
           <input
             type="text"
             formControlName="hutangWajib"
-            placeholder="Contoh: 200.000"
+            placeholder="Contoh: Rp 200.000"
             inputmode="numeric"
+            (input)="onCurrencyInput('form1', 'hutangWajib')"
           />
         </div>
-        @if (showError('form1', 'hutangWajib')) {
+        @if (hasControlError('form1', 'hutangWajib', 'maxAmount')) {
+        <small class="error">Maksimal nominal adalah Rp 1.000.000.000.</small>
+        } @if (showError('form1', 'hutangWajib')) {
         <small class="error">Wajib diisi.</small>
         }
       </div>
@@ -127,11 +141,14 @@
           <input
             type="text"
             formControlName="estimasiTabungan"
-            placeholder="Contoh: 2.000.000"
+            placeholder="Contoh: Rp 2.000.000"
             inputmode="numeric"
+            (input)="onCurrencyInput('form2', 'estimasiTabungan')"
           />
         </div>
-        @if (showError('form2', 'estimasiTabungan')) {
+        @if (hasControlError('form2', 'estimasiTabungan', 'maxAmount')) {
+        <small class="error">Maksimal nominal adalah Rp 1.000.000.000.</small>
+        } @if (showError('form2', 'estimasiTabungan')) {
         <small class="error">Wajib diisi.</small>
         }
       </div>
@@ -146,11 +163,14 @@
           <input
             type="text"
             formControlName="danaDarurat"
-            placeholder="Contoh: 1.000.000"
+            placeholder="Contoh: Rp 1.000.000"
             inputmode="numeric"
+            (input)="onCurrencyInput('form2', 'danaDarurat')"
           />
         </div>
-        @if (showError('form2', 'danaDarurat')) {
+        @if (hasControlError('form2', 'danaDarurat', 'maxAmount')) {
+        <small class="error">Maksimal nominal adalah Rp 1.000.000.000.</small>
+        } @if (showError('form2', 'danaDarurat')) {
         <small class="error">Wajib diisi.</small>
         }
       </div>

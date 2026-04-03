@@ -1,5 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({
@@ -10,6 +11,8 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './sidebar.css',
 })
 export class Sidebar {
+  private readonly router = inject(Router);
+
   @Input() showRollingBudgetPanel = false;
   @Input() rollingTotalBudget = 0;
   @Input() rollingUsedBudget = 0;
@@ -56,4 +59,10 @@ export class Sidebar {
       icon: 'assets/material-symbols_chat.svg',
     },
   ];
+
+  protected logout(): void {
+    localStorage.removeItem('currentUser');
+    sessionStorage.removeItem('currentUser');
+    void this.router.navigate(['/login']);
+  }
 }

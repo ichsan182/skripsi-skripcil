@@ -1106,7 +1106,7 @@
           }
         ],
         "selectedSymbol": "NVDA",
-        "updatedAt": "2026-04-03T14:56:47.613Z"
+        "updatedAt": "2026-04-03T14:58:21.461Z"
       },
       "streak": {
         "current": 0,
@@ -1538,9 +1538,9 @@
         "currentCycleEnd": "2026-04-24"
       },
       "streak": {
-        "current": 0,
+        "current": 1,
         "longest": 16,
-        "lastActiveDate": "2026-04-01",
+        "lastActiveDate": "2026-04-03",
         "freezeUsed": false
       }
     }

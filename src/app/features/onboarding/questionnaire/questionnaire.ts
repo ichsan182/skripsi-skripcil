@@ -5,6 +5,10 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { USERS_API_URL } from '../../../core/config/app-api.config';
+import { formatCurrency } from '../../../core/utils/format.utils';
+
+const MAX_TANGGAL_PEMASUKAN = 31;
+const MAX_CURRENCY_AMOUNT = 10_000_000_000;
 
 @Component({
   selector: 'app-questionnaire',
@@ -26,7 +30,11 @@ export class Questionnaire {
     pengeluaranWajib: ['', [Validators.required]],
     tanggalPemasukan: [
       '',
-      [Validators.required, Validators.pattern(/^[0-9]{1,2}$/)],
+      [
+        Validators.required,
+        Validators.pattern(/^[0-9]{1,2}$/),
+        Validators.max(MAX_TANGGAL_PEMASUKAN),
+      ],
     ],
     hutangWajib: ['', [Validators.required]],
   });
@@ -145,14 +153,76 @@ export class Questionnaire {
     const formGroup = form === 'form1' ? this.form1 : this.form2;
     const control = (formGroup as any).get(controlName);
     return Boolean(
-      control && control.invalid && (control.dirty || control.touched),
+      control?.hasError?.('required') && (control.dirty || control.touched),
+    );
+  }
+
+  onCurrencyInput(form: 'form1' | 'form2', controlName: string): void {
+    const formGroup = form === 'form1' ? this.form1 : this.form2;
+    const control = (formGroup as any).get(controlName);
+    if (!control) {
+      return;
+    }
+
+    const rawValue = String(control.value || '');
+    const numericValue = this.clampCurrency(this.parseNumber(rawValue));
+    const currentErrors = control.errors || {};
+    if (this.parseNumber(rawValue) > MAX_CURRENCY_AMOUNT) {
+      currentErrors['maxAmount'] = true;
+    } else {
+      delete currentErrors['maxAmount'];
+    }
+    control.setErrors(Object.keys(currentErrors).length ? currentErrors : null);
+
+    control.setValue(numericValue > 0 ? formatCurrency(numericValue) : '', {
+      emitEvent: false,
+    });
+  }
+
+  onTanggalPemasukanInput(): void {
+    const control = this.form1.get('tanggalPemasukan');
+    if (!control) {
+      return;
+    }
+
+    const rawValue = this.parseNumber(String(control.value || ''));
+    const numericValue = this.clampDay(rawValue);
+    const currentErrors = control.errors || {};
+    if (rawValue > MAX_TANGGAL_PEMASUKAN) {
+      currentErrors['max'] = true;
+    } else {
+      delete currentErrors['max'];
+    }
+    control.setErrors(Object.keys(currentErrors).length ? currentErrors : null);
+    control.setValue(numericValue > 0 ? String(numericValue) : '', {
+      emitEvent: false,
+    });
+  }
+
+  hasControlError(
+    form: 'form1' | 'form2',
+    controlName: string,
+    errorName: string,
+  ): boolean {
+    const formGroup = form === 'form1' ? this.form1 : this.form2;
+    const control = (formGroup as any).get(controlName);
+    return Boolean(
+      control?.hasError?.(errorName) && (control.dirty || control.touched),
     );
   }
 
   private parseNumber(value: string): number {
     if (!value) return 0;
-    const cleaned = value.toString().replace(/\./g, '').replace(/,/g, '.');
+    const cleaned = value.toString().replace(/[^0-9]/g, '');
     return Number(cleaned) || 0;
+  }
+
+  private clampCurrency(value: number): number {
+    return Math.max(0, Math.min(MAX_CURRENCY_AMOUNT, value));
+  }
+
+  private clampDay(value: number): number {
+    return Math.max(0, Math.min(MAX_TANGGAL_PEMASUKAN, value));
   }
 
   private calculateLevel(data: {

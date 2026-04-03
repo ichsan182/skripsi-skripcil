@@ -57,5 +57,14 @@
       <p class="profile-name">{{ profileName }}</p>
       <p class="profile-email">{{ profileEmail }}</p>
     </div>
+    <button
+      type="button"
+      class="logout-btn"
+      (click)="logout()"
+      aria-label="Logout"
+    >
+      <span class="logout-icon" aria-hidden="true">↪</span>
+      <span class="logout-label">Logout</span>
+    </button>
   </div>
 </aside>

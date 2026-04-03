@@ -281,6 +281,52 @@
   line-height: 1.2;
 }
 
+.logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-white);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 95, 95, 0.18);
+  border-color: rgba(255, 170, 170, 0.48);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.16);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+}
+
+.logout-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.62);
+  outline-offset: 2px;
+}
+
+.logout-icon {
+  font-size: 0.86rem;
+  line-height: 1;
+}
+
+.logout-label {
+  line-height: 1;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 768px) {
   .sidebar {
@@ -351,6 +397,17 @@
     padding-top: 12px;
     padding-left: 16px;
     margin-top: 0;
+  }
+
+  .logout-btn {
+    margin-left: 0;
+    padding: 8px;
+    min-width: 36px;
+    justify-content: center;
+  }
+
+  .logout-label {
+    display: none;
   }
 
   .rolling-sidebar-panel {
