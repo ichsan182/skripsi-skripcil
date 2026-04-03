@@ -4,6 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { forkJoin, Subscription } from 'rxjs';
 import {
+  formatCurrencyPlain,
+  parseCurrencyInput,
+} from '../../../../core/utils/format.utils';
+import {
   PriceData,
   YahooFinanceService,
 } from '../../../../core/services/historical-data.service';
@@ -208,12 +212,7 @@ export class ToolsSimulation implements OnInit, OnDestroy {
     const normalized = Number.isFinite(value) ? value : 0;
 
     if (this.currency === 'idr') {
-      return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(normalized);
+      return formatCurrencyPlain(normalized);
     }
 
     return new Intl.NumberFormat('en-US', {
@@ -236,16 +235,15 @@ export class ToolsSimulation implements OnInit, OnDestroy {
 
   protected onAmountInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const digits = input.value.replace(/\D/g, '');
+    const parsedValue = parseCurrencyInput(input.value);
 
-    if (!digits) {
+    if (!parsedValue) {
       this.investmentAmount = '';
       input.value = '';
       return;
     }
 
-    const num = Number.parseInt(digits, 10);
-    const formatted = new Intl.NumberFormat('id-ID').format(num);
+    const formatted = formatCurrencyPlain(parsedValue);
     this.investmentAmount = formatted;
     input.value = formatted;
   }
@@ -428,30 +426,12 @@ export class ToolsSimulation implements OnInit, OnDestroy {
       return Number.NaN;
     }
 
-    const cleaned = raw.replace(/\s/g, '').replace(/[^\d,.-]/g, '');
-    if (!cleaned) {
+    const hasDigits = /\d/.test(raw);
+    if (!hasDigits) {
       return Number.NaN;
     }
 
-    const lastComma = cleaned.lastIndexOf(',');
-    const lastDot = cleaned.lastIndexOf('.');
-
-    let normalized = cleaned;
-    if (lastComma !== -1 && lastDot !== -1) {
-      if (lastComma > lastDot) {
-        normalized = cleaned.replace(/\./g, '').replace(',', '.');
-      } else {
-        normalized = cleaned.replace(/,/g, '');
-      }
-    } else if (lastComma !== -1) {
-      normalized = cleaned.replace(/\./g, '').replace(',', '.');
-    } else {
-      const dotCount = (cleaned.match(/\./g) ?? []).length;
-      normalized = dotCount > 1 ? cleaned.replace(/\./g, '') : cleaned;
-    }
-
-    const parsed = Number.parseFloat(normalized);
-    return Number.isFinite(parsed) ? parsed : Number.NaN;
+    return parseCurrencyInput(raw);
   }
 
   private parseDateInput(value: string): Date | null {

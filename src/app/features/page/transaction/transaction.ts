@@ -20,6 +20,7 @@ import {
   daysBetween,
 } from '../../../core/utils/date.utils';
 import {
+  MAX_CURRENCY_AMOUNT,
   formatCurrency,
   formatCompactCurrency,
   formatPercent,
@@ -372,7 +373,12 @@ export class Transaction {
     const description = this.expenseDraft.description.trim();
     const amount = this.expenseDraft.amount;
 
-    if (!description || !amount || amount <= 0) {
+    if (
+      !description ||
+      !amount ||
+      amount <= 0 ||
+      amount > MAX_CURRENCY_AMOUNT
+    ) {
       return;
     }
 
@@ -405,7 +411,13 @@ export class Transaction {
     const source = this.incomeDraft.source.trim();
     const amount = this.incomeDraft.amount;
 
-    if (!description || !source || !amount || amount <= 0) {
+    if (
+      !description ||
+      !source ||
+      !amount ||
+      amount <= 0 ||
+      amount > MAX_CURRENCY_AMOUNT
+    ) {
       return;
     }
 

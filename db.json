@@ -1378,7 +1378,7 @@
         "updatedAt": "2026-04-01T15:34:40.141Z"
       },
       "journal": {
-        "nextChatMessageId": 13,
+        "nextChatMessageId": 19,
         "chatByDate": {
           "2026-04-01": [
             {
@@ -1420,6 +1420,42 @@
               "sender": "assistant",
               "text": "Dicatat: Rp 45.000 untuk \"makan\" kategori makanan.",
               "time": "22.38"
+            },
+            {
+              "id": 13,
+              "sender": "user",
+              "text": "kenyam kenyam 100000",
+              "time": "22.39"
+            },
+            {
+              "id": 14,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 100.000 untuk \"kenyam kenyam\" kategori other.",
+              "time": "22.39"
+            },
+            {
+              "id": 15,
+              "sender": "user",
+              "text": "other aneh",
+              "time": "22.42"
+            },
+            {
+              "id": 16,
+              "sender": "assistant",
+              "text": "Catatan untuk Jumat, 3 April 2026 sudah disimpan.",
+              "time": "22.42"
+            },
+            {
+              "id": 17,
+              "sender": "user",
+              "text": "other 10000",
+              "time": "22.43"
+            },
+            {
+              "id": 18,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"other\" kategori other.",
+              "time": "22.43"
             }
           ],
           "2026-04-04": [
@@ -1482,6 +1518,16 @@
           ],
           "2026-04-03": [
             {
+              "amount": 10000,
+              "description": "other",
+              "category": "other"
+            },
+            {
+              "amount": 100000,
+              "description": "kenyam kenyam",
+              "category": "other"
+            },
+            {
               "amount": 45000,
               "description": "makan",
               "category": "makanan"
@@ -1526,7 +1572,7 @@
           "savings": 90
         },
         "currentPengeluaranLimit": 1234568,
-        "currentPengeluaranUsed": 444491,
+        "currentPengeluaranUsed": 554491,
         "currentSisaSaldoPool": 11111110,
         "monthlyTopUp": {
           "cycleKey": "2026-03-25",
@@ -1538,7 +1584,7 @@
         "currentCycleEnd": "2026-04-24"
       },
       "streak": {
-        "current": 1,
+        "current": 0,
         "longest": 16,
         "lastActiveDate": "2026-04-03",
         "freezeUsed": false

@@ -5,10 +5,13 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { USERS_API_URL } from '../../../core/config/app-api.config';
-import { formatCurrency } from '../../../core/utils/format.utils';
+import {
+  MAX_CURRENCY_AMOUNT,
+  clampCurrencyAmount,
+  formatCurrencyWithPrefix,
+} from '../../../core/utils/format.utils';
 
 const MAX_TANGGAL_PEMASUKAN = 31;
-const MAX_CURRENCY_AMOUNT = 10_000_000_000;
 
 @Component({
   selector: 'app-questionnaire',
@@ -165,18 +168,22 @@ export class Questionnaire {
     }
 
     const rawValue = String(control.value || '');
-    const numericValue = this.clampCurrency(this.parseNumber(rawValue));
+    const parsedValue = this.parseNumber(rawValue);
+    const numericValue = clampCurrencyAmount(parsedValue);
     const currentErrors = control.errors || {};
-    if (this.parseNumber(rawValue) > MAX_CURRENCY_AMOUNT) {
+    if (parsedValue > MAX_CURRENCY_AMOUNT) {
       currentErrors['maxAmount'] = true;
     } else {
       delete currentErrors['maxAmount'];
     }
     control.setErrors(Object.keys(currentErrors).length ? currentErrors : null);
 
-    control.setValue(numericValue > 0 ? formatCurrency(numericValue) : '', {
-      emitEvent: false,
-    });
+    control.setValue(
+      numericValue > 0 ? formatCurrencyWithPrefix(numericValue) : '',
+      {
+        emitEvent: false,
+      },
+    );
   }
 
   onTanggalPemasukanInput(): void {
@@ -215,10 +222,6 @@ export class Questionnaire {
     if (!value) return 0;
     const cleaned = value.toString().replace(/[^0-9]/g, '');
     return Number(cleaned) || 0;
-  }
-
-  private clampCurrency(value: number): number {
-    return Math.max(0, Math.min(MAX_CURRENCY_AMOUNT, value));
   }
 
   private clampDay(value: number): number {

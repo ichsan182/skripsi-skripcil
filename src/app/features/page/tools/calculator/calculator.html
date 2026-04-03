@@ -39,8 +39,8 @@
           type="text"
           inputmode="numeric"
           class="currency-input"
-          [ngModel]="incomeInput"
-          (ngModelChange)="onIncomeInputChange($event)"
+          [value]="incomeInput"
+          (input)="onIncomeInput($event)"
           placeholder="1.000.000"
         />
       </label>
@@ -111,8 +111,8 @@
               type="text"
               inputmode="numeric"
               class="currency-input"
-              [ngModel]="initialInvestmentInput"
-              (ngModelChange)="onInitialInvestmentInputChange($event)"
+              [value]="initialInvestmentInput"
+              (input)="onInitialInvestmentInput($event)"
               placeholder="1.000.000"
             />
           </div>
@@ -189,8 +189,8 @@
               type="text"
               inputmode="numeric"
               class="currency-input"
-              [ngModel]="depositAmountInput"
-              (ngModelChange)="onDepositAmountChange($event)"
+              [value]="depositAmountInput"
+              (input)="onDepositAmountInput($event)"
               placeholder="100.000"
             />
           </div>

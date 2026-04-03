@@ -2,6 +2,10 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import {
+  formatCurrencyPlain,
+  parseCurrencyInput,
+} from '../../../../core/utils/format.utils';
 
 type SavingsFrequency =
   | 'weekly'
@@ -272,14 +276,19 @@ export class ToolsCalculator {
     this.recalculateAll();
   }
 
-  protected onIncomeInputChange(rawValue: string): void {
-    this.income = this.parseCurrencyInput(rawValue);
+  protected onIncomeInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const parsed = this.parseCurrencyInput(input.value);
+    this.income = parsed;
+    input.value = parsed ? this.formatCurrencyInput(parsed) : '';
     this.syncAndRecalculateSavings();
   }
 
-  protected onInitialInvestmentInputChange(rawValue: string): void {
-    this.initialInvestment = this.parseCurrencyInput(rawValue);
-    this.syncCurrencyInputsFromNumbers();
+  protected onInitialInvestmentInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const parsed = this.parseCurrencyInput(input.value);
+    this.initialInvestment = parsed;
+    input.value = parsed ? this.formatCurrencyInput(parsed) : '';
     this.onCompoundFieldChange();
   }
 
@@ -310,9 +319,12 @@ export class ToolsCalculator {
     this.recalculateAll();
   }
 
-  protected onDepositAmountChange(rawValue: string): void {
-    this.depositAmount = this.parseCurrencyInput(rawValue);
+  protected onDepositAmountInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const parsed = this.parseCurrencyInput(input.value);
+    this.depositAmount = parsed;
     this.isDepositSynced = false;
+    input.value = parsed ? this.formatCurrencyInput(parsed) : '';
     this.syncCurrencyInputsFromNumbers();
     this.recalculateAll();
   }
@@ -347,12 +359,10 @@ export class ToolsCalculator {
   }
 
   protected formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
+    return formatCurrencyPlain(this.ensureFinite(amount), {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(this.ensureFinite(amount));
+    });
   }
 
   protected formatPercent(percentValue: number): string {
@@ -832,7 +842,7 @@ export class ToolsCalculator {
 
   private formatDoubleTime(timeToDouble: number | null): string {
     if (this.initialInvestment <= 0) {
-      return 'Tidak tersedia karena initial investment = Rp0';
+      return 'Tidak tersedia karena initial investment = 0';
     }
 
     if (timeToDouble === null) {
@@ -907,22 +917,11 @@ export class ToolsCalculator {
   }
 
   private parseCurrencyInput(rawValue: string): number {
-    const normalized = rawValue.replace(/[^\d]/g, '');
-
-    if (normalized.length === 0) {
-      return 0;
-    }
-
-    // Remove leading zeros to prevent "0000", "006", etc.
-    let parsed = Number.parseInt(normalized, 10);
-
-    return this.safeNonNegative(parsed);
+    return parseCurrencyInput(rawValue);
   }
 
   private formatCurrencyInput(value: number): string {
-    return new Intl.NumberFormat('id-ID', {
-      maximumFractionDigits: 0,
-    }).format(Math.round(this.safeNonNegative(value)));
+    return formatCurrencyPlain(Math.round(this.safeNonNegative(value)));
   }
 
   private roundToPrecision(value: number, precision: number): number {
@@ -931,12 +930,15 @@ export class ToolsCalculator {
   }
 
   private syncCurrencyInputsFromNumbers(): void {
-    this.incomeInput = this.formatCurrencyInput(this.income);
-
-    this.initialInvestmentInput = this.formatCurrencyInput(
-      this.initialInvestment,
-    );
-    this.depositAmountInput = this.formatCurrencyInput(this.depositAmount);
+    this.incomeInput = this.income
+      ? this.formatCurrencyInput(this.income)
+      : '';
+    this.initialInvestmentInput = this.initialInvestment
+      ? this.formatCurrencyInput(this.initialInvestment)
+      : '';
+    this.depositAmountInput = this.depositAmount
+      ? this.formatCurrencyInput(this.depositAmount)
+      : '';
   }
 
   private roundCurrency(value: number): number {
