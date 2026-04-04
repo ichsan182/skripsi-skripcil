@@ -676,8 +676,8 @@
     },
     {
       "id": "d622",
-      "name": "jennibotak",
-      "email": "jennibotak@gmail.com",
+      "name": "Jennifer",
+      "email": "jennifer@gmail.com",
       "phone": "1241241121212",
       "password": "123456",
       "onboardingCompleted": true,
@@ -1111,9 +1111,10 @@
       "streak": {
         "current": 0,
         "longest": 0,
-        "lastActiveDate": "2026-04-03",
+        "lastActiveDate": "2026-04-04",
         "freezeUsed": false
-      }
+      },
+      "profileImage": "assets/user.svg"
     },
     {
       "id": "e152",

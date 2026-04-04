@@ -51,16 +51,23 @@
   }
 
   <!-- Profile -->
-  <div class="sidebar-profile">
-    <img [src]="profileImage" alt="Profile" class="profile-avatar" />
+  <div
+    class="sidebar-profile"
+    role="button"
+    tabindex="0"
+    (click)="openProfileModal()"
+    (keydown.enter)="openProfileModal()"
+    (keydown.space)="openProfileModal(); $event.preventDefault()"
+  >
+    <img [src]="activeProfileImage" alt="Profile" class="profile-avatar" />
     <div class="profile-info">
-      <p class="profile-name">{{ profileName }}</p>
-      <p class="profile-email">{{ profileEmail }}</p>
+      <p class="profile-name">{{ activeProfileName }}</p>
+      <p class="profile-email">{{ activeProfileEmail }}</p>
     </div>
     <button
       type="button"
       class="logout-btn"
-      (click)="logout()"
+      (click)="onLogoutClick($event)"
       aria-label="Logout"
     >
       <span class="logout-icon" aria-hidden="true">↪</span>
@@ -68,3 +75,145 @@
     </button>
   </div>
 </aside>
+
+@if (showProfileModal) {
+<div class="modal-overlay" (click)="closeProfileModal()">
+  <div class="modal-content profile-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title-row">
+        <img [src]="activeProfileImage" alt="Avatar" class="modal-avatar" />
+        <h2>Edit Profil</h2>
+      </div>
+      <button
+        type="button"
+        class="modal-close-btn"
+        (click)="closeProfileModal()"
+        aria-label="Tutup"
+      >
+        &times;
+      </button>
+    </div>
+
+    <div class="modal-body profile-modal-body">
+      <div class="sp-form-group">
+        <label class="sp-label" for="profile-name">Nama</label>
+        <input
+          id="profile-name"
+          type="text"
+          class="sp-input profile-text-input"
+          [(ngModel)]="editProfileName"
+          placeholder="Masukkan nama"
+        />
+      </div>
+
+      <div class="sp-form-group">
+        <label class="sp-label" for="profile-email">Email</label>
+        <input
+          id="profile-email"
+          type="email"
+          class="sp-input profile-text-input"
+          [(ngModel)]="editProfileEmail"
+          placeholder="Masukkan email"
+        />
+      </div>
+
+      <section class="profile-photo-section">
+        <div class="profile-photo-head">
+          <h3>Foto Profil</h3>
+          <p>Format didukung: PNG, JPG, JPEG. Gambar akan disimpan 1:1.</p>
+        </div>
+
+        <div class="profile-photo-grid">
+          <div class="profile-photo-preview-wrap">
+            @if (hasPendingImageCrop) {
+            <canvas
+              #cropPreviewCanvas
+              class="profile-photo-preview"
+              width="220"
+              height="220"
+            ></canvas>
+            } @else {
+            <img
+              [src]="activeProfileImage"
+              alt="Preview foto profil"
+              class="profile-photo-preview"
+            />
+            }
+          </div>
+
+          <div class="profile-photo-actions">
+            <button
+              type="button"
+              class="sp-btn-cancel"
+              (click)="triggerImagePicker()"
+            >
+              Tambah / Ganti Foto
+            </button>
+            <input
+              #profileImageInput
+              type="file"
+              accept="image/png,image/jpeg,.jpg,.jpeg"
+              class="profile-file-input"
+              (change)="onProfileImageSelected($event)"
+            />
+            @if (selectedImageName) {
+            <p class="selected-file-name">File: {{ selectedImageName }}</p>
+            }
+          </div>
+        </div>
+
+        @if (hasPendingImageCrop) {
+        <div class="crop-controls">
+          <label>
+            Zoom
+            <input
+              type="range"
+              min="1"
+              max="3"
+              step="0.05"
+              [(ngModel)]="cropZoom"
+              (input)="onCropChanged()"
+            />
+          </label>
+          <label>
+            Geser Horizontal
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              [(ngModel)]="cropOffsetX"
+              (input)="onCropChanged()"
+            />
+          </label>
+          <label>
+            Geser Vertikal
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              [(ngModel)]="cropOffsetY"
+              (input)="onCropChanged()"
+            />
+          </label>
+        </div>
+        }
+      </section>
+
+      @if (profileFormError) {
+      <p class="profile-form-error">{{ profileFormError }}</p>
+      }
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="sp-btn-cancel" (click)="closeProfileModal()">
+        Batal
+      </button>
+      <button type="button" class="sp-btn-save" (click)="saveProfile()">
+        Simpan Profil
+      </button>
+    </div>
+  </div>
+</div>
+}

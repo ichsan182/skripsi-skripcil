@@ -83,6 +83,8 @@ export class Home {
     'require-entry';
 
   userName = 'User';
+  userEmail = 'user@example.com';
+  userProfileImage = 'assets/user.svg';
   financialData: FinancialData | null = null;
   userId: string | number | null = null;
   streakState: UserStreak = {
@@ -184,6 +186,8 @@ export class Home {
     try {
       const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
       if (user.name) this.userName = user.name;
+      if (user.email) this.userEmail = user.email;
+      if (user.profileImage) this.userProfileImage = user.profileImage;
       if (user.level) {
         this.currentLevel = user.level;
         this.levelProgress = this.calculateLevelProgress();
@@ -203,6 +207,16 @@ export class Home {
     } catch {
       // use defaults
     }
+  }
+
+  onProfileUpdated(profile: {
+    name: string;
+    email: string;
+    profileImage: string;
+  }): void {
+    this.userName = profile.name;
+    this.userEmail = profile.email;
+    this.userProfileImage = profile.profileImage;
   }
 
   private calculateLevelProgress(): number {

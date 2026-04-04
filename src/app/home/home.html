@@ -6,7 +6,11 @@
     [rollingBudgetRemaining]="rollingBudgetRemaining"
     [rollingDaysRemaining]="rollingDaysRemaining"
     [rollingBudgetToday]="rollingBudgetToday"
+    [profileName]="userName"
+    [profileEmail]="userEmail"
+    [profileImage]="userProfileImage"
     [formatRupiahFn]="formatRupiah.bind(this)"
+    (profileUpdated)="onProfileUpdated($event)"
   ></app-sidebar>
   <section class="home-page">
     <h1>Selamat Datang, {{ userName }}!</h1>
