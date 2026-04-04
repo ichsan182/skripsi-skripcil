@@ -1,0 +1,279 @@
+<div class="page-container">
+  <app-sidebar></app-sidebar>
+
+  <section class="page-content debt-page">
+    <header class="debt-header">
+      <p class="debt-kicker">Debt Management</p>
+      <h1>Kelola Hutang dengan Sehat</h1>
+      <p>
+        Catat hutang konsumtif dan produktif secara terpisah agar sistem level
+        dan kesehatan cash flow kamu tetap akurat.
+      </p>
+    </header>
+
+    @if (showLargeDebtPrompt) {
+    <section class="debt-prompt">
+      <div>
+        <h3>Apakah kamu punya KPR atau hutang besar lainnya?</h3>
+        <p>
+          Mencatat hutang produktif akan membuat tracking finansialmu lebih
+          akurat di level lanjutan.
+        </p>
+      </div>
+      <button type="button" (click)="dismissLargeDebtPrompt()">
+        Oke, Mengerti
+      </button>
+    </section>
+    }
+
+    <section class="debt-summary-grid">
+      <article class="summary-card summary-card-highlight">
+        <h4>Sisa HutangWajib (Konsumtif)</h4>
+        <strong>{{ formatRupiah(sisaHutangWajib) }}</strong>
+      </article>
+
+      <article class="summary-card">
+        <h4>Total Hutang Konsumtif</h4>
+        <strong>{{ formatRupiah(totalConsumptiveDebt) }}</strong>
+      </article>
+
+      <article class="summary-card">
+        <h4>Total Hutang Produktif</h4>
+        <strong>{{ formatRupiah(totalProductiveDebt) }}</strong>
+      </article>
+
+      <article class="summary-card">
+        <h4>Total Hutang Keseluruhan</h4>
+        <strong>{{ formatRupiah(totalDebt) }}</strong>
+      </article>
+
+      <article class="summary-card">
+        <h4>Estimasi Lunas Portofolio</h4>
+        <strong>{{ estimatedPayoffLabel }}</strong>
+      </article>
+    </section>
+
+    <section class="dti-section">
+      <div class="dti-head">
+        <h3>Debt-to-Income Ratio (DTI)</h3>
+        <span
+          class="dti-badge"
+          [class.warning]="dtiClass === 'warning'"
+          [class.danger]="dtiClass === 'danger'"
+        >
+          {{ dtiStatus }}
+        </span>
+      </div>
+      <p>
+        Total cicilan bulanan {{ formatRupiah(totalMonthlyInstallment) }} /
+        penghasilan {{ formatRupiah(monthlyIncome) }} = {{
+        formatPercent(dtiRatio) }}
+      </p>
+      <div class="dti-scale">
+        <div
+          class="dti-fill"
+          [class.warning]="dtiClass === 'warning'"
+          [class.danger]="dtiClass === 'danger'"
+          [style.width.%]="dtiBarWidth"
+        ></div>
+      </div>
+      <small
+        ><strong>Panduan:</strong> &lt; 30% aman, 30-50% hati-hati, &gt; 50%
+        berbahaya.</small
+      >
+    </section>
+
+    <section class="level-relation">
+      <p>{{ levelRelationLabel }}</p>
+      @if (showConsumptiveWarning) {
+      <p class="warning-text">
+        Peringatan: Hutang konsumtif kamu > 10% penghasilan bulanan. Ini dapat
+        menghentikan streak investasi di level 4+.
+      </p>
+      }
+    </section>
+
+    <section class="debt-layout">
+      <article class="debt-form-card">
+        <h3>{{ editingDebtId ? 'Edit Hutang' : 'Tambah Hutang' }}</h3>
+
+        <label>Nama Hutang</label>
+        <input
+          type="text"
+          [(ngModel)]="form.name"
+          placeholder="Contoh: Kredivo Beli HP"
+        />
+
+        <div class="row-2">
+          <div>
+            <label>Kategori</label>
+            <select [(ngModel)]="form.category">
+              <option value="konsumtif">Konsumtif</option>
+              <option value="produktif">Produktif</option>
+            </select>
+          </div>
+          <div>
+            <label>Jenis Hutang</label>
+            <select [(ngModel)]="form.debtType">
+              @for (item of debtTypeOptions; track item) {
+              <option [value]="item">{{ item }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="money-grid">
+          <div>
+            <label>Total Hutang Awal</label>
+            <input
+              type="text"
+              [value]="form.principalAmount"
+              (input)="onCurrencyInput('principalAmount', $event)"
+              placeholder="0"
+            />
+          </div>
+          <div>
+            <label>Sisa Hutang Saat Ini</label>
+            <input
+              type="text"
+              [value]="form.remainingAmount"
+              (input)="onCurrencyInput('remainingAmount', $event)"
+              placeholder="0"
+            />
+          </div>
+        </div>
+
+        <div class="row-1">
+          <div>
+            <label>Cicilan per Bulan</label>
+            <input
+              type="text"
+              [value]="form.monthlyInstallment"
+              (input)="onCurrencyInput('monthlyInstallment', $event)"
+              placeholder="0"
+            />
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div>
+            <label>Tanggal Jatuh Tempo</label>
+            <input type="number" min="1" max="31" [(ngModel)]="form.dueDay" />
+          </div>
+          <div>
+            <label>Estimasi Lunas</label>
+            <input type="text" [value]="formEstimatedLabel" readonly />
+          </div>
+        </div>
+
+        <label>Catatan (Opsional)</label>
+        <textarea
+          rows="3"
+          [(ngModel)]="form.notes"
+          placeholder="Contoh: bunga 2% per bulan"
+        ></textarea>
+
+        @if (formError) {
+        <p class="form-error">{{ formError }}</p>
+        }
+
+        <div class="actions">
+          @if (editingDebtId) {
+          <button type="button" class="btn-secondary" (click)="cancelEdit()">
+            Batal Edit
+          </button>
+          }
+          <button
+            type="button"
+            class="btn-primary"
+            (click)="saveDebt()"
+            [disabled]="isSaving"
+          >
+            {{ editingDebtId ? 'Simpan Perubahan' : 'Tambah Hutang' }}
+          </button>
+        </div>
+      </article>
+
+      <article class="debt-list-card">
+        <h3>Daftar Hutang</h3>
+        @if (!debts.length) {
+        <p class="empty-text">
+          Belum ada hutang tercatat. Tambahkan data hutang untuk mulai tracking.
+        </p>
+        }
+
+        <div class="debt-list">
+          @for (item of debts; track item.id) {
+          <div class="debt-item">
+            <div class="debt-item-head">
+              <div>
+                <h4>{{ item.name }}</h4>
+                <p>
+                  {{ item.debtType }}
+                  <span
+                    class="pill"
+                    [class.productive]="item.category === 'produktif'"
+                  >
+                    {{ item.category === 'konsumtif' ? 'Konsumtif' : 'Produktif'
+                    }}
+                  </span>
+                </p>
+              </div>
+              <div class="item-actions">
+                <button type="button" (click)="editDebt(item)">Edit</button>
+                <button
+                  type="button"
+                  class="danger"
+                  (click)="deleteDebt(item.id)"
+                >
+                  Hapus
+                </button>
+              </div>
+            </div>
+
+            <div class="debt-item-grid">
+              <span
+                >Hutang Awal:
+                <strong>{{ formatRupiah(item.principalAmount) }}</strong></span
+              >
+              <span
+                >Sisa Hutang:
+                <strong>{{ formatRupiah(item.remainingAmount) }}</strong></span
+              >
+              <span
+                >Cicilan/Bulan:
+                <strong
+                  >{{ formatRupiah(item.monthlyInstallment) }}</strong
+                ></span
+              >
+              <span
+                >Jatuh Tempo: <strong>Tanggal {{ item.dueDay }}</strong></span
+              >
+              <span
+                >Estimasi Lunas:
+                <strong>{{ estimateDebtLabel(item) }}</strong></span
+              >
+            </div>
+
+            @if (item.notes) {
+            <p class="item-note">Catatan: {{ item.notes }}</p>
+            }
+
+            <div class="pay-row">
+              <input
+                type="text"
+                [value]="paymentInputs[item.id] || ''"
+                (input)="onPaymentInput(item.id, $event)"
+                placeholder="Nominal bayar hutang"
+              />
+              <button type="button" class="btn-pay" (click)="payDebt(item)">
+                Bayar Hutang
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+      </article>
+    </section>
+  </section>
+</div>

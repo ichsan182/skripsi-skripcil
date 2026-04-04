@@ -132,7 +132,7 @@
           />
           <p>Tambah Pengeluaran</p>
         </div>
-        <div class="card-add-or-edit">
+        <div class="card-add-or-edit" (click)="goToDebtPage()">
           <img src="assets/symbol-edit_hutang.svg" alt="Description of image" />
           <p>Edit Hutang</p>
         </div>
@@ -245,53 +245,9 @@
             </div>
           </div>
         </div>
-        <div class="insight-card-level">
-          <div class="insight-card-title-level">
-            <div class="img-level"></div>
-            <h2>Level</h2>
-          </div>
-          <div class="insight-card-subtitle-level">Level mu saat ini</div>
-          <div class="level-container">
-            <div class="level-progress">
-              <img
-                [src]="currentLevelImage"
-                [alt]="'Level ' + currentLevel"
-                class="img-level-progress"
-              />
-              <span class="current-level">Level {{ currentLevel }}</span>
-              <div class="level-progress-bar">
-                <div
-                  class="level-progress-fill"
-                  [style.width]="levelProgress + '%'"
-                >
-                  <span class="level-progress-percentage"
-                    >{{ levelProgress }}%</span
-                  >
-                </div>
-              </div>
-            </div>
-            <div class="level-info">
-              <div class="task-level-info">
-                <h3>Task</h3>
-                <p>{{ currentLevelTask }}</p>
-              </div>
-            </div>
-            <div class="next-level-container">
-              @if (currentLevel < 7) {
-              <span class="next-level">Next Level :</span>
-              <img
-                [src]="nextLevelImage!"
-                [alt]="'Level ' + (currentLevel + 1)"
-                class="img-next-level"
-              />
-              } @else {
-              <span class="max-level-text"
-                >Selamat sudah mencapai level tertinggi!</span
-              >
-              }
-            </div>
-          </div>
-        </div>
+        <ng-container
+          *ngComponentOutlet="levelCardComponent; inputs: { level: levelEvaluation }"
+        ></ng-container>
 
         <div class="insight-card-pengeluaran">
           <div class="container-ts-calendar">
@@ -610,7 +566,7 @@
               >
             </div>
 
-            @if (currentLevel >= 4) {
+            @if (showDanaInvestasi) {
             <div class="sp-alloc-field">
               <label>Dana Investasi</label>
               <div class="sp-currency-input sp-currency-input-sm">

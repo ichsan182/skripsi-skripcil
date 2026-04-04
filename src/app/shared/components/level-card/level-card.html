@@ -1,0 +1,62 @@
+<div class="insight-card-level">
+  <div class="insight-card-title-level">
+    <div class="img-level"></div>
+    <h2>Level</h2>
+  </div>
+  <div class="insight-card-subtitle-level">Level perjalanan finansial kamu</div>
+  <div class="level-container">
+    <div class="level-progress">
+      <img
+        [src]="currentLevelImage"
+        [alt]="'Level ' + level.level"
+        class="img-level-progress"
+      />
+      <span class="current-level"
+        >Level {{ level.level }} - {{ level.title }}</span
+      >
+      <div class="level-progress-bar">
+        <div
+          class="level-progress-fill"
+          [style.width]="level.progressPercent + '%'"
+        >
+          <span class="level-progress-percentage"
+            >{{ level.progressPercent }}%</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <div class="level-info">
+      <div class="task-level-info">
+        <h3>Fokus Saat Ini</h3>
+        <p>{{ level.focus }}</p>
+      </div>
+      <div class="task-level-info">
+        <h3>Target Berikutnya</h3>
+        <p>{{ level.nextTarget }}</p>
+      </div>
+      <div
+        class="status-badge"
+        [class.warning]="level.status === 'warning'"
+        [class.stable]="level.status === 'stable'"
+      >
+        Status: {{ statusLabel }}
+      </div>
+    </div>
+
+    <div class="next-level-container">
+      @if (level.level < 7) {
+      <span class="next-level">Next Level :</span>
+      <img
+        [src]="nextLevelImage!"
+        [alt]="'Level ' + (level.level + 1)"
+        class="img-next-level"
+      />
+      } @else {
+      <span class="max-level-text"
+        >Selamat sudah mencapai level tertinggi!</span
+      >
+      }
+    </div>
+  </div>
+</div>

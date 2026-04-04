@@ -2,8 +2,10 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Sidebar } from '../shared/components/sidebar/sidebar';
+import { LevelCardComponent } from '../shared/components/level-card/level-card';
 import {
   BudgetAllocation,
   FinancialData,
@@ -27,6 +29,11 @@ import {
   formatPercent,
 } from '../core/utils/format.utils';
 import { RollingBudgetService } from '../core/utils/rolling-budget.service';
+import {
+  LevelEvaluation,
+  buildLevelSignals,
+  evaluateFinancialLevel,
+} from '../core/utils/level';
 
 interface ExpenseRow {
   date: string;
@@ -72,7 +79,9 @@ interface UserStreak {
 export class Home {
   private readonly journalService = inject(JournalService);
   private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
   private readonly rollingBudgetService = inject(RollingBudgetService);
+  protected readonly levelCardComponent = LevelCardComponent;
   private journal: UserJournal = {
     nextChatMessageId: 1,
     chatByDate: {},
@@ -131,9 +140,9 @@ export class Home {
     | null = null;
   pendapatanInput = 0;
   monthlyExpenseTotal = 0;
-
-  currentLevel = 2;
-  levelProgress = 60;
+  levelEvaluation: LevelEvaluation = evaluateFinancialLevel(
+    buildLevelSignals(null),
+  );
 
   readonly monthNames = [
     'Januari',
@@ -158,26 +167,6 @@ export class Home {
   );
   monthlyExpenses: ExpenseRow[] = [];
 
-  readonly levelImages = [
-    'assets/level/level_1.svg',
-    'assets/level/level_2.svg',
-    'assets/level/level_3.svg',
-    'assets/level/level_4.svg',
-    'assets/level/level_5.svg',
-    'assets/level/level-6.svg',
-    'assets/level/level_7.svg',
-  ];
-
-  readonly levelTasks = [
-    'Mulai mencatat pengeluaran harianmu',
-    'Catat transaksi selama 7 hari berturut-turut',
-    'Mengosongkan hutang',
-    'Capai tabungan darurat 3x pengeluaran',
-    'Mulai investasi pertama kamu',
-    'Raih streak 100 hari berturut-turut',
-    'Capai semua target keuangan',
-  ];
-
   readonly dayHeaders = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   streakStartDate: Date = new Date(2026, 2, 1);
   streakCalendarYear: number = new Date().getFullYear();
@@ -196,10 +185,6 @@ export class Home {
       if (user.name) this.userName = user.name;
       if (user.email) this.userEmail = user.email;
       if (user.profileImage) this.userProfileImage = user.profileImage;
-      if (user.level) {
-        this.currentLevel = user.level;
-        this.levelProgress = this.calculateLevelProgress();
-      }
       if (user.financialData) {
         this.financialData = user.financialData;
         this.pendapatanInput = user.financialData.pendapatan || 0;
@@ -212,6 +197,8 @@ export class Home {
         }
         // savings inputs always start at 0 (sisa saldo system)
       }
+
+      this.refreshLevelEvaluation();
     } catch {
       // use defaults
     }
@@ -227,20 +214,8 @@ export class Home {
     this.userProfileImage = profile.profileImage;
   }
 
-  private calculateLevelProgress(): number {
-    if (!this.financialData) return 0;
-    const { hutangWajib, estimasiTabungan, danaDarurat, pendapatan } =
-      this.financialData;
-    if (this.currentLevel === 2) return 10;
-    if (this.currentLevel === 3) {
-      const tabProgress = Math.min((estimasiTabungan / 10_000_000) * 100, 100);
-      const target = pendapatan * 3;
-      const ddProgress =
-        target > 0 ? Math.min((danaDarurat / target) * 100, 100) : 0;
-      return Math.round((tabProgress + ddProgress) / 2);
-    }
-    if (this.currentLevel >= 4) return 100;
-    return 0;
+  goToDebtPage(): void {
+    void this.router.navigate(['/debt']);
   }
 
   get sisaSaldoAmount(): number {
@@ -299,7 +274,7 @@ export class Home {
   }
 
   get showDanaInvestasi(): boolean {
-    return this.currentLevel >= 4;
+    return this.levelEvaluation.level >= 4;
   }
 
   get savingsTotalAmount(): number {
@@ -314,7 +289,7 @@ export class Home {
     return (
       this.savingsTabunganInput +
       this.savingsDanaDaruratInput +
-      (this.currentLevel >= 4 ? this.savingsDanaInvestasiInput : 0)
+      (this.levelEvaluation.level >= 4 ? this.savingsDanaInvestasiInput : 0)
     );
   }
 
@@ -330,7 +305,7 @@ export class Home {
     return (
       this.savingsTabunganPercent +
       this.savingsDanaDaruratPercent +
-      (this.currentLevel >= 4 ? this.savingsDanaInvestasiPercent : 0)
+      (this.levelEvaluation.level >= 4 ? this.savingsDanaInvestasiPercent : 0)
     );
   }
 
@@ -362,18 +337,6 @@ export class Home {
 
   get budgetPercentShortage(): number {
     return Math.max(0, 100 - this.budgetTotalPercent);
-  }
-
-  get currentLevelImage(): string {
-    return this.levelImages[this.currentLevel - 1];
-  }
-
-  get nextLevelImage(): string | null {
-    return this.currentLevel < 7 ? this.levelImages[this.currentLevel] : null;
-  }
-
-  get currentLevelTask(): string {
-    return this.levelTasks[this.currentLevel - 1];
   }
 
   get currentMonthYearLabel(): string {
@@ -506,7 +469,7 @@ export class Home {
     const estimasiTabungan = existingTabungan + this.savingsTabunganInput;
     const danaDarurat = existingDanaDarurat + this.savingsDanaDaruratInput;
     const danaInvestasi =
-      this.currentLevel >= 4
+      this.levelEvaluation.level >= 4
         ? existingDanaInvestasi + this.savingsDanaInvestasiInput
         : existingDanaInvestasi;
     const budgetAllocation: BudgetAllocation = {
@@ -553,6 +516,7 @@ export class Home {
       ),
     };
     this.financialData = updatedFinancialData;
+    this.refreshLevelEvaluation();
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
     user.financialData = updatedFinancialData;
     localStorage.setItem('currentUser', JSON.stringify(user));
@@ -694,6 +658,7 @@ export class Home {
       this.monthlyExpenseTotal = summary.monthlyExpenseTotal;
       if (summary.financialData) {
         this.financialData = summary.financialData;
+        this.refreshLevelEvaluation();
         this.computeRollingBudgetToday();
       }
     } catch {
@@ -1122,7 +1087,7 @@ export class Home {
     let othersSum = 0;
     if (field !== 'tabungan') othersSum += this.savingsTabunganInput;
     if (field !== 'danaDarurat') othersSum += this.savingsDanaDaruratInput;
-    if (field !== 'danaInvestasi' && this.currentLevel >= 4)
+    if (field !== 'danaInvestasi' && this.levelEvaluation.level >= 4)
       othersSum += this.savingsDanaInvestasiInput;
     return Math.max(0, total - othersSum);
   }
@@ -1130,7 +1095,7 @@ export class Home {
   private autoFillSavingsPercent(
     editedField: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
   ): void {
-    if (this.currentLevel < 4) {
+    if (this.levelEvaluation.level < 4) {
       const absorber = editedField === 'tabungan' ? 'danaDarurat' : 'tabungan';
       this.setSavingsPercentField(
         absorber,
@@ -1198,7 +1163,7 @@ export class Home {
       (this.savingsDanaDaruratInput / total) * 100,
     );
 
-    if (this.currentLevel >= 4) {
+    if (this.levelEvaluation.level >= 4) {
       this.savingsDanaInvestasiPercent = this.toSafePercent(
         (this.savingsDanaInvestasiInput / total) * 100,
       );
@@ -1226,7 +1191,7 @@ export class Home {
       (total * this.savingsDanaDaruratPercent) / 100,
     );
     this.savingsDanaInvestasiInput =
-      this.currentLevel >= 4
+      this.levelEvaluation.level >= 4
         ? Math.round((total * this.savingsDanaInvestasiPercent) / 100)
         : 0;
 
@@ -1252,7 +1217,7 @@ export class Home {
     const otherFields = allSavingsFields.filter(
       (field): field is 'tabungan' | 'danaDarurat' | 'danaInvestasi' =>
         field !== primaryField &&
-        (this.currentLevel >= 4 || field !== 'danaInvestasi'),
+        (this.levelEvaluation.level >= 4 || field !== 'danaInvestasi'),
     );
 
     for (const field of otherFields) {
@@ -1310,6 +1275,12 @@ export class Home {
     }
 
     return Math.max(0, Math.min(100, Math.round(value)));
+  }
+
+  private refreshLevelEvaluation(): void {
+    this.levelEvaluation = evaluateFinancialLevel(
+      buildLevelSignals(this.financialData),
+    );
   }
 
   formatRupiah(amount: number): string {

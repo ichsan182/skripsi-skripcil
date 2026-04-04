@@ -13,6 +13,7 @@ import { ToolsCalculator } from './features/page/tools/calculator/calculator';
 import { Education } from './features/page/education/education';
 import { ToolsSimulation } from './features/page/tools/simulation/simulation';
 import { EducationContent } from './features/page/education/education-content/education-content';
+import { Debt } from './features/page/debt/debt';
 
 export const routes: Routes = [
   {
@@ -59,6 +60,10 @@ export const routes: Routes = [
   {
     path: 'investment',
     component: Investment,
+  },
+  {
+    path: 'debt',
+    component: Debt,
   },
   {
     path: 'tools',

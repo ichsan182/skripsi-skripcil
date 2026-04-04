@@ -1,0 +1,442 @@
+.debt-page {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.debt-header,
+.debt-prompt,
+.summary-card,
+.dti-section,
+.level-relation,
+.debt-form-card,
+.debt-list-card {
+  background: color-mix(
+    in srgb,
+    var(--color-card-bg) 95%,
+    var(--color-input-bg)
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary-subtle) 30%, transparent);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+}
+
+.debt-header {
+  padding: 22px;
+  display: grid;
+  gap: 8px;
+}
+
+.debt-kicker {
+  text-transform: uppercase;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-primary-dark);
+}
+
+.debt-header h1 {
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
+  color: var(--color-black);
+}
+
+.debt-header p {
+  font-size: var(--font-size-sm);
+  color: color-mix(in srgb, var(--color-black) 62%, var(--color-gray));
+}
+
+.debt-prompt {
+  padding: 16px 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  border-style: dashed;
+}
+
+.debt-prompt h3 {
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-base);
+  margin-bottom: 4px;
+}
+
+.debt-prompt p {
+  color: var(--color-gray);
+  font-size: var(--font-size-xs);
+}
+
+.debt-prompt button {
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-white);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.debt-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.summary-card {
+  padding: 14px;
+  display: grid;
+  gap: 6px;
+}
+
+.summary-card-highlight {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-white));
+}
+
+.summary-card h4 {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray);
+}
+
+.summary-card strong {
+  font-size: var(--font-size-base);
+  color: var(--color-primary-dark);
+}
+
+.dti-section {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.dti-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dti-head h3 {
+  color: var(--color-black);
+  font-size: var(--font-size-base);
+}
+
+.dti-badge {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: #166534;
+  background: #dcfce7;
+}
+
+.dti-badge.warning {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.dti-badge.danger {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.dti-section p,
+.dti-section small {
+  color: var(--color-gray);
+  font-size: var(--font-size-xs);
+}
+
+.dti-scale {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(3, 15, 15, 0.08);
+  overflow: hidden;
+}
+
+.dti-fill {
+  height: 100%;
+  background: #16a34a;
+  transition: width 0.25s ease;
+}
+
+.dti-fill.warning {
+  background: #d97706;
+}
+
+.dti-fill.danger {
+  background: #dc2626;
+}
+
+.level-relation {
+  padding: 14px 16px;
+  display: grid;
+  gap: 4px;
+}
+
+.level-relation p {
+  color: var(--color-gray);
+  font-size: var(--font-size-xs);
+}
+
+.warning-text {
+  color: #b91c1c !important;
+  font-weight: 700;
+}
+
+.debt-layout {
+  display: grid;
+  grid-template-columns: minmax(290px, 380px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.debt-form-card,
+.debt-list-card {
+  padding: 16px;
+}
+
+.debt-form-card {
+  display: grid;
+  gap: 10px;
+}
+
+.debt-form-card h3,
+.debt-list-card h3 {
+  color: var(--color-black);
+  font-size: var(--font-size-base);
+}
+
+.debt-form-card label {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: color-mix(in srgb, var(--color-black) 72%, var(--color-gray));
+}
+
+.debt-form-card input,
+.debt-form-card select,
+.debt-form-card textarea {
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary-subtle) 40%, transparent);
+  background: color-mix(in srgb, var(--color-white) 95%, var(--color-input-bg));
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-base);
+}
+
+.row-1,
+.row-2,
+.row-3,
+.money-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.row-1 {
+  grid-template-columns: 1fr;
+}
+
+.row-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.row-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.money-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.row-2 > div,
+.row-3 > div,
+.row-1 > div,
+.money-grid > div {
+  display: grid;
+  gap: 6px;
+}
+
+.form-error {
+  border-radius: 8px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--color-accent-red) 25%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--color-accent-red) 8%,
+    var(--color-white)
+  );
+  color: #991b1b;
+  font-size: var(--font-size-xs);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btn-primary,
+.btn-secondary {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.btn-secondary {
+  background: var(--color-input-bg);
+  color: var(--color-black);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.debt-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.debt-item {
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary-subtle) 30%, transparent);
+  border-radius: 10px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--color-white) 95%, var(--color-input-bg));
+}
+
+.debt-item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.debt-item-head h4 {
+  color: var(--color-black);
+  font-size: var(--font-size-sm);
+}
+
+.debt-item-head p {
+  color: var(--color-gray);
+  font-size: var(--font-size-xs);
+  margin-top: 3px;
+}
+
+.pill {
+  display: inline-flex;
+  margin-left: 6px;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.pill.productive {
+  color: #155e75;
+  background: #cffafe;
+}
+
+.item-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.item-actions button {
+  border: 1px solid rgba(3, 15, 15, 0.12);
+  background: var(--color-white);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.item-actions button.danger {
+  color: #b91c1c;
+}
+
+.debt-item-grid {
+  margin-top: 8px;
+  display: grid;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--color-gray);
+}
+
+.debt-item-grid strong {
+  color: var(--color-black);
+}
+
+.pay-row {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.pay-row input {
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary-subtle) 40%, transparent);
+  background: color-mix(in srgb, var(--color-white) 95%, var(--color-input-bg));
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family-base);
+}
+
+.btn-pay {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  background: var(--color-primary);
+  color: var(--color-white);
+  cursor: pointer;
+}
+
+.item-note,
+.empty-text {
+  margin-top: 8px;
+  font-size: var(--font-size-xs);
+  color: var(--color-gray);
+}
+
+@media (max-width: 1100px) {
+  .debt-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .debt-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .debt-prompt {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .row-2,
+  .row-3,
+  .money-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .debt-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
