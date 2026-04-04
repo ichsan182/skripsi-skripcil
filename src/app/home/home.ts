@@ -121,6 +121,14 @@ export class Home {
   savingsTabunganInput = 0;
   savingsDanaDaruratInput = 0;
   savingsDanaInvestasiInput = 0;
+  savingsTabunganPercent = 0;
+  savingsDanaDaruratPercent = 0;
+  savingsDanaInvestasiPercent = 0;
+  savingsPercentLastEdited:
+    | 'tabungan'
+    | 'danaDarurat'
+    | 'danaInvestasi'
+    | null = null;
   pendapatanInput = 0;
   monthlyExpenseTotal = 0;
 
@@ -318,6 +326,18 @@ export class Home {
     return this.savingsUsed <= this.savingsTotalAmount;
   }
 
+  get savingsPercentTotal(): number {
+    return (
+      this.savingsTabunganPercent +
+      this.savingsDanaDaruratPercent +
+      (this.currentLevel >= 4 ? this.savingsDanaInvestasiPercent : 0)
+    );
+  }
+
+  get savingsPercentRemaining(): number {
+    return Math.max(0, 100 - this.savingsPercentTotal);
+  }
+
   get isSaveDisabled(): boolean {
     if (this.budgetTotalPercent !== 100) return true;
     if (this.budgetSavings > 0 && !this.isSavingsValid) return true;
@@ -395,6 +415,10 @@ export class Home {
     this.savingsTabunganInput = 0;
     this.savingsDanaDaruratInput = 0;
     this.savingsDanaInvestasiInput = 0;
+    this.savingsTabunganPercent = 0;
+    this.savingsDanaDaruratPercent = 0;
+    this.savingsDanaInvestasiPercent = 0;
+    this.savingsPercentLastEdited = null;
     this.budgetLastEdited = null;
     this.showSettingPersenan = true;
   }
@@ -448,6 +472,23 @@ export class Home {
     else if (field === 'danaDarurat') this.savingsDanaDaruratInput = value;
     else this.savingsDanaInvestasiInput = value;
     input.value = this.formatNumber(value);
+    this.syncSavingsPercentFromAmounts();
+  }
+
+  onSavingsPercentInput(
+    field: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
+    event: Event,
+  ): void {
+    const input = event.target as HTMLInputElement;
+    const cleaned = input.value.replace(/[^0-9]/g, '');
+    let value = parseInt(cleaned, 10) || 0;
+    if (value > 100) value = 100;
+
+    this.setSavingsPercentField(field, value);
+    this.autoFillSavingsPercent(field);
+    this.savingsPercentLastEdited = field;
+    this.syncSavingsAmountsFromPercentages(field);
+    input.value = String(this.getSavingsPercentField(field));
   }
 
   async saveSettingPersenan(): Promise<void> {
@@ -1084,6 +1125,191 @@ export class Home {
     if (field !== 'danaInvestasi' && this.currentLevel >= 4)
       othersSum += this.savingsDanaInvestasiInput;
     return Math.max(0, total - othersSum);
+  }
+
+  private autoFillSavingsPercent(
+    editedField: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
+  ): void {
+    if (this.currentLevel < 4) {
+      const absorber = editedField === 'tabungan' ? 'danaDarurat' : 'tabungan';
+      this.setSavingsPercentField(
+        absorber,
+        Math.max(0, 100 - this.getSavingsPercentField(editedField)),
+      );
+      this.savingsDanaInvestasiPercent = 0;
+      return;
+    }
+
+    const allFields: ('tabungan' | 'danaDarurat' | 'danaInvestasi')[] = [
+      'tabungan',
+      'danaDarurat',
+      'danaInvestasi',
+    ];
+
+    let absorber: 'tabungan' | 'danaDarurat' | 'danaInvestasi';
+    if (
+      this.savingsPercentLastEdited &&
+      this.savingsPercentLastEdited !== editedField
+    ) {
+      absorber = this.savingsPercentLastEdited;
+    } else {
+      absorber =
+        allFields.find((field) => field !== editedField) ?? 'danaDarurat';
+    }
+
+    const thirdField = allFields.find(
+      (field) => field !== editedField && field !== absorber,
+    );
+
+    if (!thirdField) {
+      return;
+    }
+
+    const remainder =
+      100 -
+      this.getSavingsPercentField(editedField) -
+      this.getSavingsPercentField(thirdField);
+
+    if (remainder >= 0) {
+      this.setSavingsPercentField(absorber, remainder);
+      return;
+    }
+
+    this.setSavingsPercentField(absorber, 0);
+    this.setSavingsPercentField(
+      thirdField,
+      Math.max(0, 100 - this.getSavingsPercentField(editedField)),
+    );
+  }
+
+  private syncSavingsPercentFromAmounts(): void {
+    const total = this.savingsTotalAmount;
+    if (total <= 0) {
+      this.savingsTabunganPercent = 0;
+      this.savingsDanaDaruratPercent = 0;
+      this.savingsDanaInvestasiPercent = 0;
+      return;
+    }
+
+    this.savingsTabunganPercent = this.toSafePercent(
+      (this.savingsTabunganInput / total) * 100,
+    );
+    this.savingsDanaDaruratPercent = this.toSafePercent(
+      (this.savingsDanaDaruratInput / total) * 100,
+    );
+
+    if (this.currentLevel >= 4) {
+      this.savingsDanaInvestasiPercent = this.toSafePercent(
+        (this.savingsDanaInvestasiInput / total) * 100,
+      );
+      return;
+    }
+
+    this.savingsDanaInvestasiPercent = 0;
+  }
+
+  private syncSavingsAmountsFromPercentages(
+    primaryField: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
+  ): void {
+    const total = this.savingsTotalAmount;
+    if (total <= 0) {
+      this.savingsTabunganInput = 0;
+      this.savingsDanaDaruratInput = 0;
+      this.savingsDanaInvestasiInput = 0;
+      return;
+    }
+
+    this.savingsTabunganInput = Math.round(
+      (total * this.savingsTabunganPercent) / 100,
+    );
+    this.savingsDanaDaruratInput = Math.round(
+      (total * this.savingsDanaDaruratPercent) / 100,
+    );
+    this.savingsDanaInvestasiInput =
+      this.currentLevel >= 4
+        ? Math.round((total * this.savingsDanaInvestasiPercent) / 100)
+        : 0;
+
+    const overflow = this.savingsUsed - total;
+    if (overflow <= 0) {
+      return;
+    }
+
+    const primaryValue = this.getSavingsAmountField(primaryField);
+    if (primaryValue >= overflow) {
+      this.setSavingsAmountField(primaryField, primaryValue - overflow);
+      return;
+    }
+
+    this.setSavingsAmountField(primaryField, 0);
+    let remainder = overflow - primaryValue;
+
+    const allSavingsFields = [
+      'tabungan',
+      'danaDarurat',
+      'danaInvestasi',
+    ] as const;
+    const otherFields = allSavingsFields.filter(
+      (field): field is 'tabungan' | 'danaDarurat' | 'danaInvestasi' =>
+        field !== primaryField &&
+        (this.currentLevel >= 4 || field !== 'danaInvestasi'),
+    );
+
+    for (const field of otherFields) {
+      if (remainder <= 0) {
+        break;
+      }
+
+      const current = this.getSavingsAmountField(field);
+      const deduction = Math.min(current, remainder);
+      this.setSavingsAmountField(field, current - deduction);
+      remainder -= deduction;
+    }
+  }
+
+  private setSavingsPercentField(
+    field: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
+    value: number,
+  ): void {
+    const normalized = Math.max(0, Math.min(100, Math.floor(value)));
+    if (field === 'tabungan') this.savingsTabunganPercent = normalized;
+    else if (field === 'danaDarurat')
+      this.savingsDanaDaruratPercent = normalized;
+    else this.savingsDanaInvestasiPercent = normalized;
+  }
+
+  private getSavingsPercentField(
+    field: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
+  ): number {
+    if (field === 'tabungan') return this.savingsTabunganPercent;
+    if (field === 'danaDarurat') return this.savingsDanaDaruratPercent;
+    return this.savingsDanaInvestasiPercent;
+  }
+
+  private setSavingsAmountField(
+    field: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
+    value: number,
+  ): void {
+    const normalized = Math.max(0, Math.floor(value));
+    if (field === 'tabungan') this.savingsTabunganInput = normalized;
+    else if (field === 'danaDarurat') this.savingsDanaDaruratInput = normalized;
+    else this.savingsDanaInvestasiInput = normalized;
+  }
+
+  private getSavingsAmountField(
+    field: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
+  ): number {
+    if (field === 'tabungan') return this.savingsTabunganInput;
+    if (field === 'danaDarurat') return this.savingsDanaDaruratInput;
+    return this.savingsDanaInvestasiInput;
+  }
+
+  private toSafePercent(value: number): number {
+    if (!Number.isFinite(value) || value <= 0) {
+      return 0;
+    }
+
+    return Math.max(0, Math.min(100, Math.round(value)));
   }
 
   formatRupiah(amount: number): string {

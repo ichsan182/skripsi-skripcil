@@ -683,7 +683,7 @@
       "onboardingCompleted": true,
       "level": 4,
       "journal": {
-        "nextChatMessageId": 43,
+        "nextChatMessageId": 49,
         "chatByDate": {
           "2026-03-28": [
             {
@@ -944,6 +944,44 @@
               "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
               "time": "21.52"
             }
+          ],
+          "2026-04-04": [
+            {
+              "id": 43,
+              "sender": "user",
+              "text": "babi 10000",
+              "time": "21.24"
+            },
+            {
+              "id": 44,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "21.24"
+            },
+            {
+              "id": 45,
+              "sender": "user",
+              "text": "rumah sakit",
+              "time": "21.25"
+            },
+            {
+              "id": 46,
+              "sender": "assistant",
+              "text": "Catatan untuk Sabtu, 4 April 2026 sudah disimpan.",
+              "time": "21.25"
+            },
+            {
+              "id": 47,
+              "sender": "user",
+              "text": "rumah sakit 1000000",
+              "time": "21.25"
+            },
+            {
+              "id": 48,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "21.25"
+            }
           ]
         },
         "expensesByDate": {
@@ -1051,9 +1089,9 @@
         "pengeluaranWajib": 4800000,
         "tanggalPemasukan": 25,
         "hutangWajib": 0,
-        "estimasiTabungan": 34985000,
-        "danaDarurat": 45000000,
-        "danaInvestasi": 3000000,
+        "estimasiTabungan": 35525000,
+        "danaDarurat": 45420000,
+        "danaInvestasi": 3240000,
         "budgetAllocation": {
           "mode": 2,
           "pengeluaran": 80,
@@ -1061,14 +1099,14 @@
           "savings": 20
         },
         "savingsAllocation": {
-          "tabungan": 0,
-          "danaDarurat": 0,
-          "danaInvestasi": 3000000
+          "tabungan": 540000,
+          "danaDarurat": 420000,
+          "danaInvestasi": 3240000
         },
         "intendedTanggalPemasukan": 25,
         "currentPengeluaranLimit": 4800000,
         "currentPengeluaranUsed": 14632123,
-        "currentSisaSaldoPool": 1200000,
+        "currentSisaSaldoPool": 0,
         "monthlyTopUp": {
           "cycleKey": "2026-03-25",
           "fromTabunganCount": 1,
@@ -1080,6 +1118,22 @@
       },
       "investmentWatchlist": {
         "items": [
+          {
+            "symbol": "BMRI",
+            "name": "Bank Mandiri (Persero) Tbk.",
+            "type": "Common Stock",
+            "region": "Indonesia",
+            "currency": "IDR",
+            "createdAt": "2026-04-04T14:40:39.087Z"
+          },
+          {
+            "symbol": "BBCA",
+            "name": "Bank Central Asia Tbk",
+            "type": "Common Stock",
+            "region": "Indonesia",
+            "currency": "IDR",
+            "createdAt": "2026-04-04T14:40:09.250Z"
+          },
           {
             "symbol": "AMZN",
             "name": "Amazon.com, Inc.",
@@ -1105,8 +1159,8 @@
             "createdAt": "2026-03-30T15:58:34.019Z"
           }
         ],
-        "selectedSymbol": "NVDA",
-        "updatedAt": "2026-04-04T12:27:49.936Z"
+        "selectedSymbol": "AMZN",
+        "updatedAt": "2026-04-04T14:46:20.744Z"
       },
       "streak": {
         "current": 0,

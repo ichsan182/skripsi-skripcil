@@ -564,6 +564,16 @@
                   [disabled]="isSisaSaldoEmpty && savingsTabunganInput === 0"
                 />
               </div>
+              <div class="sp-percent-input sp-percent-input-secondary">
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  [value]="savingsTabunganPercent"
+                  (input)="onSavingsPercentInput('tabungan', $event)"
+                  class="sp-input sp-input-percent"
+                />
+                <span class="sp-percent-suffix">%</span>
+              </div>
               <span class="sp-existing-info"
                 >Saat ini: {{ formatRupiah(financialData?.estimasiTabungan || 0)
                 }}</span
@@ -583,6 +593,16 @@
                   class="sp-input"
                   [disabled]="isSisaSaldoEmpty && savingsDanaDaruratInput === 0"
                 />
+              </div>
+              <div class="sp-percent-input sp-percent-input-secondary">
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  [value]="savingsDanaDaruratPercent"
+                  (input)="onSavingsPercentInput('danaDarurat', $event)"
+                  class="sp-input sp-input-percent"
+                />
+                <span class="sp-percent-suffix">%</span>
               </div>
               <span class="sp-existing-info"
                 >Saat ini: {{ formatRupiah(financialData?.danaDarurat || 0)
@@ -605,12 +625,47 @@
                   [disabled]="isSisaSaldoEmpty && savingsDanaInvestasiInput === 0"
                 />
               </div>
+              <div class="sp-percent-input sp-percent-input-secondary">
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  [value]="savingsDanaInvestasiPercent"
+                  (input)="onSavingsPercentInput('danaInvestasi', $event)"
+                  class="sp-input sp-input-percent"
+                />
+                <span class="sp-percent-suffix">%</span>
+              </div>
               <span class="sp-existing-info"
                 >Saat ini: {{ formatRupiah(financialData?.danaInvestasi || 0)
                 }}</span
               >
             </div>
             }
+          </div>
+
+          <div class="sp-total-bar">
+            <div class="sp-total-label">
+              <span>Persentase Alokasi Tabungan</span>
+              <span
+                class="sp-total-value"
+                [class.sp-total-full]="savingsPercentTotal === 100"
+                [class.sp-total-under]="savingsPercentTotal < 100"
+                [class.sp-total-over]="savingsPercentTotal > 100"
+              >
+                {{ savingsPercentTotal }}%
+              </span>
+            </div>
+            <div class="sp-progress-track">
+              <div
+                class="sp-progress-fill"
+                [class.sp-progress-under]="savingsPercentTotal < 100"
+                [class.sp-progress-over]="savingsPercentTotal > 100"
+                [style.width.%]="Math.min(100, savingsPercentTotal)"
+              ></div>
+            </div>
+            <span class="sp-remaining-text">
+              Sisa belum dialokasikan via persen: {{ savingsPercentRemaining }}%
+            </span>
           </div>
 
           @if (!isSisaSaldoEmpty || savingsUsed > 0) {

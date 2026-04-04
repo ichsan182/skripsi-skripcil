@@ -1290,6 +1290,10 @@
   border-color: var(--color-primary);
 }
 
+.sp-percent-input-secondary {
+  margin-top: 2px;
+}
+
 .sp-input-percent {
   width: 100%;
   padding: 10px 8px;
