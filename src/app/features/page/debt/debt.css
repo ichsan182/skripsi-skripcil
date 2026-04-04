@@ -1,7 +1,46 @@
 .debt-page {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  padding: clamp(14px, 2.2vw, 22px);
   display: grid;
-  gap: 16px;
+  gap: clamp(12px, 1.8vw, 16px);
   align-content: start;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.debt-page::before,
+.debt-page::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  border-radius: 999px;
+  filter: blur(26px);
+}
+
+.debt-page::before {
+  width: min(520px, 76vw);
+  height: min(520px, 76vw);
+  top: -190px;
+  right: -150px;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-primary-light) 24%, transparent) 0%,
+    transparent 72%
+  );
+}
+
+.debt-page::after {
+  width: min(460px, 70vw);
+  height: min(460px, 70vw);
+  bottom: -210px;
+  left: -170px;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-progress-bar-bg) 24%, transparent) 0%,
+    transparent 70%
+  );
 }
 
 .debt-header,
@@ -79,7 +118,7 @@
 
 .debt-summary-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
 }
 
@@ -186,7 +225,7 @@
 
 .debt-layout {
   display: grid;
-  grid-template-columns: minmax(290px, 380px) minmax(0, 1fr);
+  grid-template-columns: minmax(320px, 430px) minmax(0, 1fr);
   gap: 14px;
   align-items: start;
 }
@@ -194,6 +233,7 @@
 .debt-form-card,
 .debt-list-card {
   padding: 16px;
+  min-width: 0;
 }
 
 .debt-form-card {
@@ -216,6 +256,10 @@
 .debt-form-card input,
 .debt-form-card select,
 .debt-form-card textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   border: 1px solid
     color-mix(in srgb, var(--color-primary-subtle) 40%, transparent);
   background: color-mix(in srgb, var(--color-white) 95%, var(--color-input-bg));
@@ -239,6 +283,10 @@
 
 .row-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.debt-form-card .row-2:last-of-type {
+  grid-template-columns: minmax(100px, 0.7fr) minmax(0, 1.3fr);
 }
 
 .row-3 {
@@ -382,11 +430,15 @@
 .pay-row {
   margin-top: 10px;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
 }
 
 .pay-row input {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   border: 1px solid
     color-mix(in srgb, var(--color-primary-subtle) 40%, transparent);
   background: color-mix(in srgb, var(--color-white) 95%, var(--color-input-bg));
@@ -415,16 +467,16 @@
 }
 
 @media (max-width: 1100px) {
-  .debt-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .debt-layout {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 720px) {
+  .debt-page {
+    padding: 12px;
+  }
+
   .debt-prompt {
     flex-direction: column;
     align-items: flex-start;
@@ -436,7 +488,18 @@
     grid-template-columns: 1fr;
   }
 
-  .debt-summary-grid {
+  .debt-item-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .item-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .pay-row {
     grid-template-columns: 1fr;
   }
 }

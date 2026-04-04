@@ -1672,11 +1672,11 @@
       },
       "financialData": {
         "pendapatan": 16000000,
-        "pengeluaranWajib": 3500000,
+        "pengeluaranWajib": 3520000,
         "tanggalPemasukan": 25,
         "intendedTanggalPemasukan": 25,
         "hutangWajib": 0,
-        "estimasiTabungan": 25000000,
+        "estimasiTabungan": 34984000,
         "danaDarurat": 60000000,
         "budgetAllocation": {
           "mode": 2,
@@ -1686,7 +1686,7 @@
         },
         "currentPengeluaranLimit": 3520000,
         "currentPengeluaranUsed": 0,
-        "currentSisaSaldoPool": 12480000,
+        "currentSisaSaldoPool": 0,
         "monthlyTopUp": {
           "cycleKey": "2026-03-25",
           "fromTabunganCount": 0,
@@ -1694,7 +1694,13 @@
           "totalFromDanaDarurat": 0
         },
         "currentCycleStart": "2026-03-25",
-        "currentCycleEnd": "2026-04-24"
+        "currentCycleEnd": "2026-04-24",
+        "danaInvestasi": 2496000,
+        "savingsAllocation": {
+          "tabungan": 9984000,
+          "danaDarurat": 0,
+          "danaInvestasi": 2496000
+        }
       },
       "streak": {
         "current": 0,
@@ -1702,7 +1708,19 @@
         "lastActiveDate": "2026-04-04",
         "freezeUsed": false
       },
-      "debts": []
+      "debts": [
+        {
+          "name": "beli rumah",
+          "category": "produktif",
+          "debtType": "KPR",
+          "principalAmount": 500000000,
+          "remainingAmount": 350000000,
+          "monthlyInstallment": 6000000,
+          "dueDay": 1,
+          "notes": "bunga 3% sebulan",
+          "id": "debt-1775318103739-203"
+        }
+      ]
     }
   ]
 }
