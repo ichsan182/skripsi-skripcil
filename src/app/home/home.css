@@ -1328,7 +1328,7 @@
 }
 
 .sp-total-value {
-  color: var(--color-accent-red);
+  color: var(--color-black);
   font-weight: 700;
 }
 
@@ -1408,8 +1408,28 @@
   color: var(--color-accent-red);
 }
 
+.sp-total-value.sp-total-under {
+  color: #b7791f;
+}
+
 .sp-progress-fill.sp-progress-over {
   background: var(--color-accent-red);
+}
+
+.sp-progress-fill.sp-progress-under {
+  background: #f2b53f;
+}
+
+.sp-total-warning {
+  display: block;
+  font-size: var(--font-size-2xs);
+  color: var(--color-accent-red);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.sp-total-warning.sp-total-warning-under {
+  color: #8a6400;
 }
 
 .sp-remaining-text {

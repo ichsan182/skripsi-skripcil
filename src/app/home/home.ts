@@ -319,11 +319,29 @@ export class Home {
   }
 
   get isSaveDisabled(): boolean {
-    const budgetTotal =
-      this.budgetPengeluaran + this.budgetWants + this.budgetSavings;
-    if (budgetTotal !== 100) return true;
+    if (this.budgetTotalPercent !== 100) return true;
     if (this.budgetSavings > 0 && !this.isSavingsValid) return true;
     return false;
+  }
+
+  get budgetTotalPercent(): number {
+    return this.budgetPengeluaran + this.budgetWants + this.budgetSavings;
+  }
+
+  get isBudgetTotalOverLimit(): boolean {
+    return this.budgetTotalPercent > 100;
+  }
+
+  get isBudgetTotalUnderLimit(): boolean {
+    return this.budgetTotalPercent < 100;
+  }
+
+  get budgetPercentExcess(): number {
+    return Math.max(0, this.budgetTotalPercent - 100);
+  }
+
+  get budgetPercentShortage(): number {
+    return Math.max(0, 100 - this.budgetTotalPercent);
   }
 
   get currentLevelImage(): string {
@@ -411,7 +429,9 @@ export class Home {
     if (value > 100) value = 100;
     this.setBudgetField(field, value);
     input.value = String(value);
-    this.autoFillBudget(field);
+    if (this.budgetMode === 2) {
+      this.autoFillBudget(field);
+    }
     this.budgetLastEdited = field;
   }
 

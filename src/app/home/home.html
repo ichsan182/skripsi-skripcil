@@ -506,17 +506,33 @@
               <span>Total</span>
               <span
                 class="sp-total-value"
-                [class.sp-total-full]="budgetPengeluaran + budgetWants + budgetSavings === 100"
+                [class.sp-total-full]="budgetTotalPercent === 100"
+                [class.sp-total-over]="isBudgetTotalOverLimit"
+                [class.sp-total-under]="isBudgetTotalUnderLimit"
               >
-                {{ budgetPengeluaran + budgetWants + budgetSavings }}%
+                {{ budgetTotalPercent }}%
               </span>
             </div>
             <div class="sp-progress-track">
               <div
                 class="sp-progress-fill"
-                [style.width.%]="budgetPengeluaran + budgetWants + budgetSavings"
+                [class.sp-progress-over]="isBudgetTotalOverLimit"
+                [class.sp-progress-under]="isBudgetTotalUnderLimit"
+                [style.width.%]="Math.min(100, budgetTotalPercent)"
               ></div>
             </div>
+            @if (budgetTotalPercent !== 100) {
+            <span
+              class="sp-total-warning"
+              [class.sp-total-warning-under]="isBudgetTotalUnderLimit"
+            >
+              @if (isBudgetTotalOverLimit) { Total alokasi melebihi 100%.
+              Kurangi {{ budgetPercentExcess }}% agar tombol Simpan aktif. }
+              @else { Total alokasi belum 100%. Tambahkan {{
+              budgetPercentShortage }}% agar alokasi tepat 100% dan tombol
+              Simpan aktif. }
+            </span>
+            }
           </div>
         </div>
 

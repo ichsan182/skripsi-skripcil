@@ -1047,8 +1047,8 @@
         "incomesByDate": {}
       },
       "financialData": {
-        "pendapatan": 5000000,
-        "pengeluaranWajib": 4000000,
+        "pendapatan": 6000000,
+        "pengeluaranWajib": 4800000,
         "tanggalPemasukan": 25,
         "hutangWajib": 0,
         "estimasiTabungan": 34985000,
@@ -1066,9 +1066,9 @@
           "danaInvestasi": 3000000
         },
         "intendedTanggalPemasukan": 25,
-        "currentPengeluaranLimit": 4015000,
+        "currentPengeluaranLimit": 4800000,
         "currentPengeluaranUsed": 14632123,
-        "currentSisaSaldoPool": 1000000,
+        "currentSisaSaldoPool": 1200000,
         "monthlyTopUp": {
           "cycleKey": "2026-03-25",
           "fromTabunganCount": 1,
@@ -1560,21 +1560,21 @@
       },
       "financialData": {
         "pendapatan": 12345678,
-        "pengeluaranWajib": 1234567,
+        "pengeluaranWajib": 987654,
         "tanggalPemasukan": 25,
         "intendedTanggalPemasukan": 25,
         "hutangWajib": 0,
         "estimasiTabungan": 12345678,
-        "danaDarurat": 12345678,
+        "danaDarurat": 23456788,
         "budgetAllocation": {
-          "mode": 2,
-          "pengeluaran": 10,
-          "wants": 0,
-          "savings": 90
+          "mode": 3,
+          "pengeluaran": 5,
+          "wants": 3,
+          "savings": 2
         },
-        "currentPengeluaranLimit": 1234568,
+        "currentPengeluaranLimit": 987654,
         "currentPengeluaranUsed": 554491,
-        "currentSisaSaldoPool": 11111110,
+        "currentSisaSaldoPool": 246914,
         "monthlyTopUp": {
           "cycleKey": "2026-03-25",
           "fromTabunganCount": 0,
@@ -1582,12 +1582,18 @@
           "totalFromDanaDarurat": 0
         },
         "currentCycleStart": "2026-03-25",
-        "currentCycleEnd": "2026-04-24"
+        "currentCycleEnd": "2026-04-24",
+        "danaInvestasi": 0,
+        "savingsAllocation": {
+          "tabungan": 0,
+          "danaDarurat": 11111110,
+          "danaInvestasi": 0
+        }
       },
       "streak": {
-        "current": 0,
+        "current": 1,
         "longest": 16,
-        "lastActiveDate": "2026-04-03",
+        "lastActiveDate": "2026-04-04",
         "freezeUsed": false
       }
     }
