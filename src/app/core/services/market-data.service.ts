@@ -3,6 +3,10 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { MARKET_DATA_API } from '../config/app-api.config';
 
+const TWELVE_DATA_API = MARKET_DATA_API.twelvedata;
+const FRED_API = MARKET_DATA_API.fred;
+const NEWS_API = MARKET_DATA_API.newsApi;
+
 export interface AlphaSearchMatch {
   symbol: string;
   name: string;
@@ -58,7 +62,7 @@ export class MarketDataService {
   constructor(private readonly http: HttpClient) {}
 
   searchSymbols(keywords: string): Observable<AlphaSearchMatch[]> {
-    return this.callTwelveDataApi('/symbol_search', {
+    return this.callTwelveDataApi(TWELVE_DATA_API.endpoints.symbolSearch, {
       symbol: keywords,
       outputsize: '20',
     }).pipe(
@@ -81,7 +85,7 @@ export class MarketDataService {
   }
 
   getDailySeries(symbol: string): Observable<AlphaDailyPoint[]> {
-    return this.callTwelveDataApi('/time_series', {
+    return this.callTwelveDataApi(TWELVE_DATA_API.endpoints.timeSeries, {
       symbol,
       interval: '1day',
       outputsize: '100',
@@ -107,7 +111,7 @@ export class MarketDataService {
   }
 
   getOverview(symbol: string): Observable<AlphaOverview> {
-    return this.callTwelveDataApi('/profile', {
+    return this.callTwelveDataApi(TWELVE_DATA_API.endpoints.profile, {
       symbol,
     }).pipe(
       map((raw) => ({
@@ -125,7 +129,7 @@ export class MarketDataService {
   }
 
   getNews(symbol: string, limit = 8): Observable<AlphaNewsItem[]> {
-    return this.callNewsApi('/everything', {
+    return this.callNewsApi(NEWS_API.endpoints.everything, {
       q: `${symbol} stock`,
       sortBy: 'publishedAt',
       language: 'en',
@@ -154,12 +158,15 @@ export class MarketDataService {
     indicatorFunction: 'RSI' | 'SMA',
     timePeriod: number,
   ): Observable<AlphaTechnicalValue | null> {
-    return this.callTwelveDataApi(`/${indicatorFunction.toLowerCase()}`, {
-      symbol,
-      interval: '1day',
-      time_period: String(timePeriod),
-      series_type: 'close',
-    }).pipe(
+    return this.callTwelveDataApi(
+      this.getIndicatorEndpoint(indicatorFunction),
+      {
+        symbol,
+        interval: '1day',
+        time_period: String(timePeriod),
+        series_type: 'close',
+      },
+    ).pipe(
       map((raw) => {
         const values = this.toArray<GenericRecord>(raw['values']);
         if (!values.length) {
@@ -185,7 +192,7 @@ export class MarketDataService {
   }
 
   getEconomicSeries(seriesId: string): Observable<AlphaEconomicPoint[]> {
-    return this.callFredApi('/series/observations', {
+    return this.callFredApi(FRED_API.endpoints.seriesObservations, {
       series_id: seriesId,
       file_type: 'json',
       sort_order: 'asc',
@@ -207,16 +214,13 @@ export class MarketDataService {
     path: string,
     params: Record<string, string>,
   ): Observable<GenericRecord> {
-    let httpParams = new HttpParams().set(
-      'apikey',
-      MARKET_DATA_API.twelvedata.apiKey,
-    );
+    let httpParams = new HttpParams().set('apikey', TWELVE_DATA_API.apiKey);
     for (const [key, value] of Object.entries(params)) {
       httpParams = httpParams.set(key, value);
     }
 
     return this.http
-      .get<GenericRecord>(`${MARKET_DATA_API.twelvedata.baseUrl}${path}`, {
+      .get<GenericRecord>(`${TWELVE_DATA_API.baseUrl}${path}`, {
         params: httpParams,
       })
       .pipe(map((raw) => this.assertTwelveDataResponse(raw)));
@@ -226,16 +230,13 @@ export class MarketDataService {
     path: string,
     params: Record<string, string>,
   ): Observable<GenericRecord> {
-    let httpParams = new HttpParams().set(
-      'api_key',
-      MARKET_DATA_API.fred.apiKey,
-    );
+    let httpParams = new HttpParams().set('api_key', FRED_API.apiKey);
     for (const [key, value] of Object.entries(params)) {
       httpParams = httpParams.set(key, value);
     }
 
     return this.http
-      .get<GenericRecord>(`${MARKET_DATA_API.fred.baseUrl}${path}`, {
+      .get<GenericRecord>(`${FRED_API.baseUrl}${path}`, {
         params: httpParams,
       })
       .pipe(map((raw) => this.assertFredResponse(raw)));
@@ -245,19 +246,22 @@ export class MarketDataService {
     path: string,
     params: Record<string, string>,
   ): Observable<GenericRecord> {
-    let httpParams = new HttpParams().set(
-      'apiKey',
-      MARKET_DATA_API.newsApi.apiKey,
-    );
+    let httpParams = new HttpParams().set('apiKey', NEWS_API.apiKey);
     for (const [key, value] of Object.entries(params)) {
       httpParams = httpParams.set(key, value);
     }
 
     return this.http
-      .get<GenericRecord>(`${MARKET_DATA_API.newsApi.baseUrl}${path}`, {
+      .get<GenericRecord>(`${NEWS_API.baseUrl}${path}`, {
         params: httpParams,
       })
       .pipe(map((raw) => this.assertValidResponse(raw)));
+  }
+
+  private getIndicatorEndpoint(indicator: 'RSI' | 'SMA'): string {
+    return indicator === 'RSI'
+      ? TWELVE_DATA_API.endpoints.indicators.rsi
+      : TWELVE_DATA_API.endpoints.indicators.sma;
   }
 
   private assertTwelveDataResponse(raw: GenericRecord): GenericRecord {
