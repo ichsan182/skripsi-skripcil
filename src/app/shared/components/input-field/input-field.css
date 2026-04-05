@@ -1,0 +1,97 @@
+.input-field {
+  width: 100%;
+  min-width: 0;
+}
+
+.input-field-control {
+  display: grid;
+  gap: 7px;
+}
+
+.input-field-label {
+  font-size: var(--font-size-xs);
+  color: color-mix(in srgb, var(--color-black) 74%, var(--color-gray));
+  font-weight: 600;
+}
+
+.input-field-native {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: 42px;
+  box-sizing: border-box;
+  font-family: var(--font-family-base);
+  color: var(--color-primary);
+  outline: none;
+}
+
+.input-field--align-right .input-field-native {
+  text-align: right;
+}
+
+.input-field--align-left .input-field-native {
+  text-align: left;
+}
+
+.input-field--currency .input-field-native {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.input-field--default .input-field-native {
+  border-radius: 12px;
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary-subtle) 40%, transparent);
+  background: var(--color-input-bg);
+  padding: 10px 12px;
+  font-size: var(--font-size-sm);
+}
+
+.input-field--default .input-field-native:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+}
+
+.input-field--prefix {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  height: 42px;
+  box-sizing: border-box;
+  border: 1px solid
+    color-mix(in srgb, var(--color-primary-subtle) 40%, transparent);
+  border-radius: 12px;
+  background: var(--color-input-bg);
+  overflow: hidden;
+}
+
+.input-field--prefix .input-field-prefix {
+  font-style: normal;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  padding: 0 12px;
+}
+
+.input-field--prefix .input-field-native {
+  height: 100%;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  padding: 10px 12px;
+  font-size: var(--font-size-sm);
+}
+
+.input-field--prefix .input-field-native:focus {
+  border: none;
+  box-shadow: none;
+}
+
+.input-field--prefix:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+}
+
+.input-field--disabled {
+  opacity: 0.75;
+}

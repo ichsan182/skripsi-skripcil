@@ -128,35 +128,6 @@
   box-shadow: 0 0 0 3px rgba(3, 98, 76, 0.08);
 }
 
-.input-prefix-wrap {
-  display: flex;
-  align-items: center;
-  border: 1px solid rgba(3, 15, 15, 0.16);
-  border-radius: 10px;
-  background: var(--color-white);
-  overflow: hidden;
-}
-
-.input-prefix-wrap i {
-  padding: 0 12px;
-  color: var(--color-gray);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  font-style: normal;
-}
-
-.input-prefix-wrap input {
-  border: none;
-  flex: 1;
-  padding: 12px 12px 12px 0;
-  background: transparent;
-}
-
-.input-prefix-wrap input:focus {
-  outline: none;
-  box-shadow: none;
-}
-
 .calculate-btn {
   --btn-radius: 10px;
   --btn-font-size: var(--font-size-base);

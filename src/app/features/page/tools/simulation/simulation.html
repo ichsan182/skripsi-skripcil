@@ -28,16 +28,17 @@
 
       <label class="field-control">
         <span>Jumlah investasi awal</span>
-        <div class="input-prefix-wrap">
-          <i>{{ currency === 'idr' ? 'Rp' : '$' }}</i>
-          <input
-            type="text"
-            inputmode="numeric"
-            [value]="investmentAmount"
-            (input)="onAmountInput($event)"
-            placeholder="{{ currency === 'idr' ? '1.000.000' : '1.000' }}"
-          />
-        </div>
+        <app-input-field
+          styleVariant="prefix"
+          [showPrefix]="true"
+          [prefix]="currency === 'idr' ? 'Rp' : '$'"
+          [isCurrency]="true"
+          [currencyMaxTier]="currencyMaxTier"
+          [inputmode]="'numeric'"
+          [value]="investmentAmount"
+          [placeholder]="currency === 'idr' ? '1.000.000' : '1.000'"
+          (valueChange)="onAmountInput($event)"
+        ></app-input-field>
       </label>
 
       <label class="field-control">

@@ -3,7 +3,29 @@
  * Pure utility functions untuk format currency dan number yang konsisten
  */
 
-export const MAX_CURRENCY_AMOUNT = 10_000_000_000;
+export enum CurrencyAmountLimitTier {
+  ONE_BILLION = 'ONE_BILLION',
+  TEN_BILLION = 'TEN_BILLION',
+  HUNDRED_BILLION = 'HUNDRED_BILLION',
+}
+
+export const CURRENCY_AMOUNT_LIMITS: Record<CurrencyAmountLimitTier, number> = {
+  [CurrencyAmountLimitTier.ONE_BILLION]: 1_000_000_000,
+  [CurrencyAmountLimitTier.TEN_BILLION]: 10_000_000_000,
+  [CurrencyAmountLimitTier.HUNDRED_BILLION]: 100_000_000_000,
+};
+
+export const DEFAULT_CURRENCY_AMOUNT_LIMIT_TIER =
+  CurrencyAmountLimitTier.TEN_BILLION;
+
+export const MAX_CURRENCY_AMOUNT =
+  CURRENCY_AMOUNT_LIMITS[DEFAULT_CURRENCY_AMOUNT_LIMIT_TIER];
+
+export function resolveCurrencyAmountLimit(
+  limitTier: CurrencyAmountLimitTier = DEFAULT_CURRENCY_AMOUNT_LIMIT_TIER,
+): number {
+  return CURRENCY_AMOUNT_LIMITS[limitTier] ?? MAX_CURRENCY_AMOUNT;
+}
 
 export interface CurrencyFormatOptions {
   minimumFractionDigits?: number;

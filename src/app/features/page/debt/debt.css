@@ -434,20 +434,6 @@
   gap: 8px;
 }
 
-.pay-row input {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  border: 1px solid
-    color-mix(in srgb, var(--color-primary-subtle) 40%, transparent);
-  background: color-mix(in srgb, var(--color-white) 95%, var(--color-input-bg));
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: var(--font-size-xs);
-  font-family: var(--font-family-base);
-}
-
 .btn-pay {
   border: none;
   border-radius: 8px;

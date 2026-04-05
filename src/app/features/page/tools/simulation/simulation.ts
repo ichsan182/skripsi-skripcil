@@ -4,9 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { forkJoin, Subscription } from 'rxjs';
 import {
+  CurrencyAmountLimitTier,
   formatCurrencyPlain,
   parseCurrencyInput,
 } from '../../../../core/utils/format.utils';
+import { InputField } from '../../../../shared/components/input-field/input-field';
 import {
   PriceData,
   YahooFinanceService,
@@ -38,12 +40,14 @@ interface ChartPoint {
 @Component({
   selector: 'app-simulation',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, InputField],
   templateUrl: './simulation.html',
   styleUrl: './simulation.css',
   providers: [],
 })
 export class ToolsSimulation implements OnInit, OnDestroy {
+  protected readonly currencyMaxTier = CurrencyAmountLimitTier.TEN_BILLION;
+
   protected readonly availableAssets: AssetOption[] = [
     // Logam mulia
     { id: 'GC=F', name: 'Emas (Gold)', symbol: 'GC=F' },
@@ -233,19 +237,16 @@ export class ToolsSimulation implements OnInit, OnDestroy {
     return this.formatDateDisplay(this.startOfDay(new Date()));
   }
 
-  protected onAmountInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const parsedValue = parseCurrencyInput(input.value);
+  protected onAmountInput(value: string): void {
+    const parsedValue = parseCurrencyInput(value);
 
     if (!parsedValue) {
       this.investmentAmount = '';
-      input.value = '';
       return;
     }
 
     const formatted = formatCurrencyPlain(parsedValue);
     this.investmentAmount = formatted;
-    input.value = formatted;
   }
 
   private processSimulationData(

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
+  CurrencyAmountLimitTier,
   CurrencyCode,
   formatCurrencyByCode,
   formatCurrencyPlain,
@@ -11,6 +12,7 @@ import {
   parseCurrencyInput,
   parseCurrencyInputUncapped,
 } from '../../../../core/utils/format.utils';
+import { InputField } from '../../../../shared/components/input-field/input-field';
 
 type SavingsFrequency =
   | 'weekly'
@@ -70,11 +72,13 @@ interface ProjectionChartPoint {
 @Component({
   selector: 'app-tools-calculator',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, InputField],
   templateUrl: './calculator.html',
   styleUrl: './calculator.css',
 })
 export class ToolsCalculator {
+  protected readonly currencyMaxTier = CurrencyAmountLimitTier.TEN_BILLION;
+
   protected readonly savingsFrequencyOptions: Array<
     FrequencyOption<SavingsFrequency>
   > = [
@@ -277,6 +281,11 @@ export class ToolsCalculator {
     this.syncAndRecalculateSavings();
   }
 
+  protected onSavingsRateInput(value: number): void {
+    this.savingsRate = value;
+    this.onSavingsRateChange();
+  }
+
   protected onRequiredExpenseRateChange(): void {
     // Clamp required expense rate to 0-100
     this.requiredExpenseRate = this.clamp(
@@ -289,6 +298,11 @@ export class ToolsCalculator {
     this.income = this.safeNonNegative(this.income);
 
     this.syncAndRecalculateSavings();
+  }
+
+  protected onRequiredExpenseRateInput(value: number): void {
+    this.requiredExpenseRate = value;
+    this.onRequiredExpenseRateChange();
   }
 
   protected syncAndRecalculateSavings(): void {
@@ -304,19 +318,19 @@ export class ToolsCalculator {
     this.recalculateAll();
   }
 
-  protected onIncomeInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const parsed = this.parseCurrencyInput(input.value);
+  protected onIncomeInput(value: string): void {
+    const parsed = this.parseCurrencyInput(value);
     this.income = parsed;
-    input.value = parsed ? this.formatCurrencyInput(parsed) : '';
+    this.incomeInput = parsed ? this.formatCurrencyInput(parsed) : '';
     this.syncAndRecalculateSavings();
   }
 
-  protected onInitialInvestmentInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const parsed = this.parseCurrencyInput(input.value);
+  protected onInitialInvestmentInput(value: string): void {
+    const parsed = this.parseCurrencyInput(value);
     this.initialInvestment = parsed;
-    input.value = parsed ? this.formatCurrencyInput(parsed) : '';
+    this.initialInvestmentInput = parsed
+      ? this.formatCurrencyInput(parsed)
+      : '';
     this.onCompoundFieldChange();
   }
 
@@ -347,12 +361,31 @@ export class ToolsCalculator {
     this.recalculateAll();
   }
 
-  protected onDepositAmountInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const parsed = this.parseCurrencyInput(input.value);
+  protected onInterestRateInput(value: number): void {
+    this.interestRate = value;
+    this.onCompoundFieldChange();
+  }
+
+  protected onInvestmentYearsInput(value: number): void {
+    this.investmentYears = value;
+    this.onCompoundFieldChange();
+  }
+
+  protected onInvestmentMonthsInput(value: number): void {
+    this.investmentMonths = value;
+    this.onCompoundFieldChange();
+  }
+
+  protected onAnnualDepositIncreaseInput(value: number): void {
+    this.annualDepositIncrease = value;
+    this.onCompoundFieldChange();
+  }
+
+  protected onDepositAmountInput(value: string): void {
+    const parsed = this.parseCurrencyInput(value);
     this.depositAmount = parsed;
     this.isDepositSynced = false;
-    input.value = parsed ? this.formatCurrencyInput(parsed) : '';
+    this.depositAmountInput = parsed ? this.formatCurrencyInput(parsed) : '';
     this.syncCurrencyInputsFromNumbers();
     this.recalculateAll();
   }
@@ -384,21 +417,17 @@ export class ToolsCalculator {
     this.calculateNormal();
   }
 
-  protected onNormalLeftInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const parsed = parseCurrencyInputUncapped(input.value);
+  protected onNormalLeftInput(value: string): void {
+    const parsed = parseCurrencyInputUncapped(value);
     this.normalLeft = parsed;
     this.normalLeftInput = parsed ? this.formatCurrencyInput(parsed) : '';
-    input.value = this.normalLeftInput;
     this.calculateNormal();
   }
 
-  protected onNormalRightInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const parsed = parseCurrencyInputUncapped(input.value);
+  protected onNormalRightInput(value: string): void {
+    const parsed = parseCurrencyInputUncapped(value);
     this.normalRight = parsed;
     this.normalRightInput = parsed ? this.formatCurrencyInput(parsed) : '';
-    input.value = this.normalRightInput;
     this.calculateNormal();
   }
 

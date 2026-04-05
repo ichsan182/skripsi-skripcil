@@ -246,28 +246,21 @@
 .field-control input,
 .field-control select {
   width: 100%;
-  height: 44px;
+  height: 42px;
   border-radius: 12px;
   border: 1px solid
     color-mix(in srgb, var(--color-primary-subtle) 40%, transparent);
-  background: color-mix(in srgb, var(--color-white) 95%, var(--color-input-bg));
+  background: var(--color-input-bg);
   padding: 10px 12px;
   outline: none;
   font-size: var(--font-size-sm);
   color: var(--color-black);
 }
 
-.currency-input {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.01em;
-}
-
 .field-control input:focus,
 .field-control select:focus {
-  border-color: var(--color-primary-light);
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--color-primary-light) 22%, transparent);
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
 }
 
 .field-control select:disabled {
@@ -279,37 +272,6 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-}
-
-.input-prefix-wrap {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  border: 1px solid
-    color-mix(in srgb, var(--color-primary-subtle) 40%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--color-white) 95%, var(--color-input-bg));
-  overflow: hidden;
-}
-
-.input-prefix-wrap i {
-  font-style: normal;
-  color: var(--color-primary-dark);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  padding: 0 12px;
-}
-
-.input-prefix-wrap input {
-  border: none;
-  background: transparent;
-  border-radius: 0;
-}
-
-.input-prefix-wrap:focus-within {
-  border-color: var(--color-primary-light);
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--color-primary-light) 22%, transparent);
 }
 
 .insight-strip {

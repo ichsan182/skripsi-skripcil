@@ -9,6 +9,12 @@ import {
   buildLevelSignals,
   evaluateFinancialLevel,
 } from '../../../core/utils/level';
+import {
+  CurrencyAmountLimitTier,
+  parseCurrencyInput as parseCurrencyInputValue,
+  resolveCurrencyAmountLimit,
+} from '../../../core/utils/format.utils';
+import { InputField } from '../../../shared/components/input-field/input-field';
 import { Sidebar } from '../../../shared/components/sidebar/sidebar';
 
 type DebtCategory = 'konsumtif' | 'produktif';
@@ -56,13 +62,14 @@ interface StoredUser {
 @Component({
   selector: 'app-debt',
   standalone: true,
-  imports: [CommonModule, FormsModule, Sidebar],
+  imports: [CommonModule, FormsModule, Sidebar, InputField],
   templateUrl: './debt.html',
   styleUrl: './debt.css',
 })
 export class Debt {
   private readonly http = inject(HttpClient);
   private readonly kprPromptFlagKey = 'debtKprPromptSeen';
+  protected readonly currencyMaxTier = CurrencyAmountLimitTier.HUNDRED_BILLION;
 
   protected readonly debtTypeOptions: DebtType[] = [
     'Paylater',
@@ -237,12 +244,9 @@ export class Debt {
 
   protected onCurrencyInput(
     field: 'principalAmount' | 'remainingAmount' | 'monthlyInstallment',
-    event: Event,
+    value: string,
   ): void {
-    const input = event.target as HTMLInputElement;
-    const formatted = this.formatCurrencyInput(input.value);
-    this.form[field] = formatted;
-    input.value = formatted;
+    this.form[field] = value;
   }
 
   protected async saveDebt(): Promise<void> {
@@ -293,11 +297,8 @@ export class Debt {
     this.resetForm();
   }
 
-  protected onPaymentInput(id: string, event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const formatted = this.formatCurrencyInput(input.value);
-    this.paymentInputs[id] = formatted;
-    input.value = formatted;
+  protected onPaymentInput(id: string, value: string): void {
+    this.paymentInputs[id] = value;
   }
 
   protected async payDebt(item: DebtItem): Promise<void> {
@@ -543,23 +544,11 @@ export class Debt {
     };
   }
 
-  private formatCurrencyInput(raw: string): string {
-    const digits = raw.replace(/[^0-9]/g, '');
-    if (!digits) {
-      return '';
-    }
-
-    return new Intl.NumberFormat('id-ID').format(Number.parseInt(digits, 10));
-  }
-
   private parseCurrencyInput(value: string): number {
-    const digits = value.replace(/[^0-9]/g, '');
-    if (!digits) {
-      return 0;
-    }
-
-    const parsed = Number.parseInt(digits, 10);
-    return Number.isFinite(parsed) ? parsed : 0;
+    return parseCurrencyInputValue(
+      value,
+      resolveCurrencyAmountLimit(this.currencyMaxTier),
+    );
   }
 
   private toPositiveNumber(value: unknown): number {

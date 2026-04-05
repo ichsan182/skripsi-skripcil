@@ -42,43 +42,36 @@
     </div>
 
     <div class="field-grid field-grid-savings">
-      <label class="field-control">
-        <span>Saving rate (%)</span>
-        <input
-          type="number"
-          min="0"
-          max="100"
-          [(ngModel)]="savingsRate"
-          (ngModelChange)="onSavingsRateChange()"
-        />
-      </label>
+      <app-input-field
+        label="Saving rate (%)"
+        [type]="'number'"
+        [min]="0"
+        [max]="100"
+        [value]="savingsRate.toString()"
+        (numberValueChange)="onSavingsRateInput($event)"
+      ></app-input-field>
 
-      <label class="field-control">
-        <span>Income (penghasilan)</span>
+      <app-input-field
+        label="Income (penghasilan)"
+        styleVariant="prefix"
+        [showPrefix]="true"
+        [prefix]="activeCurrencySymbol"
+        [isCurrency]="true"
+        [currencyMaxTier]="currencyMaxTier"
+        [inputmode]="'numeric'"
+        [value]="incomeInput"
+        placeholder="1.000.000"
+        (valueChange)="onIncomeInput($event)"
+      ></app-input-field>
 
-        <div class="input-prefix-wrap">
-          <i>{{ activeCurrencySymbol }}</i>
-          <input
-            type="text"
-            inputmode="numeric"
-            class="currency-input"
-            [value]="incomeInput"
-            (input)="onIncomeInput($event)"
-            placeholder="1.000.000"
-          />
-        </div>
-      </label>
-
-      <label class="field-control">
-        <span>Pengeluaran wajib (%)</span>
-        <input
-          type="number"
-          min="0"
-          max="100"
-          [(ngModel)]="requiredExpenseRate"
-          (ngModelChange)="onRequiredExpenseRateChange()"
-        />
-      </label>
+      <app-input-field
+        label="Pengeluaran wajib (%)"
+        [type]="'number'"
+        [min]="0"
+        [max]="100"
+        [value]="requiredExpenseRate.toString()"
+        (numberValueChange)="onRequiredExpenseRateInput($event)"
+      ></app-input-field>
 
       <label class="field-control">
         <span>Every</span>
@@ -127,31 +120,27 @@
       </div>
 
       <div class="field-grid field-grid-compound">
-        <label class="field-control">
-          <span>Initial investment</span>
-          <div class="input-prefix-wrap">
-            <i>{{ activeCurrencySymbol }}</i>
-            <input
-              type="text"
-              inputmode="numeric"
-              class="currency-input"
-              [value]="initialInvestmentInput"
-              (input)="onInitialInvestmentInput($event)"
-              placeholder="1.000.000"
-            />
-          </div>
-        </label>
+        <app-input-field
+          label="Initial investment"
+          styleVariant="prefix"
+          [showPrefix]="true"
+          [prefix]="activeCurrencySymbol"
+          [isCurrency]="true"
+          [currencyMaxTier]="currencyMaxTier"
+          [inputmode]="'numeric'"
+          [value]="initialInvestmentInput"
+          placeholder="1.000.000"
+          (valueChange)="onInitialInvestmentInput($event)"
+        ></app-input-field>
 
-        <label class="field-control">
-          <span>Interest rate (%)</span>
-          <input
-            type="number"
-            min="0"
-            max="1000"
-            [(ngModel)]="interestRate"
-            (ngModelChange)="onCompoundFieldChange()"
-          />
-        </label>
+        <app-input-field
+          label="Interest rate (%)"
+          [type]="'number'"
+          [min]="0"
+          [max]="1000"
+          [value]="interestRate.toString()"
+          (numberValueChange)="onInterestRateInput($event)"
+        ></app-input-field>
 
         <label class="field-control">
           <span>Interest rate interval</span>
@@ -184,41 +173,35 @@
         </label>
 
         <div class="field-row-two">
-          <label class="field-control">
-            <span>Duration years</span>
-            <input
-              type="number"
-              min="0"
-              [(ngModel)]="investmentYears"
-              (ngModelChange)="onCompoundFieldChange()"
-            />
-          </label>
-          <label class="field-control">
-            <span>Duration months</span>
-            <input
-              type="number"
-              min="0"
-              max="11"
-              [(ngModel)]="investmentMonths"
-              (ngModelChange)="onCompoundFieldChange()"
-            />
-          </label>
+          <app-input-field
+            label="Duration years"
+            [type]="'number'"
+            [min]="0"
+            [value]="investmentYears.toString()"
+            (numberValueChange)="onInvestmentYearsInput($event)"
+          ></app-input-field>
+          <app-input-field
+            label="Duration months"
+            [type]="'number'"
+            [min]="0"
+            [max]="11"
+            [value]="investmentMonths.toString()"
+            (numberValueChange)="onInvestmentMonthsInput($event)"
+          ></app-input-field>
         </div>
 
-        <label class="field-control">
-          <span>Regular contributions (deposit amount)</span>
-          <div class="input-prefix-wrap">
-            <i>{{ activeCurrencySymbol }}</i>
-            <input
-              type="text"
-              inputmode="numeric"
-              class="currency-input"
-              [value]="depositAmountInput"
-              (input)="onDepositAmountInput($event)"
-              placeholder="100.000"
-            />
-          </div>
-        </label>
+        <app-input-field
+          label="Regular contributions (deposit amount)"
+          styleVariant="prefix"
+          [showPrefix]="true"
+          [prefix]="activeCurrencySymbol"
+          [isCurrency]="true"
+          [currencyMaxTier]="currencyMaxTier"
+          [inputmode]="'numeric'"
+          [value]="depositAmountInput"
+          placeholder="100.000"
+          (valueChange)="onDepositAmountInput($event)"
+        ></app-input-field>
 
         <label class="field-control">
           <span>Deposits every</span>
@@ -247,16 +230,14 @@
           </select>
         </label>
 
-        <label class="field-control">
-          <span>Annual deposits increase (%)</span>
-          <input
-            type="number"
-            min="0"
-            max="100"
-            [(ngModel)]="annualDepositIncrease"
-            (ngModelChange)="onCompoundFieldChange()"
-          />
-        </label>
+        <app-input-field
+          label="Annual deposits increase (%)"
+          [type]="'number'"
+          [min]="0"
+          [max]="100"
+          [value]="annualDepositIncrease.toString()"
+          (numberValueChange)="onAnnualDepositIncreaseInput($event)"
+        ></app-input-field>
       </div>
 
       <div class="sync-bar">
@@ -427,18 +408,15 @@
     </div>
 
     <div class="normal-grid">
-      <label class="field-control">
-        <span>Angka pertama</span>
-        <div class="currency-input">
-          <input
-            type="text"
-            inputmode="numeric"
-            [value]="normalLeftInput"
-            (input)="onNormalLeftInput($event)"
-            placeholder="0"
-          />
-        </div>
-      </label>
+      <app-input-field
+        label="Angka pertama"
+        [isCurrency]="true"
+        [currencyMaxTier]="currencyMaxTier"
+        [inputmode]="'numeric'"
+        [value]="normalLeftInput"
+        placeholder="0"
+        (valueChange)="onNormalLeftInput($event)"
+      ></app-input-field>
 
       <div class="field-control normal-operator-field">
         <span>Operator</span>
@@ -459,18 +437,15 @@
         </div>
       </div>
 
-      <label class="field-control">
-        <span>Angka kedua</span>
-        <div class="currency-input">
-          <input
-            type="text"
-            inputmode="numeric"
-            [value]="normalRightInput"
-            (input)="onNormalRightInput($event)"
-            placeholder="0"
-          />
-        </div>
-      </label>
+      <app-input-field
+        label="Angka kedua"
+        [isCurrency]="true"
+        [currencyMaxTier]="currencyMaxTier"
+        [inputmode]="'numeric'"
+        [value]="normalRightInput"
+        placeholder="0"
+        (valueChange)="onNormalRightInput($event)"
+      ></app-input-field>
     </div>
 
     <div class="normal-result">

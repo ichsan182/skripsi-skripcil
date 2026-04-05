@@ -125,33 +125,42 @@
         <div class="money-grid">
           <div>
             <label>Total Hutang Awal</label>
-            <input
-              type="text"
+            <app-input-field
+              [isCurrency]="true"
+              [inputAlign]="'left'"
+              [currencyMaxTier]="currencyMaxTier"
+              [inputmode]="'numeric'"
               [value]="form.principalAmount"
-              (input)="onCurrencyInput('principalAmount', $event)"
               placeholder="0"
-            />
+              (valueChange)="onCurrencyInput('principalAmount', $event)"
+            ></app-input-field>
           </div>
           <div>
             <label>Sisa Hutang Saat Ini</label>
-            <input
-              type="text"
+            <app-input-field
+              [isCurrency]="true"
+              [inputAlign]="'left'"
+              [currencyMaxTier]="currencyMaxTier"
+              [inputmode]="'numeric'"
               [value]="form.remainingAmount"
-              (input)="onCurrencyInput('remainingAmount', $event)"
               placeholder="0"
-            />
+              (valueChange)="onCurrencyInput('remainingAmount', $event)"
+            ></app-input-field>
           </div>
         </div>
 
         <div class="row-1">
           <div>
             <label>Cicilan per Bulan</label>
-            <input
-              type="text"
+            <app-input-field
+              [isCurrency]="true"
+              [inputAlign]="'left'"
+              [currencyMaxTier]="currencyMaxTier"
+              [inputmode]="'numeric'"
               [value]="form.monthlyInstallment"
-              (input)="onCurrencyInput('monthlyInstallment', $event)"
               placeholder="0"
-            />
+              (valueChange)="onCurrencyInput('monthlyInstallment', $event)"
+            ></app-input-field>
           </div>
         </div>
 
@@ -260,12 +269,15 @@
             }
 
             <div class="pay-row">
-              <input
-                type="text"
+              <app-input-field
+                [isCurrency]="true"
+                [inputAlign]="'left'"
+                [currencyMaxTier]="currencyMaxTier"
+                [inputmode]="'numeric'"
                 [value]="paymentInputs[item.id] || ''"
-                (input)="onPaymentInput(item.id, $event)"
                 placeholder="Nominal bayar hutang"
-              />
+                (valueChange)="onPaymentInput(item.id, $event)"
+              ></app-input-field>
               <button type="button" class="btn-pay" (click)="payDebt(item)">
                 Bayar Hutang
               </button>

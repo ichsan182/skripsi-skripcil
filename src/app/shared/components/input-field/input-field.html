@@ -1,0 +1,58 @@
+@if (label) {
+<label class="input-field-control">
+  <span class="input-field-label">{{ label }}</span>
+  <div
+    [class]="wrapperClassName"
+    [class.input-field--disabled]="disabled"
+    [class.input-field--currency]="isCurrency"
+    [class.input-field--align-left]="inputAlign === 'left'"
+    [class.input-field--align-right]="inputAlign === 'right'"
+  >
+    @if (showPrefix) {
+    <i class="input-field-prefix">{{ prefix }}</i>
+    }
+
+    <input
+      class="input-field-native"
+      [type]="type"
+      [value]="value"
+      [attr.placeholder]="placeholder || null"
+      [attr.inputmode]="inputmode"
+      [attr.min]="min ?? null"
+      [attr.max]="max ?? null"
+      [attr.step]="step ?? null"
+      [disabled]="disabled"
+      [readOnly]="readonly"
+      [required]="required"
+      (input)="onInput($event)"
+    />
+  </div>
+</label>
+} @else {
+<div
+  [class]="wrapperClassName"
+  [class.input-field--disabled]="disabled"
+  [class.input-field--currency]="isCurrency"
+  [class.input-field--align-left]="inputAlign === 'left'"
+  [class.input-field--align-right]="inputAlign === 'right'"
+>
+  @if (showPrefix) {
+  <i class="input-field-prefix">{{ prefix }}</i>
+  }
+
+  <input
+    class="input-field-native"
+    [type]="type"
+    [value]="value"
+    [attr.placeholder]="placeholder || null"
+    [attr.inputmode]="inputmode"
+    [attr.min]="min ?? null"
+    [attr.max]="max ?? null"
+    [attr.step]="step ?? null"
+    [disabled]="disabled"
+    [readOnly]="readonly"
+    [required]="required"
+    (input)="onInput($event)"
+  />
+</div>
+}
