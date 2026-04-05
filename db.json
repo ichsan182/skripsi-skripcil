@@ -1662,6 +1662,14 @@
       "investmentWatchlist": {
         "items": [
           {
+            "symbol": "BBCA",
+            "name": "Bank Central Asia Tbk",
+            "type": "Common Stock",
+            "region": "Indonesia",
+            "currency": "IDR",
+            "createdAt": "2026-04-05T15:50:50.846Z"
+          },
+          {
             "symbol": "MSFT",
             "name": "Microsoft Corp.",
             "type": "Common Stock",
@@ -1671,10 +1679,10 @@
           }
         ],
         "selectedSymbol": "MSFT",
-        "updatedAt": "2026-04-05T14:09:00.718Z"
+        "updatedAt": "2026-04-05T16:00:22.178Z"
       },
       "journal": {
-        "nextChatMessageId": 7,
+        "nextChatMessageId": 9,
         "chatByDate": {
           "2026-04-05": [
             {
@@ -1712,11 +1720,28 @@
               "sender": "assistant",
               "text": "Dicatat: Rp 28.000 untuk \"makan\" kategori makanan.",
               "time": "09.41"
+            },
+            {
+              "id": 7,
+              "sender": "user",
+              "text": "makan 200000",
+              "time": "22.32"
+            },
+            {
+              "id": 8,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 200.000 untuk \"makan\" kategori makanan.",
+              "time": "22.32"
             }
           ]
         },
         "expensesByDate": {
           "2026-04-05": [
+            {
+              "amount": 200000,
+              "description": "makan",
+              "category": "makanan"
+            },
             {
               "amount": 28000,
               "description": "makan",
@@ -1746,8 +1771,8 @@
           "savings": 78
         },
         "currentPengeluaranLimit": 3740000,
-        "currentPengeluaranUsed": 38000,
-        "currentSisaSaldoPool": 0,
+        "currentPengeluaranUsed": 238000,
+        "currentSisaSaldoPool": 13260000,
         "monthlyTopUp": {
           "cycleKey": "2026-03-25",
           "fromTabunganCount": 0,
@@ -1769,7 +1794,7 @@
         }
       },
       "streak": {
-        "current": 1,
+        "current": 0,
         "longest": 1,
         "lastActiveDate": "2026-04-05",
         "freezeUsed": false
