@@ -34,7 +34,7 @@ export class InputField {
   @Input() required = false;
 
   @Input() styleVariant: InputFieldStyleVariant = 'default';
-  @Input() inputAlign: InputFieldAlign = 'right';
+  @Input() inputAlign: InputFieldAlign = 'left';
   @Input() showPrefix = false;
   @Input() prefix = 'Rp';
   @Input() showInlineCurrencyPrefix = false;

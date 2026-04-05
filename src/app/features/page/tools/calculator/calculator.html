@@ -54,6 +54,7 @@
       <app-input-field
         label="Income (penghasilan)"
         styleVariant="prefix"
+        [inputAlign]="'right'"
         [showPrefix]="true"
         [prefix]="activeCurrencySymbol"
         [isCurrency]="true"
@@ -91,7 +92,6 @@
 
     <div class="insight-strip">
       <div class="insight-item">
-        
         <span>Saving amount</span>
         <strong>{{ formatCurrency(savingsAmount) }}</strong>
       </div>
@@ -124,6 +124,7 @@
         <app-input-field
           label="Initial investment"
           styleVariant="prefix"
+          [inputAlign]="'right'"
           [showPrefix]="true"
           [prefix]="activeCurrencySymbol"
           [isCurrency]="true"
@@ -195,6 +196,7 @@
           label="Regular contributions (deposit amount)"
           styleVariant="prefix"
           [showPrefix]="true"
+          [inputAlign]="'right'"
           [prefix]="activeCurrencySymbol"
           [isCurrency]="true"
           [currencyMaxTier]="currencyMaxTier"

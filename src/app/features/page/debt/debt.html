@@ -99,7 +99,6 @@
 
         <app-input-field
           label="Nama Hutang"
-          [inputAlign]="'left'"
           [value]="form.name"
           placeholder="Contoh: Kredivo Beli HP"
           (valueChange)="onNameInput($event)"
@@ -128,7 +127,6 @@
             <label>Total Hutang Awal</label>
             <app-input-field
               [isCurrency]="true"
-              [inputAlign]="'left'"
               [currencyMaxTier]="currencyMaxTier"
               [inputmode]="'numeric'"
               [value]="form.principalAmount"
@@ -140,7 +138,6 @@
             <label>Sisa Hutang Saat Ini</label>
             <app-input-field
               [isCurrency]="true"
-              [inputAlign]="'left'"
               [currencyMaxTier]="currencyMaxTier"
               [inputmode]="'numeric'"
               [value]="form.remainingAmount"
@@ -155,7 +152,6 @@
             <label>Cicilan per Bulan</label>
             <app-input-field
               [isCurrency]="true"
-              [inputAlign]="'left'"
               [currencyMaxTier]="currencyMaxTier"
               [inputmode]="'numeric'"
               [value]="form.monthlyInstallment"
@@ -170,7 +166,6 @@
             <app-input-field
               label="Tanggal Jatuh Tempo"
               [type]="'number'"
-              [inputAlign]="'left'"
               [min]="1"
               [max]="31"
               [value]="form.dueDay.toString()"
@@ -180,7 +175,6 @@
           <div>
             <app-input-field
               label="Estimasi Lunas"
-              [inputAlign]="'left'"
               [value]="formEstimatedLabel"
               [readonly]="true"
             ></app-input-field>
@@ -283,7 +277,6 @@
             <div class="pay-row">
               <app-input-field
                 [isCurrency]="true"
-                [inputAlign]="'left'"
                 [currencyMaxTier]="currencyMaxTier"
                 [inputmode]="'numeric'"
                 [value]="paymentInputs[item.id] || ''"
