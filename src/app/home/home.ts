@@ -9,6 +9,7 @@ import { LevelCardComponent } from '../shared/components/level-card/level-card';
 import {
   BudgetAllocation,
   FinancialData,
+  InvestmentTracking,
   JournalService,
   SavingsAllocation,
   UserJournal,
@@ -348,7 +349,7 @@ export class Home {
       return 'Hutang produktif berjalan sesuai rencana jangka panjang.';
     }
 
-    return 'Mantap, semua hutang sudah lunas. Pertahankan kondisi sehat ini.';
+    return 'Semua hutang sudah lunas. Pertahankan kondisi sehat ini.';
   }
 
   get debtCardToneClass(): string {
@@ -401,6 +402,40 @@ export class Home {
 
   get danaInvestasiFormatted(): string {
     return this.formatRupiah(this.financialData?.danaInvestasi || 0);
+  }
+
+  get danaInvestasiInputPercentOfIncome(): string {
+    if (this.pendapatanInput <= 0 || this.savingsDanaInvestasiInput <= 0) {
+      return '0';
+    }
+
+    return formatPercent(
+      (this.savingsDanaInvestasiInput / this.pendapatanInput) * 100,
+    );
+  }
+
+  get danaInvestasiIncomeHint(): string {
+    if (this.pendapatanInput <= 0) {
+      return 'Masukkan pemasukan untuk melihat persentase dana investasi terhadap pemasukan.';
+    }
+
+    return `Input ini setara ${this.danaInvestasiInputPercentOfIncome}% dari pemasukan bulanan.`;
+  }
+
+  get danaInvestasiIncomeTargetAmount(): number {
+    if (this.pendapatanInput <= 0) {
+      return 0;
+    }
+
+    return Math.round(this.pendapatanInput * 0.15);
+  }
+
+  get danaInvestasiTargetHint(): string {
+    if (this.pendapatanInput <= 0) {
+      return 'Target level 4 akan muncul setelah pemasukan diisi.';
+    }
+
+    return `Target level 4 minimal ${this.formatRupiah(this.danaInvestasiIncomeTargetAmount)} atau 15% dari pemasukan.`;
   }
 
   get showDanaInvestasi(): boolean {
@@ -620,6 +655,7 @@ export class Home {
       danaInvestasi:
         existingSavingsAlloc.danaInvestasi + this.savingsDanaInvestasiInput,
     };
+    const investmentTracking = this.buildUpdatedInvestmentTracking();
     const updatedFinancialData: FinancialData = {
       ...(this.financialData || {
         pendapatan: 0,
@@ -636,6 +672,7 @@ export class Home {
       danaInvestasi,
       budgetAllocation,
       savingsAllocation,
+      investmentTracking,
       currentPengeluaranLimit: pengeluaranWajib,
       currentSisaSaldoPool: Math.max(
         0,
@@ -1411,6 +1448,39 @@ export class Home {
     this.levelEvaluation = evaluateFinancialLevel(
       buildLevelSignals(this.financialData),
     );
+  }
+
+  private buildUpdatedInvestmentTracking(): InvestmentTracking | undefined {
+    const existingTracking = this.financialData?.investmentTracking;
+    const cycleAmounts = {
+      ...(existingTracking?.cycleAmounts ?? {}),
+    };
+    const addedInvestment = Math.max(0, this.savingsDanaInvestasiInput);
+    const currentCycleKey = this.resolveInvestmentCycleKey();
+
+    if (addedInvestment > 0) {
+      cycleAmounts[currentCycleKey] =
+        Math.max(0, cycleAmounts[currentCycleKey] ?? 0) + addedInvestment;
+    }
+
+    if (!Object.keys(cycleAmounts).length) {
+      return existingTracking;
+    }
+
+    return { cycleAmounts };
+  }
+
+  private resolveInvestmentCycleKey(): string {
+    const existingCycleStart = this.financialData?.currentCycleStart;
+    if (existingCycleStart) {
+      return existingCycleStart;
+    }
+
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
+      2,
+      '0',
+    )}-01`;
   }
 
   formatRupiah(amount: number): string {

@@ -50,6 +50,10 @@ export interface SavingsAllocation {
   danaInvestasi: number;
 }
 
+export interface InvestmentTracking {
+  cycleAmounts: Record<string, number>;
+}
+
 export interface MonthlyTopUpSummary {
   cycleKey: string;
   fromTabunganCount: number;
@@ -68,6 +72,7 @@ export interface FinancialData {
   danaInvestasi?: number;
   budgetAllocation?: BudgetAllocation;
   savingsAllocation?: SavingsAllocation;
+  investmentTracking?: InvestmentTracking;
   currentCycleStart?: string;
   currentCycleEnd?: string;
   currentPengeluaranLimit?: number;

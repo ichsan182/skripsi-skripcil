@@ -1280,6 +1280,11 @@
   margin-top: 4px;
 }
 
+.sp-existing-info.sp-existing-info-accent {
+  color: #1565c0;
+  font-weight: 600;
+}
+
 .sp-total-value.sp-total-over {
   color: var(--color-accent-red);
 }

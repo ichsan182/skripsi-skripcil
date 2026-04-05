@@ -77,6 +77,30 @@ export function buildLevelSignals(
   const emergencyFund = Math.max(0, financialData?.danaDarurat ?? 0);
   const savingsBalance = Math.max(0, financialData?.estimasiTabungan ?? 0);
   const consumptiveDebt = Math.max(0, financialData?.hutangWajib ?? 0);
+  const currentCycleKey = resolveInvestmentCycleKey(financialData);
+  const trackedCycleAmounts =
+    financialData?.investmentTracking?.cycleAmounts ?? {};
+  const legacyInvestmentAmount = Math.max(0, financialData?.danaInvestasi ?? 0);
+  const currentCycleInvestment = getCurrentCycleInvestmentAmount(
+    trackedCycleAmounts,
+    currentCycleKey,
+    legacyInvestmentAmount,
+  );
+  const investmentAllocationRate = toPercentValue(
+    income > 0 ? currentCycleInvestment / income : 0,
+  );
+  const consecutiveInvestmentMonths = countConsecutiveQualifiedCycles(
+    trackedCycleAmounts,
+    currentCycleKey,
+    income,
+    legacyInvestmentAmount,
+  );
+  const pausedInvestmentMonths = countPausedCycles(
+    trackedCycleAmounts,
+    currentCycleKey,
+    income,
+    legacyInvestmentAmount,
+  );
 
   return {
     monthlyIncome: income,
@@ -86,9 +110,9 @@ export function buildLevelSignals(
     consumptiveDebtTotal: consumptiveDebt,
     productiveDebtTotal: 0,
     hasNewConsumptiveDebt: consumptiveDebt > 0,
-    investmentAllocationRate: 0,
-    consecutiveInvestmentMonths: 0,
-    pausedInvestmentMonths: 0,
+    investmentAllocationRate,
+    consecutiveInvestmentMonths,
+    pausedInvestmentMonths,
     bigGoalDefined: false,
     bigGoalProgressPercent: 0,
     hasMortgage: false,
@@ -166,16 +190,17 @@ export function evaluateFinancialLevel(signals: LevelSignals): LevelEvaluation {
   const hasInvestmentStreak = signals.consecutiveInvestmentMonths >= 3;
   const emergencyAbove2Months = signals.emergencyFund >= oneMonthExpense * 2;
   if (!(hasInvestmentRate && hasInvestmentStreak && emergencyAbove2Months)) {
+    const progressPercent = hasInvestmentRate
+      ? toPercent(signals.consecutiveInvestmentMonths / 3)
+      : toPercent(signals.investmentAllocationRate / 15 / 3);
+
     return {
       level: 4,
       title: LEVEL_META[4].title,
       focus: LEVEL_META[4].focus,
       nextTarget:
         'Jaga alokasi investasi >=15% selama 3 bulan berturut-turut dan pertahankan dana darurat > 2 bulan pengeluaran.',
-      progressPercent: Math.max(
-        toPercent(signals.investmentAllocationRate / 15),
-        toPercent(signals.consecutiveInvestmentMonths / 3),
-      ),
+      progressPercent,
       status: signals.pausedInvestmentMonths > 2 ? 'warning' : 'in-progress',
     };
   }
@@ -297,4 +322,152 @@ function formatCompact(value: number): string {
     notation: 'compact',
     maximumFractionDigits: 1,
   }).format(Math.max(0, value));
+}
+
+function toPercentValue(value: number): number {
+  if (!Number.isFinite(value) || value <= 0) {
+    return 0;
+  }
+
+  return Math.max(0, Math.round(value * 1000) / 10);
+}
+
+function resolveInvestmentCycleKey(
+  financialData: FinancialData | null,
+): string {
+  const parsedCycleStart = parseDateKey(financialData?.currentCycleStart);
+  if (parsedCycleStart) {
+    return toDateKey(parsedCycleStart);
+  }
+
+  const today = new Date();
+  return toDateKey(new Date(today.getFullYear(), today.getMonth(), 1));
+}
+
+function getCurrentCycleInvestmentAmount(
+  cycleAmounts: Record<string, number>,
+  currentCycleKey: string,
+  legacyInvestmentAmount: number,
+): number {
+  const trackedAmount = Math.max(0, cycleAmounts[currentCycleKey] ?? 0);
+  if (trackedAmount > 0) {
+    return trackedAmount;
+  }
+
+  return legacyInvestmentAmount;
+}
+
+function countConsecutiveQualifiedCycles(
+  cycleAmounts: Record<string, number>,
+  currentCycleKey: string,
+  income: number,
+  legacyInvestmentAmount: number,
+): number {
+  if (income <= 0) {
+    return 0;
+  }
+
+  if (!Object.keys(cycleAmounts).length) {
+    return legacyInvestmentAmount > 0 &&
+      (legacyInvestmentAmount / income) * 100 >= 15
+      ? 1
+      : 0;
+  }
+
+  let streak = 0;
+  let cycleKey: string | null = currentCycleKey;
+  let safety = 0;
+
+  while (cycleKey && safety < 120) {
+    const amount = Math.max(0, cycleAmounts[cycleKey] ?? 0);
+    if ((amount / income) * 100 < 15) {
+      break;
+    }
+
+    streak += 1;
+    cycleKey = getPreviousCycleKey(cycleKey);
+    safety += 1;
+  }
+
+  return streak;
+}
+
+function countPausedCycles(
+  cycleAmounts: Record<string, number>,
+  currentCycleKey: string,
+  income: number,
+  legacyInvestmentAmount: number,
+): number {
+  if (income <= 0) {
+    return 0;
+  }
+
+  if (!Object.keys(cycleAmounts).length) {
+    return legacyInvestmentAmount > 0 &&
+      (legacyInvestmentAmount / income) * 100 < 15
+      ? 1
+      : 0;
+  }
+
+  let paused = 0;
+  let cycleKey: string | null = currentCycleKey;
+  let safety = 0;
+
+  while (cycleKey && safety < 120) {
+    const amount = Math.max(0, cycleAmounts[cycleKey] ?? 0);
+    if ((amount / income) * 100 >= 15) {
+      break;
+    }
+
+    if (amount > 0) {
+      paused += 1;
+    }
+
+    cycleKey = getPreviousCycleKey(cycleKey);
+    safety += 1;
+  }
+
+  return paused;
+}
+
+function getPreviousCycleKey(cycleKey: string): string | null {
+  const current = parseDateKey(cycleKey);
+  if (!current) {
+    return null;
+  }
+
+  return toDateKey(
+    new Date(current.getFullYear(), current.getMonth() - 1, current.getDate()),
+  );
+}
+
+function parseDateKey(value?: string): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  const [yearRaw, monthRaw, dayRaw] = value.split('-');
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  if (
+    Number.isNaN(year) ||
+    Number.isNaN(month) ||
+    Number.isNaN(day) ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31
+  ) {
+    return null;
+  }
+
+  return new Date(year, month - 1, day);
+}
+
+function toDateKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+    2,
+    '0',
+  )}-${String(date.getDate()).padStart(2, '0')}`;
 }

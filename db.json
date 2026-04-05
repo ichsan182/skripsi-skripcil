@@ -1660,9 +1660,18 @@
       "onboardingCompleted": true,
       "level": 4,
       "investmentWatchlist": {
-        "items": [],
-        "selectedSymbol": null,
-        "updatedAt": "2026-04-04T15:26:19.632Z"
+        "items": [
+          {
+            "symbol": "MSFT",
+            "name": "Microsoft Corp.",
+            "type": "Common Stock",
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-04-05T08:22:14.369Z"
+          }
+        ],
+        "selectedSymbol": "MSFT",
+        "updatedAt": "2026-04-05T08:29:00.694Z"
       },
       "journal": {
         "nextChatMessageId": 7,
@@ -1773,6 +1782,70 @@
           "notes": "bunga 3% sebulan"
         }
       ]
+    },
+    {
+      "id": "04b0",
+      "name": "tordih",
+      "email": "tordih@gmail.com",
+      "phone": "08112512412",
+      "password": "123456",
+      "onboardingCompleted": true,
+      "level": 4,
+      "investmentWatchlist": {
+        "items": [],
+        "selectedSymbol": null,
+        "updatedAt": "2026-04-05T08:47:30.847Z"
+      },
+      "journal": {
+        "nextChatMessageId": 1,
+        "chatByDate": {},
+        "expensesByDate": {},
+        "incomesByDate": {}
+      },
+      "financialData": {
+        "pendapatan": 15000000,
+        "pengeluaranWajib": 4500000,
+        "tanggalPemasukan": 25,
+        "intendedTanggalPemasukan": 25,
+        "hutangWajib": 0,
+        "estimasiTabungan": 52350000,
+        "danaDarurat": 60000000,
+        "budgetAllocation": {
+          "mode": 2,
+          "pengeluaran": 30,
+          "wants": 0,
+          "savings": 70
+        },
+        "currentPengeluaranLimit": 4500000,
+        "currentPengeluaranUsed": 0,
+        "currentSisaSaldoPool": 10500000,
+        "monthlyTopUp": {
+          "cycleKey": "2026-03-25",
+          "fromTabunganCount": 0,
+          "totalFromTabungan": 0,
+          "totalFromDanaDarurat": 0
+        },
+        "currentCycleStart": "2026-03-25",
+        "currentCycleEnd": "2026-04-24",
+        "danaInvestasi": 3150000,
+        "savingsAllocation": {
+          "tabungan": 7350000,
+          "danaDarurat": 0,
+          "danaInvestasi": 3150000
+        },
+        "investmentTracking": {
+          "cycleAmounts": {
+            "2026-03-25": 3150000
+          }
+        }
+      },
+      "streak": {
+        "current": 0,
+        "longest": 0,
+        "lastActiveDate": "2026-04-05",
+        "freezeUsed": false
+      },
+      "debts": []
     }
   ]
 }
