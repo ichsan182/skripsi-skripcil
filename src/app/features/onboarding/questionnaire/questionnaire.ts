@@ -5,18 +5,15 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { USERS_API_URL } from '../../../core/config/app-api.config';
-import {
-  MAX_CURRENCY_AMOUNT,
-  clampCurrencyAmount,
-  formatCurrencyWithPrefix,
-} from '../../../core/utils/format.utils';
+import { CurrencyAmountLimitTier } from '../../../core/utils/format.utils';
+import { InputField } from '../../../shared/components/input-field/input-field';
 
 const MAX_TANGGAL_PEMASUKAN = 31;
 
 @Component({
   selector: 'app-questionnaire',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, InputField],
   templateUrl: './questionnaire.html',
   styleUrl: './questionnaire.css',
 })
@@ -27,6 +24,7 @@ export class Questionnaire {
 
   currentStep = 1;
   isSubmitting = false;
+  protected readonly currencyMaxTier = CurrencyAmountLimitTier.TEN_BILLION;
 
   form1 = this.fb.group({
     pendapatan: ['', [Validators.required]],
@@ -39,7 +37,7 @@ export class Questionnaire {
         Validators.max(MAX_TANGGAL_PEMASUKAN),
       ],
     ],
-    hutangWajib: ['', [Validators.required]],
+    hutangWajib: [''],
   });
 
   form2 = this.fb.group({
@@ -160,30 +158,28 @@ export class Questionnaire {
     );
   }
 
-  onCurrencyInput(form: 'form1' | 'form2', controlName: string): void {
+  onCurrencyInput(
+    form: 'form1' | 'form2',
+    controlName: string,
+    state: { value: number; formattedValue: string; exceededMax: boolean },
+  ): void {
     const formGroup = form === 'form1' ? this.form1 : this.form2;
     const control = (formGroup as any).get(controlName);
     if (!control) {
       return;
     }
 
-    const rawValue = String(control.value || '');
-    const parsedValue = this.parseNumber(rawValue);
-    const numericValue = clampCurrencyAmount(parsedValue);
     const currentErrors = control.errors || {};
-    if (parsedValue > MAX_CURRENCY_AMOUNT) {
+    if (state.exceededMax) {
       currentErrors['maxAmount'] = true;
     } else {
       delete currentErrors['maxAmount'];
     }
     control.setErrors(Object.keys(currentErrors).length ? currentErrors : null);
 
-    control.setValue(
-      numericValue > 0 ? formatCurrencyWithPrefix(numericValue) : '',
-      {
-        emitEvent: false,
-      },
-    );
+    control.setValue(state.formattedValue, {
+      emitEvent: false,
+    });
   }
 
   onTanggalPemasukanInput(): void {
@@ -206,6 +202,11 @@ export class Questionnaire {
     });
   }
 
+  onTanggalPemasukanValueChange(value: string): void {
+    this.form1.get('tanggalPemasukan')?.setValue(value, { emitEvent: false });
+    this.onTanggalPemasukanInput();
+  }
+
   hasControlError(
     form: 'form1' | 'form2',
     controlName: string,
@@ -216,6 +217,12 @@ export class Questionnaire {
     return Boolean(
       control?.hasError?.(errorName) && (control.dirty || control.touched),
     );
+  }
+
+  getControlValue(form: 'form1' | 'form2', controlName: string): string {
+    const formGroup = form === 'form1' ? this.form1 : this.form2;
+    const control = (formGroup as any).get(controlName);
+    return String(control?.value || '');
   }
 
   private parseNumber(value: string): number {

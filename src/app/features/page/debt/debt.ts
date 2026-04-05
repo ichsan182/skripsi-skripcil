@@ -249,6 +249,14 @@ export class Debt {
     this.form[field] = value;
   }
 
+  protected onNameInput(value: string): void {
+    this.form.name = value;
+  }
+
+  protected onDueDayInput(value: number): void {
+    this.form.dueDay = value;
+  }
+
   protected async saveDebt(): Promise<void> {
     this.formError = '';
 

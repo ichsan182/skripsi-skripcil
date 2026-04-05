@@ -97,12 +97,13 @@
       <article class="debt-form-card">
         <h3>{{ editingDebtId ? 'Edit Hutang' : 'Tambah Hutang' }}</h3>
 
-        <label>Nama Hutang</label>
-        <input
-          type="text"
-          [(ngModel)]="form.name"
+        <app-input-field
+          label="Nama Hutang"
+          [inputAlign]="'left'"
+          [value]="form.name"
           placeholder="Contoh: Kredivo Beli HP"
-        />
+          (valueChange)="onNameInput($event)"
+        ></app-input-field>
 
         <div class="row-2">
           <div>
@@ -166,12 +167,23 @@
 
         <div class="row-2">
           <div>
-            <label>Tanggal Jatuh Tempo</label>
-            <input type="number" min="1" max="31" [(ngModel)]="form.dueDay" />
+            <app-input-field
+              label="Tanggal Jatuh Tempo"
+              [type]="'number'"
+              [inputAlign]="'left'"
+              [min]="1"
+              [max]="31"
+              [value]="form.dueDay.toString()"
+              (numberValueChange)="onDueDayInput($event)"
+            ></app-input-field>
           </div>
           <div>
-            <label>Estimasi Lunas</label>
-            <input type="text" [value]="formEstimatedLabel" readonly />
+            <app-input-field
+              label="Estimasi Lunas"
+              [inputAlign]="'left'"
+              [value]="formEstimatedLabel"
+              [readonly]="true"
+            ></app-input-field>
           </div>
         </div>
 

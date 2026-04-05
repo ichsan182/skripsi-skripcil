@@ -1671,7 +1671,7 @@
           }
         ],
         "selectedSymbol": "MSFT",
-        "updatedAt": "2026-04-05T13:43:29.227Z"
+        "updatedAt": "2026-04-05T14:09:00.718Z"
       },
       "journal": {
         "nextChatMessageId": 7,
@@ -1732,8 +1732,8 @@
         "incomesByDate": {}
       },
       "financialData": {
-        "pendapatan": 16000000,
-        "pengeluaranWajib": 3520000,
+        "pendapatan": 17000000,
+        "pengeluaranWajib": 3740000,
         "tanggalPemasukan": 25,
         "intendedTanggalPemasukan": 25,
         "hutangWajib": 0,
@@ -1745,9 +1745,9 @@
           "wants": 0,
           "savings": 78
         },
-        "currentPengeluaranLimit": 3520000,
+        "currentPengeluaranLimit": 3740000,
         "currentPengeluaranUsed": 38000,
-        "currentSisaSaldoPool": 0,
+        "currentSisaSaldoPool": 13260000,
         "monthlyTopUp": {
           "cycleKey": "2026-03-25",
           "fromTabunganCount": 0,

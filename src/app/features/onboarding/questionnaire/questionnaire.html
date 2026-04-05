@@ -39,15 +39,16 @@
           Masukkan rata-rata pendapatan tetap yang kamu terima setiap bulan,
           termasuk gaji pokok dan pendapatan rutin lainnya.
         </p>
-        <div class="input-field">
-          <input
-            type="text"
-            formControlName="pendapatan"
-            placeholder="Contoh: Rp 5.000.000"
-            inputmode="numeric"
-            (input)="onCurrencyInput('form1', 'pendapatan')"
-          />
-        </div>
+        <app-input-field
+          [isCurrency]="true"
+          [inputAlign]="'left'"
+          [showInlineCurrencyPrefix]="true"
+          [currencyMaxTier]="currencyMaxTier"
+          [inputmode]="'numeric'"
+          [value]="getControlValue('form1', 'pendapatan')"
+          placeholder="Contoh: Rp 5.000.000"
+          (currencyStateChange)="onCurrencyInput('form1', 'pendapatan', $event)"
+        ></app-input-field>
         @if (hasControlError('form1', 'pendapatan', 'maxAmount')) {
         <small class="error">Maksimal nominal adalah Rp 10.000.000.000.</small>
         } @if (showError('form1', 'pendapatan')) {
@@ -61,15 +62,16 @@
           Total pengeluaran yang wajib kamu bayar setiap bulan seperti bayar
           kos, makan, transportasi, dan tagihan rutin.
         </p>
-        <div class="input-field">
-          <input
-            type="text"
-            formControlName="pengeluaranWajib"
-            placeholder="Contoh: Rp 2.000.000"
-            inputmode="numeric"
-            (input)="onCurrencyInput('form1', 'pengeluaranWajib')"
-          />
-        </div>
+        <app-input-field
+          [isCurrency]="true"
+          [inputAlign]="'left'"
+          [showInlineCurrencyPrefix]="true"
+          [currencyMaxTier]="currencyMaxTier"
+          [inputmode]="'numeric'"
+          [value]="getControlValue('form1', 'pengeluaranWajib')"
+          placeholder="Contoh: Rp 2.000.000"
+          (currencyStateChange)="onCurrencyInput('form1', 'pengeluaranWajib', $event)"
+        ></app-input-field>
         @if (hasControlError('form1', 'pengeluaranWajib', 'maxAmount')) {
         <small class="error">Maksimal nominal adalah Rp 10.000.000.000.</small>
         } @if (showError('form1', 'pengeluaranWajib')) {
@@ -87,16 +89,14 @@
           Jika pilih 29/30/31, pada bulan yang tidak memiliki tanggal tersebut,
           reset otomatis akan dijalankan pada hari terakhir bulan itu.
         </p>
-        <div class="input-field">
-          <input
-            type="text"
-            formControlName="tanggalPemasukan"
-            placeholder="Contoh: 25"
-            inputmode="numeric"
-            maxlength="2"
-            (input)="onTanggalPemasukanInput()"
-          />
-        </div>
+        <app-input-field
+          [inputAlign]="'left'"
+          [value]="getControlValue('form1', 'tanggalPemasukan')"
+          placeholder="Contoh: 25"
+          [inputmode]="'numeric'"
+          [maxlength]="2"
+          (valueChange)="onTanggalPemasukanValueChange($event)"
+        ></app-input-field>
         @if (hasControlError('form1', 'tanggalPemasukan', 'invalidDay') ||
         hasControlError('form1', 'tanggalPemasukan', 'max')) {
         <small class="error">Tanggal maksimal adalah 31.</small>
@@ -111,19 +111,19 @@
           Total cicilan hutang kecil hingga menengah per bulan, selain KPR, KPA
           (Kredit Kepemilikan Apartemen), kredit mobil, atau motor mewah.
         </p>
-        <div class="input-field">
-          <input
-            type="text"
-            formControlName="hutangWajib"
-            placeholder="Contoh: Rp 200.000"
-            inputmode="numeric"
-            (input)="onCurrencyInput('form1', 'hutangWajib')"
-          />
-        </div>
+        <app-input-field
+          [isCurrency]="true"
+          [inputAlign]="'left'"
+          [showInlineCurrencyPrefix]="true"
+          [allowZeroValue]="true"
+          [currencyMaxTier]="currencyMaxTier"
+          [inputmode]="'numeric'"
+          [value]="getControlValue('form1', 'hutangWajib')"
+          placeholder="Contoh: Rp 200.000"
+          (currencyStateChange)="onCurrencyInput('form1', 'hutangWajib', $event)"
+        ></app-input-field>
         @if (hasControlError('form1', 'hutangWajib', 'maxAmount')) {
         <small class="error">Maksimal nominal adalah Rp 10.000.000.000.</small>
-        } @if (showError('form1', 'hutangWajib')) {
-        <small class="error">Wajib diisi.</small>
         }
       </div>
 
@@ -137,15 +137,16 @@
           Perkiraan total tabungan yang kamu miliki saat ini di seluruh rekening
           bank atau celengan.
         </p>
-        <div class="input-field">
-          <input
-            type="text"
-            formControlName="estimasiTabungan"
-            placeholder="Contoh: Rp 2.000.000"
-            inputmode="numeric"
-            (input)="onCurrencyInput('form2', 'estimasiTabungan')"
-          />
-        </div>
+        <app-input-field
+          [isCurrency]="true"
+          [inputAlign]="'left'"
+          [showInlineCurrencyPrefix]="true"
+          [currencyMaxTier]="currencyMaxTier"
+          [inputmode]="'numeric'"
+          [value]="getControlValue('form2', 'estimasiTabungan')"
+          placeholder="Contoh: Rp 2.000.000"
+          (currencyStateChange)="onCurrencyInput('form2', 'estimasiTabungan', $event)"
+        ></app-input-field>
         @if (hasControlError('form2', 'estimasiTabungan', 'maxAmount')) {
         <small class="error">Maksimal nominal adalah Rp 10.000.000.000.</small>
         } @if (showError('form2', 'estimasiTabungan')) {
@@ -159,15 +160,16 @@
           Total dana yang kamu siapkan khusus untuk kebutuhan tak terduga
           seperti sakit, kehilangan pekerjaan, atau keadaan darurat lainnya.
         </p>
-        <div class="input-field">
-          <input
-            type="text"
-            formControlName="danaDarurat"
-            placeholder="Contoh: Rp 1.000.000"
-            inputmode="numeric"
-            (input)="onCurrencyInput('form2', 'danaDarurat')"
-          />
-        </div>
+        <app-input-field
+          [isCurrency]="true"
+          [inputAlign]="'left'"
+          [showInlineCurrencyPrefix]="true"
+          [currencyMaxTier]="currencyMaxTier"
+          [inputmode]="'numeric'"
+          [value]="getControlValue('form2', 'danaDarurat')"
+          placeholder="Contoh: Rp 1.000.000"
+          (currencyStateChange)="onCurrencyInput('form2', 'danaDarurat', $event)"
+        ></app-input-field>
         @if (hasControlError('form2', 'danaDarurat', 'maxAmount')) {
         <small class="error">Maksimal nominal adalah Rp 10.000.000.000.</small>
         } @if (showError('form2', 'danaDarurat')) {

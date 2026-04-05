@@ -112,31 +112,6 @@
   line-height: var(--line-height-normal);
 }
 
-.input-field {
-  display: flex;
-  align-items: center;
-  padding: 12px 20px;
-  background: var(--color-input-bg);
-  border-radius: 12px;
-}
-
-.input-field input {
-  width: 100%;
-  border: 0;
-  background: transparent;
-  font-size: var(--font-size-base);
-  color: var(--color-black);
-}
-
-.input-field input:focus {
-  outline: none;
-}
-
-.input-field input::placeholder {
-  color: var(--color-primary);
-  opacity: 1;
-}
-
 .error {
   color: #b42318;
   font-size: var(--font-size-sm);
