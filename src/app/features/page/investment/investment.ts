@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Sidebar } from '../../../shared/components/sidebar/sidebar';
@@ -15,6 +15,12 @@ import {
   InvestmentWatchlistService,
   WatchlistItem,
 } from '../../../core/services/investment-watchlist.service';
+import {
+  FinancialData,
+  JournalService,
+  UserJournal,
+} from '../../../core/services/journal.service';
+import { RollingBudgetService } from '../../../core/utils/rolling-budget.service';
 import { firstValueFrom } from 'rxjs';
 import {
   ECONOMIC_CATEGORY_OPTIONS,
@@ -58,6 +64,23 @@ interface EconomicCard {
   styleUrl: './investment.css',
 })
 export class Investment implements OnInit {
+  private readonly journalService = inject(JournalService);
+  private readonly rollingBudgetService = inject(RollingBudgetService);
+
+  rollingBudgetToday = 0;
+  rollingBudgetRemaining = 0;
+  rollingDaysRemaining = 0;
+  rollingTotalBudget = 0;
+  rollingUsedBudget = 0;
+
+  private journal: UserJournal = {
+    nextChatMessageId: 1,
+    chatByDate: {},
+    expensesByDate: {},
+    incomesByDate: {},
+  };
+  private currentFinancialData: FinancialData | null = null;
+
   protected searchQuery = '';
   protected searchResults: AlphaSearchMatch[] = [];
   protected watchlist: WatchlistItem[] = [];
@@ -95,6 +118,7 @@ export class Investment implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
+    await this.loadRollingBudgetState();
     await this.initializeWatchlist();
     await this.loadEconomicIndicators();
   }
@@ -463,5 +487,33 @@ export class Investment implements OnInit {
     this.chartMax = 0;
     this.chartStartLabel = '-';
     this.chartEndLabel = '-';
+  }
+
+  private async loadRollingBudgetState(): Promise<void> {
+    try {
+      this.journal = await this.journalService.loadCurrentUserJournal();
+      const summary = await this.journalService.getCurrentCycleSummary();
+      this.currentFinancialData = summary.financialData;
+      this.computeRollingBudgetToday();
+    } catch {
+      this.rollingBudgetToday = 0;
+      this.rollingBudgetRemaining = 0;
+      this.rollingDaysRemaining = 0;
+      this.rollingTotalBudget = 0;
+      this.rollingUsedBudget = 0;
+    }
+  }
+
+  private computeRollingBudgetToday(): void {
+    const state = this.rollingBudgetService.computeRollingBudgetState(
+      this.currentFinancialData,
+      this.journal,
+    );
+
+    this.rollingTotalBudget = state.rollingTotalBudget;
+    this.rollingUsedBudget = state.rollingUsedBudget;
+    this.rollingBudgetRemaining = state.rollingBudgetRemaining;
+    this.rollingDaysRemaining = state.rollingDaysRemaining;
+    this.rollingBudgetToday = state.rollingBudgetToday;
   }
 }

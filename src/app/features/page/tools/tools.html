@@ -1,5 +1,12 @@
 <div class="page-container">
-  <app-sidebar></app-sidebar>
+  <app-sidebar
+    [showRollingBudgetPanel]="true"
+    [rollingTotalBudget]="rollingTotalBudget"
+    [rollingUsedBudget]="rollingUsedBudget"
+    [rollingBudgetRemaining]="rollingBudgetRemaining"
+    [rollingDaysRemaining]="rollingDaysRemaining"
+    [rollingBudgetToday]="rollingBudgetToday"
+  ></app-sidebar>
   <section class="page-content">
     <h1>Tools untuk membantu kamu!</h1>
 
