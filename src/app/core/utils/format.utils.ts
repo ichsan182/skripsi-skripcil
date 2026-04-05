@@ -99,6 +99,67 @@ export function parseCurrencyInputUncapped(rawValue: string): number {
   return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
 }
 
+export interface CurrencyInputFormattingOptions {
+  maxAmount?: number;
+  allowZeroValue?: boolean;
+  includePrefix?: boolean;
+  prefix?: string;
+}
+
+export interface CurrencyInputFormattingResult {
+  value: number;
+  rawNumericValue: number;
+  normalizedDigits: string;
+  formattedValue: string;
+  exceededMax: boolean;
+}
+
+export function normalizeCurrencyDigits(rawValue: string): string {
+  const digitsOnly = (rawValue || '').replace(/[^0-9]/g, '');
+  if (!digitsOnly) {
+    return '';
+  }
+
+  const normalized = digitsOnly.replace(/^0+(?=\d)/, '');
+  return /^0+$/.test(normalized) ? '0' : normalized;
+}
+
+export function formatCurrencyInputValue(
+  rawValue: string,
+  options: CurrencyInputFormattingOptions = {},
+): CurrencyInputFormattingResult {
+  const {
+    maxAmount = MAX_CURRENCY_AMOUNT,
+    allowZeroValue = false,
+    includePrefix = false,
+    prefix = getCurrencyPrefix(DEFAULT_CURRENCY_CODE),
+  } = options;
+
+  const normalizedDigits = normalizeCurrencyDigits(rawValue);
+  const rawNumericValue = normalizedDigits ? Number(normalizedDigits) : 0;
+  const parsedValue = parseCurrencyInput(normalizedDigits, maxAmount);
+  const preserveZero = allowZeroValue && normalizedDigits === '0';
+
+  let formattedValue = '';
+  if (parsedValue > 0 || preserveZero) {
+    if (includePrefix) {
+      const normalizedPrefix = prefix.trim();
+      const inlinePrefix = normalizedPrefix ? `${normalizedPrefix} ` : '';
+      formattedValue = formatCurrencyWithPrefix(parsedValue, inlinePrefix);
+    } else {
+      formattedValue = formatCurrencyPlain(parsedValue);
+    }
+  }
+
+  return {
+    value: parsedValue,
+    rawNumericValue,
+    normalizedDigits,
+    formattedValue,
+    exceededMax: rawNumericValue > maxAmount,
+  };
+}
+
 export function formatCurrencyPlain(
   amount: number,
   options: CurrencyFormatOptions = {},
