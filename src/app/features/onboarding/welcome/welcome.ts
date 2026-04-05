@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { CurrentUserService } from '../../../core/services/current-user.service';
 
 @Component({
   selector: 'app-welcome',
@@ -9,14 +10,11 @@ import { Router } from '@angular/router';
 })
 export class Welcome {
   private readonly router = inject(Router);
+  private readonly currentUserService = inject(CurrentUserService);
 
   get userName(): string {
-    try {
-      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-      return user.name || 'User';
-    } catch {
-      return 'User';
-    }
+    const user = this.currentUserService.getCurrentUser<{ name?: string }>();
+    return user?.name || 'User';
   }
 
   startOnboarding(): void {

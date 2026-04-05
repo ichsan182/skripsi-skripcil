@@ -1737,8 +1737,8 @@
         "tanggalPemasukan": 25,
         "intendedTanggalPemasukan": 25,
         "hutangWajib": 0,
-        "estimasiTabungan": 34984000,
-        "danaDarurat": 60000000,
+        "estimasiTabungan": 48244000,
+        "danaDarurat": 65304000,
         "budgetAllocation": {
           "mode": 2,
           "pengeluaran": 22,
@@ -1747,7 +1747,7 @@
         },
         "currentPengeluaranLimit": 3740000,
         "currentPengeluaranUsed": 38000,
-        "currentSisaSaldoPool": 13260000,
+        "currentSisaSaldoPool": 0,
         "monthlyTopUp": {
           "cycleKey": "2026-03-25",
           "fromTabunganCount": 0,
@@ -1756,11 +1756,16 @@
         },
         "currentCycleStart": "2026-03-25",
         "currentCycleEnd": "2026-04-24",
-        "danaInvestasi": 2496000,
+        "danaInvestasi": 10452000,
         "savingsAllocation": {
-          "tabungan": 9984000,
-          "danaDarurat": 0,
-          "danaInvestasi": 2496000
+          "tabungan": 23244000,
+          "danaDarurat": 5304000,
+          "danaInvestasi": 10452000
+        },
+        "investmentTracking": {
+          "cycleAmounts": {
+            "2026-03-25": 7956000
+          }
         }
       },
       "streak": {

@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { USERS_API_URL } from '../../../core/config/app-api.config';
+import { CurrentUserService } from '../../../core/services/current-user.service';
 
 interface User {
   id?: number | string;
@@ -35,6 +36,7 @@ export class Login {
   private readonly httpClient = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
+  private readonly currentUserService = inject(CurrentUserService);
 
   protected isSubmitting = false;
   protected isPasswordVisible = false;
@@ -84,7 +86,7 @@ export class Login {
         return;
       }
 
-      localStorage.setItem('currentUser', JSON.stringify(user));
+      this.currentUserService.setCurrentUser(user);
 
       if (!user.onboardingCompleted) {
         await this.router.navigateByUrl('/welcome');

@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { USERS_API_URL } from '../config/app-api.config';
+import { CurrentUserService } from './current-user.service';
 import {
   ExpenseCategory,
   inferExpenseCategory,
@@ -114,11 +115,6 @@ export interface FinancialCycleSummary {
   monthlyExpenseTotal: number;
 }
 
-interface StoredUser {
-  id?: number | string;
-  financialData?: FinancialData;
-}
-
 interface UserRecord {
   id: number | string;
   financialData?: FinancialData;
@@ -130,6 +126,7 @@ interface UserRecord {
 })
 export class JournalService {
   private readonly httpClient = inject(HttpClient);
+  private readonly currentUserService = inject(CurrentUserService);
 
   private static readonly DEFAULT_BUDGET: BudgetAllocation = {
     mode: 2,
@@ -355,17 +352,7 @@ export class JournalService {
   }
 
   private getCurrentUserId(): number | string | null {
-    const rawCurrentUser = localStorage.getItem('currentUser');
-    if (!rawCurrentUser) {
-      return null;
-    }
-
-    try {
-      const currentUser = JSON.parse(rawCurrentUser) as StoredUser;
-      return currentUser.id ?? null;
-    } catch {
-      return null;
-    }
+    return this.currentUserService.getCurrentUserId();
   }
 
   private async patchJournal(
@@ -971,23 +958,7 @@ export class JournalService {
   private patchLocalCurrentUser(patch: {
     financialData?: FinancialData | null;
   }): void {
-    const rawCurrentUser = localStorage.getItem('currentUser');
-    if (!rawCurrentUser) {
-      return;
-    }
-
-    try {
-      const currentUser = JSON.parse(rawCurrentUser) as StoredUser;
-      localStorage.setItem(
-        'currentUser',
-        JSON.stringify({
-          ...currentUser,
-          ...patch,
-        }),
-      );
-    } catch {
-      // ignore parse error
-    }
+    this.currentUserService.patchCurrentUser(patch);
   }
 
   private inferCategory(description: string): ExpenseCategory {

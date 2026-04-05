@@ -4,6 +4,7 @@ import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { USERS_API_URL } from '../../../core/config/app-api.config';
+import { CurrentUserService } from '../../../core/services/current-user.service';
 import { FinancialData } from '../../../core/services/journal.service';
 import {
   buildLevelSignals,
@@ -68,6 +69,7 @@ interface StoredUser {
 })
 export class Debt {
   private readonly http = inject(HttpClient);
+  private readonly currentUserService = inject(CurrentUserService);
   private readonly kprPromptFlagKey = 'debtKprPromptSeen';
   protected readonly currencyMaxTier = CurrencyAmountLimitTier.HUNDRED_BILLION;
 
@@ -379,7 +381,9 @@ export class Debt {
   }
 
   private loadDebtPageState(): void {
-    const user = this.getCurrentUser();
+    const user = this.currentUserService.getCurrentUserOrDefault<StoredUser>(
+      {},
+    );
     this.financialData = user.financialData ?? null;
     this.debts = Array.isArray(user.debts)
       ? user.debts
@@ -481,7 +485,9 @@ export class Debt {
   }
 
   private async persistDebts(): Promise<void> {
-    const user = this.getCurrentUser();
+    const user = this.currentUserService.getCurrentUserOrDefault<StoredUser>(
+      {},
+    );
     const nextFinancialData: FinancialData = {
       ...(this.financialData ?? {
         pendapatan: 0,
@@ -506,8 +512,9 @@ export class Debt {
       debts: this.debts,
     };
 
-    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-    sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    this.currentUserService.setCurrentUser(updatedUser, {
+      syncSession: true,
+    });
 
     if (!updatedUser.id) {
       return;
@@ -526,14 +533,6 @@ export class Debt {
       this.formError = 'Data tersimpan lokal, tapi sinkronisasi server gagal.';
     } finally {
       this.isSaving = false;
-    }
-  }
-
-  private getCurrentUser(): StoredUser {
-    try {
-      return JSON.parse(localStorage.getItem('currentUser') || '{}');
-    } catch {
-      return {};
     }
   }
 

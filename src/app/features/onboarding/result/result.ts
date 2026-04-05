@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { CurrentUserService } from '../../../core/services/current-user.service';
 
 interface FinancialData {
   pendapatan: number;
@@ -20,17 +21,18 @@ interface FinancialData {
 })
 export class Result {
   private readonly router = inject(Router);
+  private readonly currentUserService = inject(CurrentUserService);
 
   get user(): {
     name: string;
     level: number;
     financialData: FinancialData;
   } {
-    try {
-      return JSON.parse(localStorage.getItem('currentUser') || '{}');
-    } catch {
-      return { name: 'User', level: 1, financialData: {} as FinancialData };
-    }
+    return this.currentUserService.getCurrentUserOrDefault({
+      name: 'User',
+      level: 1,
+      financialData: {} as FinancialData,
+    });
   }
 
   get userName(): string {

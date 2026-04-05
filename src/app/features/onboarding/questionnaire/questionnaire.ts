@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { USERS_API_URL } from '../../../core/config/app-api.config';
 import { CurrencyAmountLimitTier } from '../../../core/utils/format.utils';
+import { CurrentUserService } from '../../../core/services/current-user.service';
 import { InputField } from '../../../shared/components/input-field/input-field';
 
 const MAX_TANGGAL_PEMASUKAN = 31;
@@ -21,6 +22,7 @@ export class Questionnaire {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
+  private readonly currentUserService = inject(CurrentUserService);
 
   currentStep = 1;
   isSubmitting = false;
@@ -88,7 +90,9 @@ export class Questionnaire {
 
     this.isSubmitting = true;
     try {
-      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      const user = this.currentUserService.getCurrentUserOrDefault<{
+        id?: number | string;
+      }>({});
       const tanggalPemasukan = this.parseNumber(
         this.form1.value.tanggalPemasukan || '',
       );
@@ -140,7 +144,7 @@ export class Questionnaire {
         financialData,
         level,
       };
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      this.currentUserService.setCurrentUser(updatedUser);
 
       this.router.navigateByUrl('/result');
     } catch {

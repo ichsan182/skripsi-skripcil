@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { USERS_API_URL } from '../config/app-api.config';
+import { CurrentUserService } from './current-user.service';
 
 export interface WatchlistItem {
   symbol: string;
@@ -31,6 +32,7 @@ interface UserRecord {
 @Injectable({ providedIn: 'root' })
 export class InvestmentWatchlistService {
   private readonly httpClient = inject(HttpClient);
+  private readonly currentUserService = inject(CurrentUserService);
 
   async loadCurrentUserWatchlist(): Promise<InvestmentWatchlistState> {
     const userId = this.getCurrentUserId();
@@ -130,17 +132,7 @@ export class InvestmentWatchlistService {
   }
 
   private getCurrentUserId(): number | string | null {
-    const rawCurrentUser = localStorage.getItem('currentUser');
-    if (!rawCurrentUser) {
-      return null;
-    }
-
-    try {
-      const currentUser = JSON.parse(rawCurrentUser) as StoredUser;
-      return currentUser.id ?? null;
-    } catch {
-      return null;
-    }
+    return this.currentUserService.getCurrentUserId();
   }
 
   private async patchState(
@@ -153,18 +145,9 @@ export class InvestmentWatchlistService {
       }),
     );
 
-    const rawCurrentUser = localStorage.getItem('currentUser');
-    if (!rawCurrentUser) {
-      return;
-    }
-
-    try {
-      const currentUser = JSON.parse(rawCurrentUser) as StoredUser;
-      currentUser.investmentWatchlist = state;
-      localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    } catch {
-      // no-op
-    }
+    this.currentUserService.patchCurrentUser({
+      investmentWatchlist: state,
+    });
   }
 
   private createDefaultState(): InvestmentWatchlistState {
