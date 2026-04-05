@@ -5,7 +5,6 @@ import { Register } from './features/auth/register/register';
 import { Welcome } from './features/onboarding/welcome/welcome';
 import { Questionnaire } from './features/onboarding/questionnaire/questionnaire';
 import { Result } from './features/onboarding/result/result';
-import { Chat } from './features/page/chat/chat';
 import { Transaction } from './features/page/transaction/transaction';
 import { Investment } from './features/page/investment/investment';
 import { Tools } from './features/page/tools/tools';
@@ -48,10 +47,6 @@ export const routes: Routes = [
   {
     path: 'home',
     component: Home,
-  },
-  {
-    path: 'chat',
-    component: Chat,
   },
   {
     path: 'transactions',

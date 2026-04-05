@@ -110,11 +110,6 @@ export class Sidebar implements OnInit, OnChanges {
       label: 'Education',
       icon: 'assets/material-symbols_education.svg',
     },
-    {
-      path: '/chat',
-      label: 'Chat',
-      icon: 'assets/material-symbols_chat.svg',
-    },
   ];
 
   ngOnInit(): void {

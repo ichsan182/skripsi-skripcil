@@ -12,7 +12,7 @@ export interface RollingBudgetState {
 
 /**
  * Service untuk menghitung rolling budget state
- * Digunakan oleh Home, Transaction, dan Chat komponen
+ * Digunakan oleh komponen Home dan Transaction
  *
  * Best practice:
  * - Centralized calculation logic untuk rolling budget

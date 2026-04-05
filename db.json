@@ -1665,9 +1665,61 @@
         "updatedAt": "2026-04-04T15:26:19.632Z"
       },
       "journal": {
-        "nextChatMessageId": 1,
-        "chatByDate": {},
-        "expensesByDate": {},
+        "nextChatMessageId": 7,
+        "chatByDate": {
+          "2026-04-05": [
+            {
+              "id": 1,
+              "sender": "user",
+              "text": "babi 10000",
+              "time": "09.41"
+            },
+            {
+              "id": 2,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"babi\" kategori other.",
+              "time": "09.41"
+            },
+            {
+              "id": 3,
+              "sender": "user",
+              "text": "makan 28000\\",
+              "time": "09.41"
+            },
+            {
+              "id": 4,
+              "sender": "assistant",
+              "text": "Catatan untuk Minggu, 5 April 2026 sudah disimpan.",
+              "time": "09.41"
+            },
+            {
+              "id": 5,
+              "sender": "user",
+              "text": "makan 28000",
+              "time": "09.41"
+            },
+            {
+              "id": 6,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 28.000 untuk \"makan\" kategori makanan.",
+              "time": "09.41"
+            }
+          ]
+        },
+        "expensesByDate": {
+          "2026-04-05": [
+            {
+              "amount": 28000,
+              "description": "makan",
+              "category": "makanan"
+            },
+            {
+              "amount": 10000,
+              "description": "babi",
+              "category": "other"
+            }
+          ]
+        },
         "incomesByDate": {}
       },
       "financialData": {
@@ -1685,7 +1737,7 @@
           "savings": 78
         },
         "currentPengeluaranLimit": 3520000,
-        "currentPengeluaranUsed": 0,
+        "currentPengeluaranUsed": 38000,
         "currentSisaSaldoPool": 0,
         "monthlyTopUp": {
           "cycleKey": "2026-03-25",
@@ -1705,7 +1757,7 @@
       "streak": {
         "current": 0,
         "longest": 0,
-        "lastActiveDate": "2026-04-04",
+        "lastActiveDate": "2026-04-05",
         "freezeUsed": false
       },
       "debts": [
