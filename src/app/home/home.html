@@ -93,20 +93,25 @@
         <div class="card-with-mention">
           <div class="hutang-card">
             <div class="title-subtitle-cards">
-              <div class="title-cards">Hutang</div>
-              <div class="percentage-cards">
-                <div class="arrow-cards down">
+              <div class="title-cards">{{ debtCardTitle }}</div>
+              @if (showDebtChange) {
+              <div class="percentage-cards" [ngClass]="debtChangeClass">
+                <div
+                  class="arrow-cards"
+                  [class.down]="debtChangeDirection === 'down'"
+                >
                   <img src="assets/arrow_up.svg" alt="Arrow down" />
                 </div>
-                {{ hutangPercentage }}%
+                {{ debtChangePercentLabel }}
               </div>
+              }
             </div>
-            <div class="cards-value value-negative">{{ hutangFormatted }}</div>
+            <div class="cards-value value-negative">
+              {{ debtCardPrimaryValue }}
+            </div>
           </div>
-          <p class="mention-text" [class.mention-hidden]="!showMentions.hutang">
-            Hutang sudah terbayar
-            <span class="mention-percent">{{ hutangPercentage }}%</span>
-            bulan ini
+          <p class="mention-text">
+            {{ debtCardSecondaryValue || debtCardMessage }}
           </p>
         </div>
       </section>

@@ -117,6 +117,14 @@
   color: #27ae60;
 }
 
+.percentage-cards.debt-change-up {
+  color: var(--color-accent-red);
+}
+
+.percentage-cards.debt-change-down {
+  color: #16a34a;
+}
+
 .arrow-cards {
   display: flex;
   align-items: center;

@@ -1755,13 +1755,14 @@
         }
       },
       "streak": {
-        "current": 0,
-        "longest": 0,
+        "current": 1,
+        "longest": 1,
         "lastActiveDate": "2026-04-05",
         "freezeUsed": false
       },
       "debts": [
         {
+          "id": "debt-1775318103739-203",
           "name": "beli rumah",
           "category": "produktif",
           "debtType": "KPR",
@@ -1769,8 +1770,7 @@
           "remainingAmount": 350000000,
           "monthlyInstallment": 6000000,
           "dueDay": 1,
-          "notes": "bunga 3% sebulan",
-          "id": "debt-1775318103739-203"
+          "notes": "bunga 3% sebulan"
         }
       ]
     }

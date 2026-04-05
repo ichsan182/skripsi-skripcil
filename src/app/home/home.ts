@@ -69,6 +69,36 @@ interface UserStreak {
   freezeUsed: boolean;
 }
 
+type DebtCategory = 'konsumtif' | 'produktif';
+type DebtCardMode = 'consumptive' | 'productive' | 'clear';
+type DebtChangeDirection = 'up' | 'down';
+
+interface DebtItemSnapshot {
+  id: string;
+  name: string;
+  category: DebtCategory;
+  remainingAmount: number;
+  monthlyInstallment: number;
+  dueDay: number;
+  dueDate: string;
+  status: string;
+}
+
+interface DebtMonthlySnapshot {
+  consumptiveActiveTotal: number;
+  productiveActiveTotal: number;
+}
+
+interface DebtCardState {
+  mode: DebtCardMode;
+  total: number;
+  activeCount: number;
+  changePercent: number | null;
+  changeDirection: DebtChangeDirection | null;
+  urgentLine: string;
+  payoffLabel: string;
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -90,6 +120,17 @@ export class Home {
   };
   private readonly noExpensePolicy: 'allow-no-expense' | 'require-entry' =
     'require-entry';
+  private readonly debtSnapshotStorageKey = 'homeDebtMonthlySnapshots';
+  private debts: DebtItemSnapshot[] = [];
+  private debtCardState: DebtCardState = {
+    mode: 'clear',
+    total: 0,
+    activeCount: 0,
+    changePercent: null,
+    changeDirection: null,
+    urgentLine: '',
+    payoffLabel: '',
+  };
 
   userName = 'User';
   userEmail = 'user@example.com';
@@ -118,7 +159,6 @@ export class Home {
   saldoPercentage = this.generatePercentage();
   pemasukanPercentage = this.generatePercentage();
   pengeluaranPercentage = this.generatePercentage();
-  hutangPercentage = this.generatePercentage();
 
   Math = Math;
   showSettingPersenan = false;
@@ -182,9 +222,11 @@ export class Home {
   private loadUserData(): void {
     try {
       const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      this.userId = user.id ?? null;
       if (user.name) this.userName = user.name;
       if (user.email) this.userEmail = user.email;
       if (user.profileImage) this.userProfileImage = user.profileImage;
+      this.debts = this.normalizeDebts(user.debts);
       if (user.financialData) {
         this.financialData = user.financialData;
         this.pendapatanInput = user.financialData.pendapatan || 0;
@@ -198,9 +240,17 @@ export class Home {
         // savings inputs always start at 0 (sisa saldo system)
       }
 
+      if (!this.debts.length && (this.financialData?.hutangWajib ?? 0) > 0) {
+        this.debts = [
+          this.buildLegacyConsumptiveDebt(this.financialData?.hutangWajib ?? 0),
+        ];
+      }
+
       this.refreshLevelEvaluation();
+      this.refreshDebtCardState();
     } catch {
       // use defaults
+      this.refreshDebtCardState();
     }
   }
 
@@ -257,8 +307,88 @@ export class Home {
     return this.formatRupiah(this.monthlyExpenseTotal);
   }
 
-  get hutangFormatted(): string {
-    return this.formatRupiah(this.financialData?.hutangWajib || 0);
+  get debtCardTitle(): string {
+    if (this.debtCardState.mode === 'consumptive') {
+      return 'Hutang Konsumtif';
+    }
+
+    if (this.debtCardState.mode === 'productive') {
+      return 'Hutang Produktif';
+    }
+
+    return 'Status Hutang';
+  }
+
+  get debtCardPrimaryValue(): string {
+    if (this.debtCardState.mode === 'clear') {
+      return 'Bebas Hutang';
+    }
+
+    return this.formatRupiah(this.debtCardState.total);
+  }
+
+  get debtCardSecondaryValue(): string {
+    if (this.debtCardState.mode === 'consumptive') {
+      return `${this.debtCardState.activeCount} Hutang Konsumtif Aktif`;
+    }
+
+    if (this.debtCardState.mode === 'productive') {
+      return `Estimasi lunas: ${this.debtCardState.payoffLabel}`;
+    }
+
+    return '';
+  }
+
+  get debtCardMessage(): string {
+    if (this.debtCardState.mode === 'consumptive') {
+      return this.debtCardState.urgentLine;
+    }
+
+    if (this.debtCardState.mode === 'productive') {
+      return 'Hutang produktif berjalan sesuai rencana jangka panjang.';
+    }
+
+    return 'Mantap, semua hutang sudah lunas. Pertahankan kondisi sehat ini.';
+  }
+
+  get debtCardToneClass(): string {
+    if (this.debtCardState.mode === 'consumptive') {
+      return 'debt-tone-alert';
+    }
+
+    if (this.debtCardState.mode === 'productive') {
+      return 'debt-tone-progress';
+    }
+
+    return 'debt-tone-clear';
+  }
+
+  get showDebtChange(): boolean {
+    return this.debtCardState.changePercent !== null;
+  }
+
+  get debtChangePercentLabel(): string {
+    if (this.debtCardState.changePercent === null) {
+      return '';
+    }
+
+    return `${this.debtCardState.changePercent}%`;
+  }
+
+  get debtChangeDirection(): DebtChangeDirection | null {
+    return this.debtCardState.changeDirection;
+  }
+
+  get debtChangeClass(): string {
+    if (this.debtCardState.changeDirection === 'up') {
+      return 'debt-change-up';
+    }
+
+    if (this.debtCardState.changeDirection === 'down') {
+      return 'debt-change-down';
+    }
+
+    return '';
   }
 
   get tabunganFormatted(): string {
@@ -1303,5 +1433,344 @@ export class Home {
 
   private generatePercentage(): number {
     return Math.floor(Math.random() * 100) + 1;
+  }
+
+  private refreshDebtCardState(): void {
+    const consumptiveActive = this.getActiveDebtsByCategory('konsumtif');
+    const productiveActive = this.getActiveDebtsByCategory('produktif');
+    const consumptiveTotal = this.sumDebtRemaining(consumptiveActive);
+    const productiveTotal = this.sumDebtRemaining(productiveActive);
+
+    if (consumptiveActive.length > 0) {
+      const urgent = this.findMostUrgentDebt(consumptiveActive);
+      this.debtCardState = {
+        mode: 'consumptive',
+        total: consumptiveTotal,
+        activeCount: consumptiveActive.length,
+        changePercent: this.computeDebtChangePercent(
+          'consumptive',
+          consumptiveTotal,
+        ),
+        changeDirection: this.computeDebtChangeDirection(
+          'consumptive',
+          consumptiveTotal,
+        ),
+        urgentLine: urgent
+          ? `Paling mendesak: ${urgent.name} jatuh tempo ${this.formatDebtDueDate(
+              urgent,
+            )} (${this.formatRupiah(urgent.remainingAmount)}).`
+          : 'Masih ada hutang konsumtif aktif yang perlu diprioritaskan.',
+        payoffLabel: '',
+      };
+      this.persistCurrentDebtSnapshot(consumptiveTotal, productiveTotal);
+      return;
+    }
+
+    if (productiveActive.length > 0) {
+      this.debtCardState = {
+        mode: 'productive',
+        total: productiveTotal,
+        activeCount: productiveActive.length,
+        changePercent: this.computeDebtChangePercent(
+          'productive',
+          productiveTotal,
+        ),
+        changeDirection: this.computeDebtChangeDirection(
+          'productive',
+          productiveTotal,
+        ),
+        urgentLine: '',
+        payoffLabel: this.buildProductivePayoffLabel(productiveActive),
+      };
+      this.persistCurrentDebtSnapshot(consumptiveTotal, productiveTotal);
+      return;
+    }
+
+    this.debtCardState = {
+      mode: 'clear',
+      total: 0,
+      activeCount: 0,
+      changePercent: null,
+      changeDirection: null,
+      urgentLine: '',
+      payoffLabel: '',
+    };
+    this.persistCurrentDebtSnapshot(consumptiveTotal, productiveTotal);
+  }
+
+  private normalizeDebts(rawDebts: unknown): DebtItemSnapshot[] {
+    if (!Array.isArray(rawDebts)) {
+      return [];
+    }
+
+    return rawDebts
+      .map((item) => this.normalizeSingleDebt(item))
+      .filter((item): item is DebtItemSnapshot => Boolean(item));
+  }
+
+  private normalizeSingleDebt(raw: unknown): DebtItemSnapshot | null {
+    if (!raw || typeof raw !== 'object') {
+      return null;
+    }
+
+    const value = raw as Partial<DebtItemSnapshot> & {
+      dueDate?: unknown;
+      status?: unknown;
+    };
+
+    const remainingAmount = this.toPositiveInt(value.remainingAmount);
+    const monthlyInstallment = this.toPositiveInt(value.monthlyInstallment);
+    const dueDay = this.normalizeDueDay(value.dueDay);
+
+    return {
+      id: (value.id || `${Date.now()}`) as string,
+      name: String(value.name || 'Hutang').trim(),
+      category: value.category === 'produktif' ? 'produktif' : 'konsumtif',
+      remainingAmount,
+      monthlyInstallment,
+      dueDay,
+      dueDate: typeof value.dueDate === 'string' ? value.dueDate : '',
+      status: typeof value.status === 'string' ? value.status : '',
+    };
+  }
+
+  private getActiveDebtsByCategory(category: DebtCategory): DebtItemSnapshot[] {
+    return this.debts.filter(
+      (item) => item.category === category && this.isDebtActive(item),
+    );
+  }
+
+  private isDebtActive(item: DebtItemSnapshot): boolean {
+    if (item.remainingAmount <= 0) {
+      return false;
+    }
+
+    const normalizedStatus = item.status.trim().toLowerCase();
+    return (
+      normalizedStatus !== 'lunas' &&
+      normalizedStatus !== 'paid' &&
+      normalizedStatus !== 'settled'
+    );
+  }
+
+  private sumDebtRemaining(items: DebtItemSnapshot[]): number {
+    return items.reduce((sum, item) => sum + item.remainingAmount, 0);
+  }
+
+  private findMostUrgentDebt(
+    debts: DebtItemSnapshot[],
+  ): DebtItemSnapshot | null {
+    if (!debts.length) {
+      return null;
+    }
+
+    const today = this.startOfDay(new Date());
+    const sorted = [...debts].sort((a, b) => {
+      const aDue = this.resolveDebtDueDate(a, today).getTime();
+      const bDue = this.resolveDebtDueDate(b, today).getTime();
+
+      if (aDue !== bDue) {
+        return aDue - bDue;
+      }
+
+      return b.remainingAmount - a.remainingAmount;
+    });
+
+    return sorted[0] ?? null;
+  }
+
+  private resolveDebtDueDate(item: DebtItemSnapshot, reference: Date): Date {
+    if (item.dueDate) {
+      const parsed = new Date(item.dueDate);
+      if (!Number.isNaN(parsed.getTime())) {
+        return this.startOfDay(parsed);
+      }
+    }
+
+    const year = reference.getFullYear();
+    const month = reference.getMonth();
+    const dayThisMonth = this.resolveDayInMonth(year, month, item.dueDay);
+    const dueThisMonth = this.startOfDay(new Date(year, month, dayThisMonth));
+
+    if (dueThisMonth >= reference) {
+      return dueThisMonth;
+    }
+
+    const nextMonth = new Date(year, month + 1, 1);
+    const dayNextMonth = this.resolveDayInMonth(
+      nextMonth.getFullYear(),
+      nextMonth.getMonth(),
+      item.dueDay,
+    );
+    return this.startOfDay(
+      new Date(nextMonth.getFullYear(), nextMonth.getMonth(), dayNextMonth),
+    );
+  }
+
+  private formatDebtDueDate(item: DebtItemSnapshot): string {
+    const due = this.resolveDebtDueDate(item, this.startOfDay(new Date()));
+    return due.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+    });
+  }
+
+  private buildProductivePayoffLabel(debts: DebtItemSnapshot[]): string {
+    const totalRemaining = this.sumDebtRemaining(debts);
+    const totalInstallment = debts.reduce(
+      (sum, item) => sum + Math.max(0, item.monthlyInstallment),
+      0,
+    );
+
+    if (totalRemaining <= 0 || totalInstallment <= 0) {
+      return '-';
+    }
+
+    const months = Math.ceil(totalRemaining / totalInstallment);
+    const projected = new Date();
+    projected.setMonth(projected.getMonth() + months);
+    return `${months} bulan (~${projected.toLocaleDateString('id-ID', {
+      month: 'long',
+      year: 'numeric',
+    })})`;
+  }
+
+  private computeDebtChangePercent(
+    mode: 'consumptive' | 'productive',
+    currentTotal: number,
+  ): number | null {
+    const previousTotal = this.getPreviousMonthRelevantDebtTotal(mode);
+    if (previousTotal <= 0 || previousTotal === currentTotal) {
+      return null;
+    }
+
+    const deltaPercent = Math.round(
+      (Math.abs(currentTotal - previousTotal) / previousTotal) * 100,
+    );
+    return deltaPercent > 0 ? deltaPercent : null;
+  }
+
+  private computeDebtChangeDirection(
+    mode: 'consumptive' | 'productive',
+    currentTotal: number,
+  ): DebtChangeDirection | null {
+    const previousTotal = this.getPreviousMonthRelevantDebtTotal(mode);
+    if (previousTotal <= 0 || previousTotal === currentTotal) {
+      return null;
+    }
+
+    return currentTotal > previousTotal ? 'up' : 'down';
+  }
+
+  private getPreviousMonthRelevantDebtTotal(
+    mode: 'consumptive' | 'productive',
+  ): number {
+    const snapshots = this.getDebtSnapshots();
+    const previousMonth = new Date();
+    previousMonth.setMonth(previousMonth.getMonth() - 1);
+    const key = this.toYearMonthKey(previousMonth);
+    const previous = snapshots[key];
+    if (!previous) {
+      return 0;
+    }
+
+    return mode === 'consumptive'
+      ? previous.consumptiveActiveTotal
+      : previous.productiveActiveTotal;
+  }
+
+  private persistCurrentDebtSnapshot(
+    consumptiveTotal: number,
+    productiveTotal: number,
+  ): void {
+    const snapshots = this.getDebtSnapshots();
+    const currentKey = this.toYearMonthKey(new Date());
+    snapshots[currentKey] = {
+      consumptiveActiveTotal: Math.max(0, Math.round(consumptiveTotal)),
+      productiveActiveTotal: Math.max(0, Math.round(productiveTotal)),
+    };
+
+    localStorage.setItem(
+      this.debtSnapshotStorageKey,
+      JSON.stringify(snapshots),
+    );
+  }
+
+  private getDebtSnapshots(): Record<string, DebtMonthlySnapshot> {
+    try {
+      const parsed = JSON.parse(
+        localStorage.getItem(this.debtSnapshotStorageKey) || '{}',
+      );
+      if (!parsed || typeof parsed !== 'object') {
+        return {};
+      }
+
+      const entries = Object.entries(parsed as Record<string, unknown>);
+      const snapshots: Record<string, DebtMonthlySnapshot> = {};
+      for (const [key, value] of entries) {
+        if (!value || typeof value !== 'object') {
+          continue;
+        }
+
+        const raw = value as Partial<DebtMonthlySnapshot>;
+        snapshots[key] = {
+          consumptiveActiveTotal: this.toPositiveInt(
+            raw.consumptiveActiveTotal,
+          ),
+          productiveActiveTotal: this.toPositiveInt(raw.productiveActiveTotal),
+        };
+      }
+
+      return snapshots;
+    } catch {
+      return {};
+    }
+  }
+
+  private toYearMonthKey(date: Date): string {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+      2,
+      '0',
+    )}`;
+  }
+
+  private toPositiveInt(value: unknown): number {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return 0;
+    }
+
+    return Math.round(parsed);
+  }
+
+  private normalizeDueDay(value: unknown): number {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+      return 1;
+    }
+
+    return Math.max(1, Math.min(31, Math.floor(parsed)));
+  }
+
+  private resolveDayInMonth(
+    year: number,
+    monthIndex: number,
+    intendedDay: number,
+  ): number {
+    const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+    return Math.min(Math.max(1, intendedDay), lastDay);
+  }
+
+  private buildLegacyConsumptiveDebt(amount: number): DebtItemSnapshot {
+    return {
+      id: 'legacy-consumptive-debt',
+      name: 'Hutang Konsumtif',
+      category: 'konsumtif',
+      remainingAmount: Math.max(0, Math.round(amount)),
+      monthlyInstallment: Math.max(1, Math.round(amount * 0.1)),
+      dueDay: this.normalizeDueDay(this.financialData?.tanggalPemasukan),
+      dueDate: '',
+      status: 'aktif',
+    };
   }
 }
