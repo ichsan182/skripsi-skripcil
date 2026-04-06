@@ -26,6 +26,7 @@ import {
   formatPercent,
 } from '../../../core/utils/format.utils';
 import { RollingBudgetService } from '../../../core/utils/rolling-budget.service';
+import { TestingTimeService } from '../../../core/services/testing-time.service';
 
 interface CalendarCell {
   date: Date;
@@ -93,6 +94,7 @@ const CATEGORY_META: Record<ExpenseCategory, CategoryMeta> = {
 export class Transaction {
   private readonly journalService = inject(JournalService);
   private readonly rollingBudgetService = inject(RollingBudgetService);
+  private readonly testingTimeService = inject(TestingTimeService);
 
   rollingBudgetToday = 0;
   rollingBudgetRemaining = 0;
@@ -107,7 +109,9 @@ export class Transaction {
     label: CATEGORY_META[key].label,
   }));
 
-  readonly today = this.normalizeDate(new Date());
+  readonly today = this.normalizeDate(
+    this.testingTimeService.getReferenceDate(),
+  );
 
   selectedDate = this.normalizeDate(new Date());
   currentMonthCursor = new Date(
@@ -445,7 +449,7 @@ export class Transaction {
   }
 
   private async initializeData(): Promise<void> {
-    this.journal = await this.journalService.loadCurrentUserJournal();
+    this.journal = await this.journalService.loadCurrentUserJournal(this.today);
     const cycle = await this.journalService.getCurrentCycleSummary(
       this.selectedDate,
     );
@@ -573,51 +577,17 @@ export class Transaction {
   }
 
   private computeRollingBudgetToday(): void {
-    if (
-      !this.currentFinancialData?.currentCycleStart ||
-      !this.currentFinancialData.currentCycleEnd
-    ) {
-      this.rollingBudgetToday = 0;
-      this.rollingBudgetRemaining = 0;
-      this.rollingDaysRemaining = 0;
-      this.rollingTotalBudget = 0;
-      this.rollingUsedBudget = 0;
-      return;
-    }
-
-    const cycleStart = this.parseDateKey(
-      this.currentFinancialData.currentCycleStart,
+    const state = this.rollingBudgetService.computeRollingBudgetState(
+      this.currentFinancialData,
+      this.journal,
+      this.today,
     );
-    const cycleEnd = this.parseDateKey(
-      this.currentFinancialData.currentCycleEnd,
-    );
-    if (!cycleStart || !cycleEnd) {
-      return;
-    }
 
-    const today = this.normalizeDate(new Date());
-    const dayBeforeToday = new Date(today);
-    dayBeforeToday.setDate(dayBeforeToday.getDate() - 1);
-
-    const usedBeforeToday = this.sumExpensesInRange(cycleStart, dayBeforeToday);
-    const totalBudget =
-      this.currentFinancialData.currentPengeluaranLimit ??
-      this.currentFinancialData.pengeluaranWajib;
-    const remainingBudget = Math.max(0, totalBudget - usedBeforeToday);
-    const remainingDays = Math.max(1, this.daysBetween(today, cycleEnd) + 1);
-
-    this.rollingTotalBudget = totalBudget;
-    this.rollingUsedBudget =
-      this.currentFinancialData.currentPengeluaranUsed || 0;
-    this.rollingBudgetRemaining = Math.max(
-      0,
-      totalBudget - this.rollingUsedBudget,
-    );
-    this.rollingDaysRemaining = remainingDays;
-    this.rollingBudgetToday = Math.max(
-      0,
-      Math.floor(remainingBudget / remainingDays),
-    );
+    this.rollingTotalBudget = state.rollingTotalBudget;
+    this.rollingUsedBudget = state.rollingUsedBudget;
+    this.rollingBudgetRemaining = state.rollingBudgetRemaining;
+    this.rollingDaysRemaining = state.rollingDaysRemaining;
+    this.rollingBudgetToday = state.rollingBudgetToday;
   }
 
   private sumExpensesInRange(start: Date, end: Date): number {

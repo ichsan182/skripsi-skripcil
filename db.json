@@ -1876,6 +1876,94 @@
         "freezeUsed": false
       },
       "debts": []
+    },
+    {
+      "id": "974d",
+      "name": "epa",
+      "email": "epa@gmail.com",
+      "phone": "082112488179",
+      "password": "123456",
+      "onboardingCompleted": true,
+      "level": 3,
+      "investmentWatchlist": {
+        "items": [],
+        "selectedSymbol": null,
+        "updatedAt": "2026-04-06T15:06:06.684Z"
+      },
+      "journal": {
+        "nextChatMessageId": 3,
+        "chatByDate": {
+          "2026-04-06": [
+            {
+              "id": 1,
+              "sender": "user",
+              "text": "makan 12000",
+              "time": "22.17"
+            },
+            {
+              "id": 2,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 12.000 untuk \"makan\" kategori makanan.",
+              "time": "22.17"
+            }
+          ]
+        },
+        "expensesByDate": {
+          "2026-04-06": [
+            {
+              "amount": 12000,
+              "description": "makan",
+              "category": "makanan"
+            }
+          ]
+        },
+        "incomesByDate": {}
+      },
+      "financialData": {
+        "pendapatan": 5000000,
+        "pengeluaranWajib": 2500000,
+        "tanggalPemasukan": 25,
+        "intendedTanggalPemasukan": 25,
+        "hutangWajib": 0,
+        "estimasiTabungan": 16350000,
+        "danaDarurat": 11250000,
+        "budgetAllocation": {
+          "mode": 2,
+          "pengeluaran": 50,
+          "wants": 0,
+          "savings": 50
+        },
+        "currentPengeluaranLimit": 2500000,
+        "currentPengeluaranUsed": 0,
+        "currentSisaSaldoPool": 3500000,
+        "monthlyTopUp": {
+          "cycleKey": "2026-05-25",
+          "fromTabunganCount": 0,
+          "totalFromTabungan": 0,
+          "totalFromDanaDarurat": 0
+        },
+        "currentCycleStart": "2026-05-25",
+        "currentCycleEnd": "2026-06-24",
+        "danaInvestasi": 8900000,
+        "savingsAllocation": {
+          "tabungan": 1350000,
+          "danaDarurat": 1250000,
+          "danaInvestasi": 8900000
+        },
+        "investmentTracking": {
+          "cycleAmounts": {
+            "2026-03-25": 3900000,
+            "2026-04-25": 2500000,
+            "2026-05-25": 2500000
+          }
+        }
+      },
+      "streak": {
+        "current": 50,
+        "longest": 50,
+        "lastActiveDate": "2026-05-25",
+        "freezeUsed": false
+      }
     }
   ]
 }

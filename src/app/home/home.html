@@ -15,6 +15,35 @@
   <section class="home-page">
     <h1>Selamat Datang, {{ userName }}!</h1>
     <p>Cek status kamu hari ini yuk!</p>
+    <section class="time-testing-panel">
+      <div class="time-testing-title">Mode Testing Waktu</div>
+      <p class="time-testing-subtitle">
+        Atur tanggal simulasi untuk fitur Home dan Transaction.
+      </p>
+      <div class="time-testing-controls">
+        <input
+          type="date"
+          class="time-testing-input"
+          [value]="testingDateInput"
+          (change)="testingDateInput = $any($event.target).value"
+          aria-label="Pilih tanggal simulasi"
+        />
+        <button type="button" class="time-testing-apply" (click)="applyTestingDate()">
+          Terapkan
+        </button>
+        <button
+          type="button"
+          class="time-testing-reset"
+          (click)="resetTestingDate()"
+        >
+          Kembali ke Hari Ini
+        </button>
+      </div>
+      <span class="time-testing-status" [class.active]="isTestingDateActive">
+        @if (isTestingDateActive) { Menggunakan tanggal simulasi: {{
+        testingDateInput }} } @else { Menggunakan tanggal sistem saat ini. }
+      </span>
+    </section>
     <div class="home-content">
       <section class="summary-cards-section">
         <div class="card-with-mention">

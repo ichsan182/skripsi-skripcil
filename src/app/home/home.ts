@@ -35,6 +35,7 @@ import {
   buildLevelSignals,
   evaluateFinancialLevel,
 } from '../core/utils/level';
+import { TestingTimeService } from '../core/services/testing-time.service';
 
 interface ExpenseRow {
   date: string;
@@ -112,6 +113,7 @@ export class Home {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly rollingBudgetService = inject(RollingBudgetService);
+  private readonly testingTimeService = inject(TestingTimeService);
   protected readonly levelCardComponent = LevelCardComponent;
   private journal: UserJournal = {
     nextChatMessageId: 1,
@@ -180,6 +182,7 @@ export class Home {
     | 'danaInvestasi'
     | null = null;
   pendapatanInput = 0;
+  testingDateInput = '';
   monthlyExpenseTotal = 0;
   levelEvaluation: LevelEvaluation = evaluateFinancialLevel(
     buildLevelSignals(null),
@@ -217,7 +220,27 @@ export class Home {
 
   constructor() {
     this.loadUserData();
+    this.syncReferenceDateControls();
     void this.initializeDashboard();
+  }
+
+  get isTestingDateActive(): boolean {
+    return this.testingTimeService.isCustomDateActive();
+  }
+
+  async applyTestingDate(): Promise<void> {
+    const parsed = this.parseTestingDateInput(this.testingDateInput);
+    if (!parsed) {
+      return;
+    }
+
+    this.testingTimeService.setReferenceDate(parsed);
+    await this.reloadForReferenceDate();
+  }
+
+  async resetTestingDate(): Promise<void> {
+    this.testingTimeService.clearReferenceDate();
+    await this.reloadForReferenceDate();
   }
 
   private loadUserData(): void {
@@ -812,7 +835,9 @@ export class Home {
 
   private async loadMonthlyExpenseTotal(): Promise<void> {
     try {
-      const summary = await this.journalService.getCurrentCycleSummary();
+      const summary = await this.journalService.getCurrentCycleSummary(
+        this.getReferenceToday(),
+      );
       this.monthlyExpenseTotal = summary.monthlyExpenseTotal;
       if (summary.financialData) {
         this.financialData = summary.financialData;
@@ -826,7 +851,9 @@ export class Home {
 
   private async initializeDashboard(): Promise<void> {
     await this.loadMonthlyExpenseTotal();
-    this.journal = await this.journalService.loadCurrentUserJournal();
+    this.journal = await this.journalService.loadCurrentUserJournal(
+      this.getReferenceToday(),
+    );
     this.firstRecordDate = this.getFirstRecordDate();
     await this.syncDailyStreakState();
     this.refreshMonthlyExpenses();
@@ -834,11 +861,16 @@ export class Home {
   }
 
   private async syncDailyStreakState(): Promise<void> {
-    const today = this.startOfDay(new Date());
+    const today = this.getReferenceToday();
     const todayKey = this.toDateKey(today);
     const currentUserStreak = this.normalizeStreak(
       JSON.parse(localStorage.getItem('currentUser') || '{}').streak,
     );
+
+    if (this.isTestingDateActive) {
+      await this.syncTestingModeStreak(currentUserStreak, today, todayKey);
+      return;
+    }
 
     if (!this.firstRecordDate) {
       const emptyStreak: UserStreak = {
@@ -879,6 +911,46 @@ export class Home {
       freezeUsed: currentUserStreak.freezeUsed,
     };
     this.streakState = updated;
+    await this.persistStreak(updated);
+  }
+
+  private async syncTestingModeStreak(
+    currentUserStreak: UserStreak,
+    today: Date,
+    todayKey: string,
+  ): Promise<void> {
+    const lastActive = currentUserStreak.lastActiveDate
+      ? this.parseDateKey(currentUserStreak.lastActiveDate)
+      : null;
+
+    let nextCurrent = Math.max(0, currentUserStreak.current);
+    let nextLastActiveDate = currentUserStreak.lastActiveDate || todayKey;
+
+    if (!lastActive) {
+      nextCurrent = Math.max(1, nextCurrent || 1);
+      nextLastActiveDate = todayKey;
+    } else {
+      const diff = this.daysBetween(lastActive, today);
+      if (diff > 0) {
+        nextCurrent += diff;
+        nextLastActiveDate = todayKey;
+      } else if (diff === 0) {
+        nextLastActiveDate = todayKey;
+      }
+      // if diff < 0 (mundur tanggal), keep current streak as-is.
+    }
+
+    const updated: UserStreak = {
+      current: nextCurrent,
+      longest: Math.max(currentUserStreak.longest, nextCurrent),
+      lastActiveDate: nextLastActiveDate,
+      freezeUsed: currentUserStreak.freezeUsed,
+    };
+
+    this.streakState = updated;
+    if (!this.firstRecordDate) {
+      this.firstRecordDate = lastActive ?? today;
+    }
     await this.persistStreak(updated);
   }
 
@@ -925,6 +997,7 @@ export class Home {
     const state = this.rollingBudgetService.computeRollingBudgetState(
       this.financialData,
       this.journal,
+      this.getReferenceToday(),
     );
     this.rollingTotalBudget = state.rollingTotalBudget;
     this.rollingUsedBudget = state.rollingUsedBudget;
@@ -935,9 +1008,19 @@ export class Home {
 
   private getStreakDayStatus(date: Date): StreakDayStatus {
     const day = this.startOfDay(date);
-    const today = this.startOfDay(new Date());
+    const today = this.getReferenceToday();
     if (day > today) {
       return 'future';
+    }
+
+    if (this.isTestingDateActive) {
+      const simulatedStart =
+        this.firstRecordDate ||
+        this.parseDateKey(this.streakState.lastActiveDate);
+      if (simulatedStart && day < simulatedStart) {
+        return 'before-start';
+      }
+      return 'success';
     }
 
     if (!this.firstRecordDate || day < this.firstRecordDate) {
@@ -1539,7 +1622,7 @@ export class Home {
       return existingCycleStart;
     }
 
-    const today = new Date();
+    const today = this.getReferenceToday();
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
       2,
       '0',
@@ -1697,7 +1780,7 @@ export class Home {
       return null;
     }
 
-    const today = this.startOfDay(new Date());
+    const today = this.getReferenceToday();
     const sorted = [...debts].sort((a, b) => {
       const aDue = this.resolveDebtDueDate(a, today).getTime();
       const bDue = this.resolveDebtDueDate(b, today).getTime();
@@ -1741,7 +1824,7 @@ export class Home {
   }
 
   private formatDebtDueDate(item: DebtItemSnapshot): string {
-    const due = this.resolveDebtDueDate(item, this.startOfDay(new Date()));
+    const due = this.resolveDebtDueDate(item, this.getReferenceToday());
     return due.toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
@@ -1760,7 +1843,7 @@ export class Home {
     }
 
     const months = Math.ceil(totalRemaining / totalInstallment);
-    const projected = new Date();
+    const projected = new Date(this.getReferenceToday());
     projected.setMonth(projected.getMonth() + months);
     return `${months} bulan (~${projected.toLocaleDateString('id-ID', {
       month: 'long',
@@ -1799,7 +1882,7 @@ export class Home {
     mode: 'consumptive' | 'productive',
   ): number {
     const snapshots = this.getDebtSnapshots();
-    const previousMonth = new Date();
+    const previousMonth = new Date(this.getReferenceToday());
     previousMonth.setMonth(previousMonth.getMonth() - 1);
     const key = this.toYearMonthKey(previousMonth);
     const previous = snapshots[key];
@@ -1817,7 +1900,7 @@ export class Home {
     productiveTotal: number,
   ): void {
     const snapshots = this.getDebtSnapshots();
-    const currentKey = this.toYearMonthKey(new Date());
+    const currentKey = this.toYearMonthKey(this.getReferenceToday());
     snapshots[currentKey] = {
       consumptiveActiveTotal: Math.max(0, Math.round(consumptiveTotal)),
       productiveActiveTotal: Math.max(0, Math.round(productiveTotal)),
@@ -1905,5 +1988,51 @@ export class Home {
       dueDate: '',
       status: 'aktif',
     };
+  }
+
+  private async reloadForReferenceDate(): Promise<void> {
+    this.syncReferenceDateControls();
+    await this.initializeDashboard();
+  }
+
+  private syncReferenceDateControls(): void {
+    const reference = this.getReferenceToday();
+    this.testingDateInput = this.testingTimeService.toDateInputValue(reference);
+    this.selectedYear = reference.getFullYear();
+    this.selectedMonthIndex = reference.getMonth();
+    this.selectedMonthValue = this.toMonthInputValue(
+      this.selectedYear,
+      this.selectedMonthIndex,
+    );
+    this.streakCalendarYear = reference.getFullYear();
+    this.streakCalendarMonth = reference.getMonth();
+  }
+
+  private getReferenceToday(): Date {
+    return this.startOfDay(this.testingTimeService.getReferenceDate());
+  }
+
+  private parseTestingDateInput(value: string): Date | null {
+    if (!value) {
+      return null;
+    }
+
+    const [yearRaw, monthRaw, dayRaw] = value.split('-');
+    const year = Number(yearRaw);
+    const month = Number(monthRaw);
+    const day = Number(dayRaw);
+    if (
+      Number.isNaN(year) ||
+      Number.isNaN(month) ||
+      Number.isNaN(day) ||
+      month < 1 ||
+      month > 12 ||
+      day < 1 ||
+      day > 31
+    ) {
+      return null;
+    }
+
+    return this.startOfDay(new Date(year, month - 1, day));
   }
 }

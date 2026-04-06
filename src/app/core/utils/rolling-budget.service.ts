@@ -32,6 +32,7 @@ export class RollingBudgetService {
   computeRollingBudgetState(
     financialData: FinancialData | null,
     journal: UserJournal,
+    referenceDate: Date = new Date(),
   ): RollingBudgetState {
     // Default state jika data tidak lengkap
     if (!financialData?.currentCycleStart || !financialData.currentCycleEnd) {
@@ -56,7 +57,7 @@ export class RollingBudgetService {
       };
     }
 
-    const today = normalizeDate(new Date());
+    const today = normalizeDate(referenceDate);
     const dayBeforeToday = new Date(today);
     dayBeforeToday.setDate(dayBeforeToday.getDate() - 1);
 

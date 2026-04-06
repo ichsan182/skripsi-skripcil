@@ -135,7 +135,9 @@ export class JournalService {
     savings: 20,
   };
 
-  async loadCurrentUserJournal(): Promise<UserJournal> {
+  async loadCurrentUserJournal(
+    referenceDate: Date = new Date(),
+  ): Promise<UserJournal> {
     const userId = this.getCurrentUserId();
     if (!userId) {
       return this.createEmptyJournal();
@@ -149,7 +151,7 @@ export class JournalService {
     const financialState = this.ensureFinancialState(
       this.normalizeFinancialData(user.financialData),
       journal,
-      this.startOfDay(new Date()),
+      this.startOfDay(referenceDate),
     );
 
     if (!user.journal || financialState.changed) {
@@ -512,10 +514,11 @@ export class JournalService {
       next.currentCycleStart !== cycleStartKey ||
       next.currentCycleEnd !== cycleEndKey
     ) {
+      const carriedSaldo = Math.max(0, next.currentSisaSaldoPool ?? 0);
       next.currentCycleStart = cycleStartKey;
       next.currentCycleEnd = cycleEndKey;
       next.currentPengeluaranLimit = baseLimit;
-      next.currentSisaSaldoPool = baseSaldo;
+      next.currentSisaSaldoPool = baseSaldo + carriedSaldo;
       next.monthlyTopUp = {
         cycleKey: cycleStartKey,
         fromTabunganCount: 0,
