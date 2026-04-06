@@ -1125,7 +1125,13 @@
   font-size: var(--font-size-xs);
   color: var(--color-primary-light);
   font-weight: 600;
-  margin: 0;
+}
+
+.sp-sub-info-margin {
+  font-size: var(--font-size-xs);
+  color: var(--color-primary-light);
+  font-weight: 600;
+  margin-top: 6px;
 }
 
 .sp-allocation-grid {

@@ -443,7 +443,7 @@ export class Home {
   }
 
   get savingsTotalAmount(): number {
-    return this.sisaSaldoAmount;
+    return this.computeEditableSavingsPoolTotal();
   }
 
   get isSisaSaldoEmpty(): boolean {
@@ -621,10 +621,13 @@ export class Home {
 
   async saveSettingPersenan(): Promise<void> {
     const pendapatan = this.pendapatanInput;
-    const totalPengeluaranPct =
-      this.budgetMode === 3
-        ? this.budgetPengeluaran + this.budgetWants
-        : this.budgetPengeluaran;
+    const budgetAllocation: BudgetAllocation = {
+      mode: this.budgetMode,
+      pengeluaran: this.budgetPengeluaran,
+      wants: this.budgetWants,
+      savings: this.budgetSavings,
+    };
+    const totalPengeluaranPct = this.getBudgetExpensePercent(budgetAllocation);
     const pengeluaranWajib = Math.round(
       (pendapatan * totalPengeluaranPct) / 100,
     );
@@ -637,12 +640,6 @@ export class Home {
       this.levelEvaluation.level >= 4
         ? existingDanaInvestasi + this.savingsDanaInvestasiInput
         : existingDanaInvestasi;
-    const budgetAllocation: BudgetAllocation = {
-      mode: this.budgetMode,
-      pengeluaran: this.budgetPengeluaran,
-      wants: this.budgetWants,
-      savings: this.budgetSavings,
-    };
     const existingSavingsAlloc = this.financialData?.savingsAllocation || {
       tabungan: 0,
       danaDarurat: 0,
@@ -674,13 +671,7 @@ export class Home {
       savingsAllocation,
       investmentTracking,
       currentPengeluaranLimit: pengeluaranWajib,
-      currentSisaSaldoPool: Math.max(
-        0,
-        Math.round((pendapatan * this.budgetSavings) / 100) -
-          (this.savingsTabunganInput +
-            this.savingsDanaDaruratInput +
-            this.savingsDanaInvestasiInput),
-      ),
+      currentSisaSaldoPool: Math.max(0, this.savingsRemaining),
     };
     this.financialData = updatedFinancialData;
     this.refreshLevelEvaluation();
@@ -1434,6 +1425,78 @@ export class Home {
     if (field === 'tabungan') return this.savingsTabunganInput;
     if (field === 'danaDarurat') return this.savingsDanaDaruratInput;
     return this.savingsDanaInvestasiInput;
+  }
+
+  private computeEditableSavingsPoolTotal(): number {
+    const currentBudget = this.getCurrentBudgetAllocation();
+    const currentPoolBase = this.computeSavingsPoolBase(
+      this.financialData?.pendapatan || 0,
+      currentBudget,
+    );
+    const activePool = Math.max(
+      0,
+      this.financialData?.currentSisaSaldoPool ?? currentPoolBase,
+    );
+    const nextPoolBase = this.computeSavingsPoolBase(
+      this.pendapatanInput,
+      this.getPendingBudgetAllocation(),
+    );
+
+    return Math.max(0, activePool + (nextPoolBase - currentPoolBase));
+  }
+
+  private getPendingBudgetAllocation(): BudgetAllocation {
+    return {
+      mode: this.budgetMode,
+      pengeluaran: this.budgetPengeluaran,
+      wants: this.budgetWants,
+      savings: this.budgetSavings,
+    };
+  }
+
+  private getCurrentBudgetAllocation(): BudgetAllocation {
+    const currentBudget = this.financialData?.budgetAllocation;
+    if (currentBudget) {
+      return currentBudget;
+    }
+
+    const pendapatan = this.financialData?.pendapatan || 0;
+    if (pendapatan <= 0) {
+      return this.getPendingBudgetAllocation();
+    }
+
+    const pengeluaran = Math.max(
+      0,
+      Math.min(
+        100,
+        Math.round(
+          ((this.financialData?.pengeluaranWajib || 0) / pendapatan) * 100,
+        ),
+      ),
+    );
+
+    return {
+      mode: 2,
+      pengeluaran,
+      wants: 0,
+      savings: Math.max(0, 100 - pengeluaran),
+    };
+  }
+
+  private getBudgetExpensePercent(budget: BudgetAllocation): number {
+    return budget.mode === 3
+      ? budget.pengeluaran + budget.wants
+      : budget.pengeluaran;
+  }
+
+  private computeSavingsPoolBase(
+    pendapatan: number,
+    budget: BudgetAllocation,
+  ): number {
+    return Math.max(
+      0,
+      Math.round((Math.max(0, pendapatan) * budget.savings) / 100),
+    );
   }
 
   private toSafePercent(value: number): number {

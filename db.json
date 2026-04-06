@@ -1757,22 +1757,22 @@
         "incomesByDate": {}
       },
       "financialData": {
-        "pendapatan": 17000000,
-        "pengeluaranWajib": 3740000,
+        "pendapatan": 18000000,
+        "pengeluaranWajib": 14400000,
         "tanggalPemasukan": 25,
         "intendedTanggalPemasukan": 25,
         "hutangWajib": 0,
-        "estimasiTabungan": 48244000,
-        "danaDarurat": 65304000,
+        "estimasiTabungan": 66864215,
+        "danaDarurat": 67473441,
         "budgetAllocation": {
           "mode": 2,
-          "pengeluaran": 22,
+          "pengeluaran": 80,
           "wants": 0,
-          "savings": 78
+          "savings": 20
         },
-        "currentPengeluaranLimit": 3740000,
+        "currentPengeluaranLimit": 14400000,
         "currentPengeluaranUsed": 238000,
-        "currentSisaSaldoPool": 13260000,
+        "currentSisaSaldoPool": 200000,
         "monthlyTopUp": {
           "cycleKey": "2026-03-25",
           "fromTabunganCount": 0,
@@ -1781,22 +1781,22 @@
         },
         "currentCycleStart": "2026-03-25",
         "currentCycleEnd": "2026-04-24",
-        "danaInvestasi": 10452000,
+        "danaInvestasi": 11109925,
         "savingsAllocation": {
-          "tabungan": 23244000,
-          "danaDarurat": 5304000,
-          "danaInvestasi": 10452000
+          "tabungan": 41864215,
+          "danaDarurat": 7473441,
+          "danaInvestasi": 11109925
         },
         "investmentTracking": {
           "cycleAmounts": {
-            "2026-03-25": 7956000
+            "2026-03-25": 8613925
           }
         }
       },
       "streak": {
-        "current": 0,
+        "current": 1,
         "longest": 1,
-        "lastActiveDate": "2026-04-05",
+        "lastActiveDate": "2026-04-06",
         "freezeUsed": false
       },
       "debts": [
