@@ -1935,7 +1935,7 @@
         },
         "currentPengeluaranLimit": 2500000,
         "currentPengeluaranUsed": 0,
-        "currentSisaSaldoPool": 3500000,
+        "currentSisaSaldoPool": 6500000,
         "monthlyTopUp": {
           "cycleKey": "2026-05-25",
           "fromTabunganCount": 0,
@@ -1944,15 +1944,15 @@
         },
         "currentCycleStart": "2026-05-25",
         "currentCycleEnd": "2026-06-24",
-        "danaInvestasi": 8900000,
+        "danaInvestasi": 13400000,
         "savingsAllocation": {
           "tabungan": 1350000,
           "danaDarurat": 1250000,
-          "danaInvestasi": 8900000
+          "danaInvestasi": 13400000
         },
         "investmentTracking": {
           "cycleAmounts": {
-            "2026-03-25": 3900000,
+            "2026-03-25": 8400000,
             "2026-04-25": 2500000,
             "2026-05-25": 2500000
           }
@@ -1962,6 +1962,71 @@
         "current": 50,
         "longest": 50,
         "lastActiveDate": "2026-05-25",
+        "freezeUsed": false
+      }
+    },
+    {
+      "id": "28b1",
+      "name": "notrayt",
+      "email": "notrayt@gmail.com",
+      "phone": "1241241121212",
+      "password": "123456",
+      "onboardingCompleted": true,
+      "level": 4,
+      "investmentWatchlist": {
+        "items": [],
+        "selectedSymbol": null,
+        "updatedAt": "2026-04-06T15:53:32.275Z"
+      },
+      "journal": {
+        "nextChatMessageId": 1,
+        "chatByDate": {},
+        "expensesByDate": {},
+        "incomesByDate": {}
+      },
+      "financialData": {
+        "pendapatan": 5000000,
+        "pengeluaranWajib": 2700000,
+        "tanggalPemasukan": 25,
+        "intendedTanggalPemasukan": 25,
+        "hutangWajib": 0,
+        "estimasiTabungan": 15000000,
+        "danaDarurat": 15000000,
+        "budgetAllocation": {
+          "mode": 2,
+          "pengeluaran": 54,
+          "wants": 0,
+          "savings": 46
+        },
+        "currentPengeluaranLimit": 2700000,
+        "currentPengeluaranUsed": 0,
+        "currentSisaSaldoPool": 5700000,
+        "monthlyTopUp": {
+          "cycleKey": "2026-06-25",
+          "fromTabunganCount": 0,
+          "totalFromTabungan": 0,
+          "totalFromDanaDarurat": 0
+        },
+        "currentCycleStart": "2026-06-25",
+        "currentCycleEnd": "2026-07-24",
+        "danaInvestasi": 15000000,
+        "savingsAllocation": {
+          "tabungan": 0,
+          "danaDarurat": 0,
+          "danaInvestasi": 15000000
+        },
+        "investmentTracking": {
+          "cycleAmounts": {
+            "2026-05-25": 9000000,
+            "2026-06-25": 3000000,
+            "2026-07-25": 3000000
+          }
+        }
+      },
+      "streak": {
+        "current": 63,
+        "longest": 63,
+        "lastActiveDate": "2026-07-26",
         "freezeUsed": false
       }
     }
