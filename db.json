@@ -1979,9 +1979,32 @@
         "updatedAt": "2026-04-06T15:53:32.275Z"
       },
       "journal": {
-        "nextChatMessageId": 1,
-        "chatByDate": {},
-        "expensesByDate": {},
+        "nextChatMessageId": 3,
+        "chatByDate": {
+          "2026-04-07": [
+            {
+              "id": 1,
+              "sender": "user",
+              "text": "makanan 100000",
+              "time": "21.44"
+            },
+            {
+              "id": 2,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 100.000 untuk \"makanan\" kategori makanan.",
+              "time": "21.44"
+            }
+          ]
+        },
+        "expensesByDate": {
+          "2026-04-07": [
+            {
+              "amount": 100000,
+              "description": "makanan",
+              "category": "makanan"
+            }
+          ]
+        },
         "incomesByDate": {
           "2026-04-07": [
             {
@@ -2017,16 +2040,16 @@
           "savings": 46
         },
         "currentPengeluaranLimit": 2700000,
-        "currentPengeluaranUsed": 0,
-        "currentSisaSaldoPool": 0,
+        "currentPengeluaranUsed": 100000,
+        "currentSisaSaldoPool": 6900000,
         "monthlyTopUp": {
-          "cycleKey": "2026-04-25",
+          "cycleKey": "2026-03-25",
           "fromTabunganCount": 0,
           "totalFromTabungan": 0,
           "totalFromDanaDarurat": 0
         },
-        "currentCycleStart": "2026-04-25",
-        "currentCycleEnd": "2026-05-24",
+        "currentCycleStart": "2026-03-25",
+        "currentCycleEnd": "2026-04-24",
         "danaInvestasi": 217920467,
         "savingsAllocation": {
           "tabungan": 507301166,
@@ -2041,12 +2064,12 @@
             "2026-04-25": 202920467
           }
         },
-        "lastCycleCarryOverSaldo": 1012302333
+        "lastCycleCarryOverSaldo": 4600000
       },
       "streak": {
-        "current": 18,
+        "current": 1,
         "longest": 18,
-        "lastActiveDate": "2026-04-25",
+        "lastActiveDate": "2026-04-07",
         "freezeUsed": false
       }
     }

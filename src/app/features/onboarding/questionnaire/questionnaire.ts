@@ -7,6 +7,11 @@ import { firstValueFrom } from 'rxjs';
 import { USERS_API_URL } from '../../../core/config/app-api.config';
 import { CurrencyAmountLimitTier } from '../../../core/utils/format.utils';
 import { CurrentUserService } from '../../../core/services/current-user.service';
+import { FinancialData } from '../../../core/services/journal.service';
+import {
+  buildLevelSignals,
+  evaluateFinancialLevel,
+} from '../../../core/utils/level';
 import { InputField } from '../../../shared/components/input-field/input-field';
 
 const MAX_TANGGAL_PEMASUKAN = 31;
@@ -128,7 +133,9 @@ export class Questionnaire {
         danaDarurat: this.parseNumber(this.form2.value.danaDarurat || ''),
       };
 
-      const level = this.calculateLevel(financialData);
+      const level = this.calculateLevel(
+        financialData as unknown as FinancialData,
+      );
 
       await firstValueFrom(
         this.http.patch(`${USERS_API_URL}/${user.id}`, {
@@ -239,19 +246,9 @@ export class Questionnaire {
     return Math.max(0, Math.min(MAX_TANGGAL_PEMASUKAN, value));
   }
 
-  private calculateLevel(data: {
-    hutangWajib: number;
-    estimasiTabungan: number;
-    danaDarurat: number;
-    pendapatan: number;
-  }): number {
-    if (data.hutangWajib > 0) return 2;
-    if (
-      data.estimasiTabungan >= 10_000_000 &&
-      data.danaDarurat >= 3 * data.pendapatan
-    ) {
-      return 4;
-    }
-    return 3;
+  private calculateLevel(data: FinancialData): number {
+    const signals = buildLevelSignals(data);
+    const evaluation = evaluateFinancialLevel(signals);
+    return evaluation.level;
   }
 }
