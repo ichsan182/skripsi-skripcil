@@ -1,4 +1,4 @@
-<div class="home-container">
+﻿<div class="home-container">
   <app-sidebar
     [showRollingBudgetPanel]="true"
     [rollingTotalBudget]="rollingTotalBudget"
@@ -152,7 +152,7 @@
           />
           <p>setting persenan</p>
         </div>
-        <div class="card-add-or-edit">
+        <div class="card-add-or-edit" (click)="openTambahPemasukan()">
           <img
             src="assets/symbol-tambah_pemasukan.svg"
             alt="Description of image"
@@ -369,6 +369,100 @@
     </div>
   </section>
 
+  @if (showTambahPemasukan) {
+  <div class="modal-overlay" (click)="closeTambahPemasukan()">
+    <div
+      class="modal-content tambah-pemasukan-modal"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <img
+            src="assets/symbol-tambah_pemasukan.svg"
+            alt="Tambah Pemasukan"
+            class="modal-icon"
+          />
+          <h2>Tambah Pemasukan</h2>
+        </div>
+        <button
+          type="button"
+          class="modal-close-btn"
+          (click)="closeTambahPemasukan()"
+          aria-label="Tutup"
+        >
+          &times;
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="ti-info-banner">
+          <span class="ti-info-icon">&#8505;&#65039;</span>
+          <p>
+            Pemasukan ini bersifat <strong>sementara</strong> dan hanya berlaku
+            pada siklus bulan ini. Jumlah langsung ditambahkan ke
+            <strong>Sisa Saldo</strong> kamu.
+          </p>
+        </div>
+
+        <app-input-field
+          label="Jumlah Pemasukan"
+          styleVariant="prefix"
+          inputmode="numeric"
+          placeholder="0"
+          [isCurrency]="true"
+          [currencyMaxTier]="incomeAmountLimitTier"
+          [showPrefix]="true"
+          prefix="Rp"
+          [value]="incomeDraftAmountDisplay"
+          (currencyValueChange)="onIncomeAmountChange($event)"
+        ></app-input-field>
+
+        <app-input-field
+          label="Deskripsi"
+          placeholder="Contoh: Lembur kerja, Freelance, Bonus, dll."
+          [value]="incomeDraft.description"
+          [maxlength]="100"
+          (valueChange)="onIncomeDraftValueChange('description', $event)"
+        ></app-input-field>
+
+        <app-input-field
+          label="Sumber (opsional)"
+          placeholder="Contoh: Kantor, Klien, dll."
+          [value]="incomeDraft.source"
+          [maxlength]="60"
+          (valueChange)="onIncomeDraftValueChange('source', $event)"
+        ></app-input-field>
+
+        @if (incomeDraft.amount && incomeDraft.amount > 0) {
+        <div class="ti-preview-row">
+          <span class="ti-preview-label">Sisa saldo setelah ditambah</span>
+          <span class="ti-preview-value">
+            {{ formatRupiah(sisaSaldoAmount + (incomeDraft.amount || 0)) }}
+          </span>
+        </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="sp-btn-cancel"
+          (click)="closeTambahPemasukan()"
+        >
+          Batal
+        </button>
+        <button
+          type="button"
+          class="sp-btn-save"
+          [disabled]="isTambahPemasukanSaveDisabled"
+          (click)="saveTambahPemasukan()"
+        >
+          @if (incomeSubmitting) { Menyimpan... } @else { Tambah Pemasukan }
+        </button>
+      </div>
+    </div>
+  </div>
+  }
   @if (showSettingPersenan) {
   <div class="modal-overlay" (click)="closeSettingPersenan()">
     <div
@@ -538,7 +632,7 @@
 
           @if (isSisaSaldoEmpty && savingsUsed === 0) {
           <div class="sp-warning-box">
-            ⚠️ Sisa saldo kamu sudah habis. Tidak bisa mengalokasikan tabungan
+            ΓÜá∩╕Å Sisa saldo kamu sudah habis. Tidak bisa mengalokasikan tabungan
             lagi.
           </div>
           }

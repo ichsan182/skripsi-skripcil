@@ -9,6 +9,7 @@ import { LevelCardComponent } from '../shared/components/level-card/level-card';
 import {
   BudgetAllocation,
   FinancialData,
+  IncomeEntry,
   InvestmentTracking,
   JournalService,
   SavingsAllocation,
@@ -24,11 +25,14 @@ import {
   toMonthInputValue,
 } from '../core/utils/date.utils';
 import {
+  CurrencyAmountLimitTier,
   formatCurrency,
   formatNumber,
   formatCompactCurrency,
   formatPercent,
+  MAX_CURRENCY_AMOUNT,
 } from '../core/utils/format.utils';
+import { InputField } from '../shared/components/input-field/input-field';
 import { RollingBudgetService } from '../core/utils/rolling-budget.service';
 import {
   LevelEvaluation,
@@ -104,7 +108,7 @@ interface DebtCardState {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, Sidebar],
+  imports: [CommonModule, FormsModule, Sidebar, InputField],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
@@ -165,6 +169,12 @@ export class Home {
 
   Math = Math;
   showSettingPersenan = false;
+  showTambahPemasukan = false;
+  incomeDraft: { amount: number | null; description: string; source: string } =
+    { amount: null, description: '', source: '' };
+  incomeDraftAmountDisplay = '';
+  incomeSubmitting = false;
+  readonly incomeAmountLimitTier = CurrencyAmountLimitTier.ONE_BILLION;
   budgetMode: 2 | 3 = 2;
   budgetPengeluaran = 80;
   budgetWants = 0;
@@ -578,6 +588,63 @@ export class Home {
     this.showSettingPersenan = false;
   }
 
+  openTambahPemasukan(): void {
+    this.incomeDraft = { amount: null, description: '', source: '' };
+    this.incomeDraftAmountDisplay = '';
+    this.incomeSubmitting = false;
+    this.showTambahPemasukan = true;
+  }
+
+  closeTambahPemasukan(): void {
+    this.showTambahPemasukan = false;
+  }
+
+  get isTambahPemasukanSaveDisabled(): boolean {
+    const amount = this.incomeDraft.amount;
+    return (
+      this.incomeSubmitting ||
+      !amount ||
+      amount <= 0 ||
+      amount > MAX_CURRENCY_AMOUNT ||
+      !this.incomeDraft.description.trim()
+    );
+  }
+
+  async saveTambahPemasukan(): Promise<void> {
+    const amount = this.incomeDraft.amount;
+    if (!amount || amount <= 0 || !this.incomeDraft.description.trim()) {
+      return;
+    }
+
+    this.incomeSubmitting = true;
+    try {
+      const today = this.getReferenceToday();
+      const todayKey = this.toDateKey(today);
+      const entry: IncomeEntry = {
+        amount,
+        description: this.incomeDraft.description.trim(),
+        source: this.incomeDraft.source.trim(),
+      };
+
+      const result = await this.journalService.addTemporaryIncome(
+        todayKey,
+        entry,
+      );
+      this.journal = result.journal;
+      if (result.financialData) {
+        this.financialData = result.financialData;
+        this.refreshLevelEvaluation();
+        this.computeRollingBudgetToday();
+        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        user.financialData = result.financialData;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+      }
+      this.showTambahPemasukan = false;
+    } finally {
+      this.incomeSubmitting = false;
+    }
+  }
+
   setBudgetMode(mode: 2 | 3): void {
     this.budgetMode = mode;
     this.budgetLastEdited = null;
@@ -592,6 +659,17 @@ export class Home {
     const cleaned = input.value.replace(/[^0-9]/g, '');
     this.pendapatanInput = parseInt(cleaned, 10) || 0;
     input.value = this.formatNumber(this.pendapatanInput);
+  }
+
+  onIncomeAmountChange(value: number): void {
+    this.incomeDraft.amount = value > 0 ? value : null;
+  }
+
+  onIncomeDraftValueChange(
+    field: 'description' | 'source',
+    value: string,
+  ): void {
+    this.incomeDraft[field] = value;
   }
 
   onBudgetPercentInput(

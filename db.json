@@ -1982,7 +1982,25 @@
         "nextChatMessageId": 1,
         "chatByDate": {},
         "expensesByDate": {},
-        "incomesByDate": {}
+        "incomesByDate": {
+          "2026-04-07": [
+            {
+              "amount": 2333,
+              "description": "1",
+              "source": ""
+            },
+            {
+              "amount": 1000000000,
+              "description": "schuwpeed",
+              "source": ""
+            },
+            {
+              "amount": 2000000,
+              "description": "judi",
+              "source": "berjudi"
+            }
+          ]
+        }
       },
       "financialData": {
         "pendapatan": 5000000,
@@ -1990,8 +2008,8 @@
         "tanggalPemasukan": 25,
         "intendedTanggalPemasukan": 25,
         "hutangWajib": 0,
-        "estimasiTabungan": 15000000,
-        "danaDarurat": 15000000,
+        "estimasiTabungan": 522301166,
+        "danaDarurat": 319380700,
         "budgetAllocation": {
           "mode": 2,
           "pengeluaran": 54,
@@ -2000,33 +2018,35 @@
         },
         "currentPengeluaranLimit": 2700000,
         "currentPengeluaranUsed": 0,
-        "currentSisaSaldoPool": 5700000,
+        "currentSisaSaldoPool": 0,
         "monthlyTopUp": {
-          "cycleKey": "2026-06-25",
+          "cycleKey": "2026-04-25",
           "fromTabunganCount": 0,
           "totalFromTabungan": 0,
           "totalFromDanaDarurat": 0
         },
-        "currentCycleStart": "2026-06-25",
-        "currentCycleEnd": "2026-07-24",
-        "danaInvestasi": 15000000,
+        "currentCycleStart": "2026-04-25",
+        "currentCycleEnd": "2026-05-24",
+        "danaInvestasi": 217920467,
         "savingsAllocation": {
-          "tabungan": 0,
-          "danaDarurat": 0,
-          "danaInvestasi": 15000000
+          "tabungan": 507301166,
+          "danaDarurat": 304380700,
+          "danaInvestasi": 217920467
         },
         "investmentTracking": {
           "cycleAmounts": {
             "2026-05-25": 9000000,
             "2026-06-25": 3000000,
-            "2026-07-25": 3000000
+            "2026-07-25": 3000000,
+            "2026-04-25": 202920467
           }
-        }
+        },
+        "lastCycleCarryOverSaldo": 1012302333
       },
       "streak": {
-        "current": 63,
-        "longest": 63,
-        "lastActiveDate": "2026-07-26",
+        "current": 18,
+        "longest": 18,
+        "lastActiveDate": "2026-04-25",
         "freezeUsed": false
       }
     }

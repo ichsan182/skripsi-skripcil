@@ -79,6 +79,7 @@ export interface FinancialData {
   currentPengeluaranLimit?: number;
   currentPengeluaranUsed?: number;
   currentSisaSaldoPool?: number;
+  lastCycleCarryOverSaldo?: number;
   monthlyTopUp?: MonthlyTopUpSummary;
 }
 
@@ -308,6 +309,37 @@ export class JournalService {
     return this.saveCurrentUserJournal(journal);
   }
 
+  async addTemporaryIncome(
+    dateKey: string,
+    entry: IncomeEntry,
+  ): Promise<{ journal: UserJournal; financialData: FinancialData | null }> {
+    const userId = this.getCurrentUserId();
+    const user = await this.loadUserById(userId);
+    const journal = this.normalizeJournal(user?.journal);
+    const referenceDate =
+      this.parseDateKey(dateKey) ?? this.startOfDay(new Date());
+    const financialState = this.ensureFinancialState(
+      this.normalizeFinancialData(user?.financialData),
+      journal,
+      referenceDate,
+    );
+
+    this.ensureIncomeBucket(journal, dateKey).unshift(entry);
+
+    const nextFinancial = financialState.data
+      ? {
+          ...financialState.data,
+          currentSisaSaldoPool: Math.max(
+            0,
+            (financialState.data.currentSisaSaldoPool ?? 0) + entry.amount,
+          ),
+        }
+      : null;
+
+    await this.saveJournalAndFinancial(userId, journal, nextFinancial);
+    return { journal, financialData: nextFinancial };
+  }
+
   async getCurrentCycleSummary(
     referenceDate: Date = new Date(),
   ): Promise<FinancialCycleSummary> {
@@ -428,6 +460,7 @@ export class JournalService {
       ),
       currentPengeluaranUsed: Math.max(0, data.currentPengeluaranUsed ?? 0),
       currentSisaSaldoPool: Math.max(0, data.currentSisaSaldoPool ?? baseSaldo),
+      lastCycleCarryOverSaldo: Math.max(0, data.lastCycleCarryOverSaldo ?? 0),
       monthlyTopUp: data.monthlyTopUp,
     };
   }
@@ -514,10 +547,14 @@ export class JournalService {
       next.currentCycleStart !== cycleStartKey ||
       next.currentCycleEnd !== cycleEndKey
     ) {
-      const carriedSaldo = Math.max(0, next.currentSisaSaldoPool ?? 0);
+      const carriedSaldo = Math.max(
+        0,
+        next.currentSisaSaldoPool ?? next.lastCycleCarryOverSaldo ?? 0,
+      );
       next.currentCycleStart = cycleStartKey;
       next.currentCycleEnd = cycleEndKey;
       next.currentPengeluaranLimit = baseLimit;
+      next.lastCycleCarryOverSaldo = carriedSaldo;
       next.currentSisaSaldoPool = baseSaldo + carriedSaldo;
       next.monthlyTopUp = {
         cycleKey: cycleStartKey,
