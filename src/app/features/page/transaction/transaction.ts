@@ -13,10 +13,7 @@ import {
   UserJournal,
 } from '../../../core/services/journal.service';
 import { ExpenseCategory } from '../../../shared/utils/expense-category';
-import {
-  normalizeDate,
-  toDateKey,
-} from '../../../core/utils/date.utils';
+import { normalizeDate, toDateKey } from '../../../core/utils/date.utils';
 import {
   CurrencyAmountLimitTier,
   MAX_CURRENCY_AMOUNT,
@@ -110,9 +107,7 @@ export class Transaction {
   }));
   readonly oneBillionLimitTier = CurrencyAmountLimitTier.ONE_BILLION;
 
-  readonly today = normalizeDate(
-    this.testingTimeService.getReferenceDate(),
-  );
+  readonly today = normalizeDate(this.testingTimeService.getReferenceDate());
 
   selectedDate = normalizeDate(new Date());
   currentMonthCursor = new Date(
