@@ -405,11 +405,6 @@
   margin-bottom: 2px;
 }
 
-.entry-form {
-  display: grid;
-  gap: 10px;
-}
-
 .filter-form {
   display: grid;
   gap: 10px;
@@ -441,20 +436,6 @@
   font-weight: 600;
 }
 
-.entry-form-expense {
-  grid-template-columns:
-    minmax(0, 1.2fr) minmax(130px, 0.9fr) minmax(100px, 0.7fr)
-    auto;
-}
-
-.entry-form-income {
-  grid-template-columns:
-    minmax(0, 1fr) minmax(0, 1fr) minmax(100px, 0.75fr)
-    auto;
-}
-
-.entry-form input,
-.entry-form select,
 .filter-form input,
 .filter-form select {
   width: 100%;
@@ -465,37 +446,16 @@
   background: var(--color-white);
 }
 
-.entry-form input:disabled,
-.entry-form select:disabled,
 .filter-form input:disabled,
 .filter-form select:disabled {
   cursor: not-allowed;
   background: color-mix(in srgb, var(--color-input-bg) 85%, white);
 }
 
-.entry-form button {
-  --btn-radius: 10px;
-  --btn-font-size: var(--font-size-sm);
-  --btn-font-weight: 600;
-  --btn-padding-y: 10px;
-  --btn-padding-x: 14px;
-  --btn-min-height: 40px;
-  border-radius: 10px;
-}
-
-.filter-reset-btn {
-  min-height: 40px;
-}
-
 .filter-action-btn {
   min-height: 40px;
   padding: 0 16px;
   white-space: nowrap;
-}
-
-.entry-form button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
 }
 
 .form-note,
@@ -757,11 +717,6 @@
 }
 
 @media (max-width: 1024px) {
-  .entry-form-expense,
-  .entry-form-income {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .filter-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -774,9 +729,6 @@
     grid-column: span 2;
   }
 
-  .entry-form button {
-    min-height: 40px;
-  }
 }
 
 @media (max-width: 768px) {
@@ -812,8 +764,6 @@
     max-height: 300px;
   }
 
-  .entry-form-expense,
-  .entry-form-income,
   .filter-form,
   .chat-input-area {
     grid-template-columns: 1fr;
@@ -825,8 +775,7 @@
   }
 
   .send-btn,
-  .entry-form button,
-  .filter-reset-btn {
+  .filter-action-btn {
     min-height: 42px;
   }
 

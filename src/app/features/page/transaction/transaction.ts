@@ -16,8 +16,6 @@ import { ExpenseCategory } from '../../../shared/utils/expense-category';
 import {
   normalizeDate,
   toDateKey,
-  parseDateKey,
-  daysBetween,
 } from '../../../core/utils/date.utils';
 import {
   CurrencyAmountLimitTier,
@@ -112,11 +110,11 @@ export class Transaction {
   }));
   readonly oneBillionLimitTier = CurrencyAmountLimitTier.ONE_BILLION;
 
-  readonly today = this.normalizeDate(
+  readonly today = normalizeDate(
     this.testingTimeService.getReferenceDate(),
   );
 
-  selectedDate = this.normalizeDate(new Date());
+  selectedDate = normalizeDate(new Date());
   currentMonthCursor = new Date(
     this.selectedDate.getFullYear(),
     this.selectedDate.getMonth(),
@@ -258,11 +256,11 @@ export class Transaction {
   }
 
   get selectedDateKey(): string {
-    return this.toDateKey(this.selectedDate);
+    return toDateKey(this.selectedDate);
   }
 
   get isSelectedDateToday(): boolean {
-    return this.selectedDateKey === this.toDateKey(this.today);
+    return this.selectedDateKey === toDateKey(this.today);
   }
 
   get selectedChatMessages(): ChatMessage[] {
@@ -405,7 +403,7 @@ export class Transaction {
   }
 
   selectDate(cell: CalendarCell): void {
-    this.selectedDate = this.normalizeDate(cell.date);
+    this.selectedDate = normalizeDate(cell.date);
 
     if (!cell.inCurrentMonth) {
       this.currentMonthCursor = new Date(
@@ -420,7 +418,7 @@ export class Transaction {
   }
 
   isSameDate(dateA: Date, dateB: Date): boolean {
-    return this.toDateKey(dateA) === this.toDateKey(dateB);
+    return toDateKey(dateA) === toDateKey(dateB);
   }
 
   async sendMessage(): Promise<void> {
@@ -635,28 +633,17 @@ export class Transaction {
     this.calendarCells = Array.from({ length: 42 }, (_, index) => {
       const date = new Date(gridStart);
       date.setDate(gridStart.getDate() + index);
-      const normalizedDate = this.normalizeDate(date);
+      const normalizedDate = normalizeDate(date);
 
       return {
         date: normalizedDate,
         dayNumber: normalizedDate.getDate(),
-        key: this.toDateKey(normalizedDate),
+        key: toDateKey(normalizedDate),
         inCurrentMonth:
           normalizedDate.getMonth() === this.currentMonthCursor.getMonth(),
         isToday: this.isSameDate(normalizedDate, this.today),
       };
     });
-  }
-
-  private normalizeDate(date: Date): Date {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  }
-
-  private toDateKey(date: Date): string {
-    const year = date.getFullYear();
-    const month = `${date.getMonth() + 1}`.padStart(2, '0');
-    const day = `${date.getDate()}`.padStart(2, '0');
-    return `${year}-${month}-${day}`;
   }
 
   private computeRollingBudgetToday(): void {
@@ -671,46 +658,5 @@ export class Transaction {
     this.rollingBudgetRemaining = state.rollingBudgetRemaining;
     this.rollingDaysRemaining = state.rollingDaysRemaining;
     this.rollingBudgetToday = state.rollingBudgetToday;
-  }
-
-  private sumExpensesInRange(start: Date, end: Date): number {
-    if (end < start) {
-      return 0;
-    }
-
-    let total = 0;
-    for (const [dateKey, entries] of Object.entries(
-      this.journal.expensesByDate,
-    )) {
-      const date = this.parseDateKey(dateKey);
-      if (!date) {
-        continue;
-      }
-
-      if (date >= start && date <= end) {
-        total += entries.reduce((acc, item) => acc + item.amount, 0);
-      }
-    }
-
-    return total;
-  }
-
-  private parseDateKey(dateKey: string): Date | null {
-    const [yearRaw, monthRaw, dayRaw] = dateKey.split('-');
-    const year = Number(yearRaw);
-    const month = Number(monthRaw);
-    const day = Number(dayRaw);
-    if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) {
-      return null;
-    }
-
-    return new Date(year, month - 1, day);
-  }
-
-  private daysBetween(start: Date, end: Date): number {
-    const startMs = this.normalizeDate(start).getTime();
-    const endMs = this.normalizeDate(end).getTime();
-    const dayMs = 24 * 60 * 60 * 1000;
-    return Math.floor((endMs - startMs) / dayMs);
   }
 }

@@ -1988,7 +1988,7 @@
         "updatedAt": "2026-04-09T13:29:14.306Z"
       },
       "journal": {
-        "nextChatMessageId": 7,
+        "nextChatMessageId": 9,
         "chatByDate": {
           "2026-04-07": [
             {
@@ -2028,6 +2028,18 @@
               "sender": "assistant",
               "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
               "time": "22.35"
+            },
+            {
+              "id": 7,
+              "sender": "user",
+              "text": "halah 29189",
+              "time": "23.28"
+            },
+            {
+              "id": 8,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 29.189 untuk \"halah\" kategori other.",
+              "time": "23.28"
             }
           ]
         },
@@ -2040,6 +2052,11 @@
             }
           ],
           "2026-04-09": [
+            {
+              "amount": 29189,
+              "description": "halah",
+              "category": "other"
+            },
             {
               "amount": 1241241,
               "description": "gojek",
@@ -2104,7 +2121,7 @@
           "savings": 46
         },
         "currentPengeluaranLimit": 2700000,
-        "currentPengeluaranUsed": 1589479,
+        "currentPengeluaranUsed": 1618668,
         "currentSisaSaldoPool": 7004124,
         "monthlyTopUp": {
           "cycleKey": "2026-03-25",
