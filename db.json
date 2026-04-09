@@ -1988,7 +1988,7 @@
         "updatedAt": "2026-04-09T13:29:14.306Z"
       },
       "journal": {
-        "nextChatMessageId": 3,
+        "nextChatMessageId": 7,
         "chatByDate": {
           "2026-04-07": [
             {
@@ -2003,6 +2003,32 @@
               "text": "Dicatat: Rp 100.000 untuk \"makanan\" kategori makanan.",
               "time": "21.44"
             }
+          ],
+          "2026-04-09": [
+            {
+              "id": 3,
+              "sender": "user",
+              "text": "babi 12412412",
+              "time": "22.34"
+            },
+            {
+              "id": 4,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "22.34"
+            },
+            {
+              "id": 5,
+              "sender": "user",
+              "text": "babi 2000000",
+              "time": "22.35"
+            },
+            {
+              "id": 6,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "22.35"
+            }
           ]
         },
         "expensesByDate": {
@@ -2014,6 +2040,16 @@
             }
           ],
           "2026-04-09": [
+            {
+              "amount": 1241241,
+              "description": "gojek",
+              "category": "travel"
+            },
+            {
+              "amount": 124114,
+              "description": "makan",
+              "category": "travel"
+            },
             {
               "amount": 124124,
               "description": "throat",
@@ -2038,6 +2074,13 @@
               "description": "judi",
               "source": "berjudi"
             }
+          ],
+          "2026-04-09": [
+            {
+              "amount": 90000,
+              "description": "gaji",
+              "source": "kantor"
+            }
           ]
         }
       },
@@ -2056,8 +2099,8 @@
           "savings": 46
         },
         "currentPengeluaranLimit": 2700000,
-        "currentPengeluaranUsed": 224124,
-        "currentSisaSaldoPool": 6900000,
+        "currentPengeluaranUsed": 1589479,
+        "currentSisaSaldoPool": 6990000,
         "monthlyTopUp": {
           "cycleKey": "2026-03-25",
           "fromTabunganCount": 0,

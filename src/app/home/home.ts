@@ -1,6 +1,5 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -9,33 +8,19 @@ import { LevelCardComponent } from '../shared/components/level-card/level-card';
 import {
   BudgetAllocation,
   FinancialData,
-  IncomeEntry,
   InvestmentTracking,
   JournalService,
   SavingsAllocation,
   UserJournal,
 } from '../core/services/journal.service';
-import {
-  ExpenseCategory,
-  EXPENSE_CATEGORY_KEYWORDS,
-} from '../shared/utils/expense-category';
+import { ExpenseCategory } from '../shared/utils/expense-category';
 import { USERS_API_URL } from '../core/config/app-api.config';
 import {
-  normalizeDate,
-  toDateKey,
-  parseDateKey,
-  daysBetween,
-  toMonthInputValue,
-} from '../core/utils/date.utils';
-import {
   CurrencyAmountLimitTier,
-  formatCurrency,
-  formatNumber,
-  formatCompactCurrency,
+  formatCurrency as formatRupiahUtil,
+  formatNumber as formatNumberUtil,
   formatPercent,
-  MAX_CURRENCY_AMOUNT,
 } from '../core/utils/format.utils';
-import { InputField } from '../shared/components/input-field/input-field';
 import { RollingBudgetService } from '../core/utils/rolling-budget.service';
 import {
   LevelEvaluation,
@@ -43,6 +28,14 @@ import {
   evaluateFinancialLevel,
 } from '../core/utils/level';
 import { TestingTimeService } from '../core/services/testing-time.service';
+import {
+  PemasukanPopup,
+  PemasukanPopupSubmitPayload,
+} from '../shared/components/pemasukan-popup/pemasukan-popup';
+import {
+  PengeluaranPopup,
+  PengeluaranPopupSubmitPayload,
+} from '../shared/components/pengeluaran-popup/pengeluaran-popup';
 
 interface ExpenseRow {
   date: string;
@@ -111,7 +104,7 @@ interface DebtCardState {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, Sidebar, InputField],
+  imports: [CommonModule, Sidebar, PemasukanPopup, PengeluaranPopup],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
@@ -173,30 +166,11 @@ export class Home {
   Math = Math;
   showSettingPersenan = false;
   showTambahPemasukan = false;
-  incomeDraft: { amount: number | null; description: string; source: string } =
-    { amount: null, description: '', source: '' };
-  incomeDraftAmountDisplay = '';
   incomeSubmitting = false;
   readonly incomeAmountLimitTier = CurrencyAmountLimitTier.ONE_BILLION;
   showTambahPengeluaran = false;
-  expenseDraft: {
-    amount: number | null;
-    description: string;
-    category: ExpenseCategory | null;
-    keyword: string;
-  } = { amount: null, description: '', category: null, keyword: '' };
-  expenseDraftAmountDisplay = '';
   expenseSubmitting = false;
   expenseSaveError = '';
-
-  readonly expenseCategoryLabels: Record<ExpenseCategory, string> = {
-    [ExpenseCategory.Makanan]: 'Makanan & Minuman',
-    [ExpenseCategory.Travel]: 'Transport & Perjalanan',
-    [ExpenseCategory.Entertainment]: 'Hiburan & Rekreasi',
-    [ExpenseCategory.Subscription]: 'Langganan',
-    [ExpenseCategory.Bills]: 'Tagihan & Cicilan',
-    [ExpenseCategory.Other]: 'Lainnya',
-  };
 
   budgetMode: 2 | 3 = 2;
   budgetPengeluaran = 80;
@@ -358,6 +332,18 @@ export class Home {
         this.financialData?.pengeluaranWajib ??
         0,
     );
+  }
+
+  get pengeluaranBudgetLimit(): number {
+    return (
+      this.financialData?.currentPengeluaranLimit ??
+      this.financialData?.pengeluaranWajib ??
+      0
+    );
+  }
+
+  get pengeluaranBudgetUsed(): number {
+    return this.financialData?.currentPengeluaranUsed ?? 0;
   }
 
   get monthlyExpenseTotalFormatted(): string {
@@ -612,8 +598,6 @@ export class Home {
   }
 
   openTambahPemasukan(): void {
-    this.incomeDraft = { amount: null, description: '', source: '' };
-    this.incomeDraftAmountDisplay = '';
     this.incomeSubmitting = false;
     this.showTambahPemasukan = true;
   }
@@ -623,13 +607,6 @@ export class Home {
   }
 
   openTambahPengeluaran(): void {
-    this.expenseDraft = {
-      amount: null,
-      description: '',
-      category: null,
-      keyword: '',
-    };
-    this.expenseDraftAmountDisplay = '';
     this.expenseSubmitting = false;
     this.expenseSaveError = '';
     this.showTambahPengeluaran = true;
@@ -640,73 +617,18 @@ export class Home {
     this.expenseSaveError = '';
   }
 
-  get expenseCategoryOptions(): { value: ExpenseCategory; label: string }[] {
-    return Object.values(ExpenseCategory).map((cat) => ({
-      value: cat,
-      label: this.expenseCategoryLabels[cat],
-    }));
-  }
-
-  get expenseKeywordOptions(): string[] {
-    if (!this.expenseDraft.category) {
-      return [];
-    }
-    return [...EXPENSE_CATEGORY_KEYWORDS[this.expenseDraft.category]];
-  }
-
-  get isTambahPengeluaranSaveDisabled(): boolean {
-    const amount = this.expenseDraft.amount;
-    return (
-      this.expenseSubmitting ||
-      !amount ||
-      amount <= 0 ||
-      amount > MAX_CURRENCY_AMOUNT ||
-      !this.expenseDraft.description.trim() ||
-      !this.expenseDraft.category
-    );
-  }
-
-  onExpenseAmountChange(value: number): void {
-    this.expenseDraft.amount = value > 0 ? value : null;
-  }
-
-  onExpenseCategoryChange(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    this.expenseDraft.category = (select.value as ExpenseCategory) || null;
-    this.expenseDraft.keyword = '';
-    this.expenseSaveError = '';
-  }
-
-  onExpenseKeywordChange(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    this.expenseDraft.keyword = select.value;
-    if (select.value && !this.expenseDraft.description.trim()) {
-      this.expenseDraft.description =
-        select.value.charAt(0).toUpperCase() + select.value.slice(1);
-    }
-  }
-
-  async saveTambahPengeluaran(): Promise<void> {
-    const amount = this.expenseDraft.amount;
-    const category = this.expenseDraft.category;
-    if (
-      !amount ||
-      amount <= 0 ||
-      !this.expenseDraft.description.trim() ||
-      !category
-    ) {
-      return;
-    }
-
+  async saveTambahPengeluaran(
+    payload: PengeluaranPopupSubmitPayload,
+  ): Promise<void> {
     this.expenseSubmitting = true;
     this.expenseSaveError = '';
     try {
       const today = this.getReferenceToday();
       const todayKey = this.toDateKey(today);
       const result = await this.journalService.addExpense(todayKey, {
-        amount,
-        description: this.expenseDraft.description.trim(),
-        category,
+        amount: payload.amount,
+        description: payload.description,
+        category: payload.category,
       });
 
       if (result.requiresTopUp) {
@@ -733,36 +655,16 @@ export class Home {
     }
   }
 
-  get isTambahPemasukanSaveDisabled(): boolean {
-    const amount = this.incomeDraft.amount;
-    return (
-      this.incomeSubmitting ||
-      !amount ||
-      amount <= 0 ||
-      amount > MAX_CURRENCY_AMOUNT ||
-      !this.incomeDraft.description.trim()
-    );
-  }
-
-  async saveTambahPemasukan(): Promise<void> {
-    const amount = this.incomeDraft.amount;
-    if (!amount || amount <= 0 || !this.incomeDraft.description.trim()) {
-      return;
-    }
-
+  async saveTambahPemasukan(
+    payload: PemasukanPopupSubmitPayload,
+  ): Promise<void> {
     this.incomeSubmitting = true;
     try {
       const today = this.getReferenceToday();
       const todayKey = this.toDateKey(today);
-      const entry: IncomeEntry = {
-        amount,
-        description: this.incomeDraft.description.trim(),
-        source: this.incomeDraft.source.trim(),
-      };
-
       const result = await this.journalService.addTemporaryIncome(
         todayKey,
-        entry,
+        payload,
       );
       this.journal = result.journal;
       if (result.financialData) {
@@ -793,17 +695,6 @@ export class Home {
     const cleaned = input.value.replace(/[^0-9]/g, '');
     this.pendapatanInput = parseInt(cleaned, 10) || 0;
     input.value = this.formatNumber(this.pendapatanInput);
-  }
-
-  onIncomeAmountChange(value: number): void {
-    this.incomeDraft.amount = value > 0 ? value : null;
-  }
-
-  onIncomeDraftValueChange(
-    field: 'description' | 'source',
-    value: string,
-  ): void {
-    this.incomeDraft[field] = value;
   }
 
   onBudgetPercentInput(
@@ -1842,17 +1733,12 @@ export class Home {
   }
 
   formatRupiah(amount: number): string {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
+    return formatRupiahUtil(amount);
   }
 
   formatNumber(value: number): string {
     if (!value) return '';
-    return new Intl.NumberFormat('id-ID').format(value);
+    return formatNumberUtil(value);
   }
 
   private toMonthInputValue(year: number, monthIndex: number): string {
