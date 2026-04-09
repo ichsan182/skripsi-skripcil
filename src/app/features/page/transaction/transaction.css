@@ -410,6 +410,37 @@
   gap: 10px;
 }
 
+.filter-form {
+  display: grid;
+  gap: 10px;
+  grid-template-columns:
+    minmax(200px, 1.35fr) minmax(160px, 0.95fr) minmax(220px, 1fr)
+    auto;
+  align-items: center;
+}
+
+.filter-description {
+  min-width: 0;
+}
+
+.filter-form app-input-field,
+.amount-range app-input-field {
+  min-width: 0;
+}
+
+.amount-range {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.range-separator {
+  color: var(--color-gray);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
 .entry-form-expense {
   grid-template-columns:
     minmax(0, 1.2fr) minmax(130px, 0.9fr) minmax(100px, 0.7fr)
@@ -423,7 +454,9 @@
 }
 
 .entry-form input,
-.entry-form select {
+.entry-form select,
+.filter-form input,
+.filter-form select {
   width: 100%;
   border-radius: 10px;
   border: 1px solid rgba(3, 15, 15, 0.16);
@@ -433,7 +466,9 @@
 }
 
 .entry-form input:disabled,
-.entry-form select:disabled {
+.entry-form select:disabled,
+.filter-form input:disabled,
+.filter-form select:disabled {
   cursor: not-allowed;
   background: color-mix(in srgb, var(--color-input-bg) 85%, white);
 }
@@ -446,6 +481,16 @@
   --btn-padding-x: 14px;
   --btn-min-height: 40px;
   border-radius: 10px;
+}
+
+.filter-reset-btn {
+  min-height: 40px;
+}
+
+.filter-action-btn {
+  min-height: 40px;
+  padding: 0 16px;
+  white-space: nowrap;
 }
 
 .entry-form button:disabled {
@@ -717,6 +762,18 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .filter-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .amount-range {
+    grid-column: span 2;
+  }
+
+  .filter-action-btn {
+    grid-column: span 2;
+  }
+
   .entry-form button {
     min-height: 40px;
   }
@@ -757,12 +814,19 @@
 
   .entry-form-expense,
   .entry-form-income,
+  .filter-form,
   .chat-input-area {
     grid-template-columns: 1fr;
   }
 
+  .amount-range,
+  .filter-action-btn {
+    grid-column: auto;
+  }
+
   .send-btn,
-  .entry-form button {
+  .entry-form button,
+  .filter-reset-btn {
     min-height: 42px;
   }
 

@@ -2077,6 +2077,11 @@
           ],
           "2026-04-09": [
             {
+              "amount": 14124,
+              "description": "biji",
+              "source": "ntah"
+            },
+            {
               "amount": 90000,
               "description": "gaji",
               "source": "kantor"
@@ -2100,7 +2105,7 @@
         },
         "currentPengeluaranLimit": 2700000,
         "currentPengeluaranUsed": 1589479,
-        "currentSisaSaldoPool": 6990000,
+        "currentSisaSaldoPool": 7004124,
         "monthlyTopUp": {
           "cycleKey": "2026-03-25",
           "fromTabunganCount": 0,

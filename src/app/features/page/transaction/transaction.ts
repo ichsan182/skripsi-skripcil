@@ -20,6 +20,7 @@ import {
   daysBetween,
 } from '../../../core/utils/date.utils';
 import {
+  CurrencyAmountLimitTier,
   MAX_CURRENCY_AMOUNT,
   formatCurrency,
   formatCompactCurrency,
@@ -27,6 +28,7 @@ import {
 } from '../../../core/utils/format.utils';
 import { RollingBudgetService } from '../../../core/utils/rolling-budget.service';
 import { TestingTimeService } from '../../../core/services/testing-time.service';
+import { InputField } from '../../../shared/components/input-field/input-field';
 
 interface CalendarCell {
   date: Date;
@@ -87,7 +89,7 @@ const CATEGORY_META: Record<ExpenseCategory, CategoryMeta> = {
 @Component({
   selector: 'app-transaction',
   standalone: true,
-  imports: [CommonModule, FormsModule, Sidebar],
+  imports: [CommonModule, FormsModule, Sidebar, InputField],
   templateUrl: './transaction.html',
   styleUrl: './transaction.css',
 })
@@ -108,6 +110,7 @@ export class Transaction {
     key,
     label: CATEGORY_META[key].label,
   }));
+  readonly oneBillionLimitTier = CurrencyAmountLimitTier.ONE_BILLION;
 
   readonly today = this.normalizeDate(
     this.testingTimeService.getReferenceDate(),
@@ -152,6 +155,25 @@ export class Transaction {
     source: '',
     amount: null,
   };
+
+  expenseFilter: {
+    description: string;
+    category: ExpenseCategory | '';
+    minAmount: number | null;
+    maxAmount: number | null;
+  } = { description: '', category: '', minAmount: null, maxAmount: null };
+
+  incomeFilter: {
+    description: string;
+    source: string;
+    minAmount: number | null;
+    maxAmount: number | null;
+  } = { description: '', source: '', minAmount: null, maxAmount: null };
+
+  expenseFilterMinInput = '';
+  expenseFilterMaxInput = '';
+  incomeFilterMinInput = '';
+  incomeFilterMaxInput = '';
 
   private journal: UserJournal = {
     nextChatMessageId: 1,
@@ -310,6 +332,67 @@ export class Transaction {
 
   get totalIncomeAmount(): number {
     return this.selectedIncomes.reduce((total, item) => total + item.amount, 0);
+  }
+
+  get filteredExpenses(): ExpenseEntry[] {
+    let result = this.selectedExpenses;
+    const f = this.expenseFilter;
+    if (f.description.trim()) {
+      const q = f.description.trim().toLowerCase();
+      result = result.filter((e) => e.description.toLowerCase().includes(q));
+    }
+    if (f.category) {
+      result = result.filter((e) => e.category === f.category);
+    }
+    if (f.minAmount != null && f.minAmount > 0) {
+      result = result.filter((e) => e.amount >= f.minAmount!);
+    }
+    if (f.maxAmount != null && f.maxAmount > 0) {
+      result = result.filter((e) => e.amount <= f.maxAmount!);
+    }
+    return result;
+  }
+
+  get filteredIncomes(): IncomeEntry[] {
+    let result = this.selectedIncomes;
+    const f = this.incomeFilter;
+    if (f.description.trim()) {
+      const q = f.description.trim().toLowerCase();
+      result = result.filter((i) => i.description.toLowerCase().includes(q));
+    }
+    if (f.source.trim()) {
+      const q = f.source.trim().toLowerCase();
+      result = result.filter((i) => i.source.toLowerCase().includes(q));
+    }
+    if (f.minAmount != null && f.minAmount > 0) {
+      result = result.filter((i) => i.amount >= f.minAmount!);
+    }
+    if (f.maxAmount != null && f.maxAmount > 0) {
+      result = result.filter((i) => i.amount <= f.maxAmount!);
+    }
+    return result;
+  }
+
+  resetExpenseFilter(): void {
+    this.expenseFilter = {
+      description: '',
+      category: '',
+      minAmount: null,
+      maxAmount: null,
+    };
+    this.expenseFilterMinInput = '';
+    this.expenseFilterMaxInput = '';
+  }
+
+  resetIncomeFilter(): void {
+    this.incomeFilter = {
+      description: '',
+      source: '',
+      minAmount: null,
+      maxAmount: null,
+    };
+    this.incomeFilterMinInput = '';
+    this.incomeFilterMaxInput = '';
   }
 
   changeMonth(offset: number): void {
