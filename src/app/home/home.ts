@@ -15,7 +15,10 @@ import {
   SavingsAllocation,
   UserJournal,
 } from '../core/services/journal.service';
-import { ExpenseCategory } from '../shared/utils/expense-category';
+import {
+  ExpenseCategory,
+  EXPENSE_CATEGORY_KEYWORDS,
+} from '../shared/utils/expense-category';
 import { USERS_API_URL } from '../core/config/app-api.config';
 import {
   normalizeDate,
@@ -175,6 +178,26 @@ export class Home {
   incomeDraftAmountDisplay = '';
   incomeSubmitting = false;
   readonly incomeAmountLimitTier = CurrencyAmountLimitTier.ONE_BILLION;
+  showTambahPengeluaran = false;
+  expenseDraft: {
+    amount: number | null;
+    description: string;
+    category: ExpenseCategory | null;
+    keyword: string;
+  } = { amount: null, description: '', category: null, keyword: '' };
+  expenseDraftAmountDisplay = '';
+  expenseSubmitting = false;
+  expenseSaveError = '';
+
+  readonly expenseCategoryLabels: Record<ExpenseCategory, string> = {
+    [ExpenseCategory.Makanan]: 'Makanan & Minuman',
+    [ExpenseCategory.Travel]: 'Transport & Perjalanan',
+    [ExpenseCategory.Entertainment]: 'Hiburan & Rekreasi',
+    [ExpenseCategory.Subscription]: 'Langganan',
+    [ExpenseCategory.Bills]: 'Tagihan & Cicilan',
+    [ExpenseCategory.Other]: 'Lainnya',
+  };
+
   budgetMode: 2 | 3 = 2;
   budgetPengeluaran = 80;
   budgetWants = 0;
@@ -597,6 +620,117 @@ export class Home {
 
   closeTambahPemasukan(): void {
     this.showTambahPemasukan = false;
+  }
+
+  openTambahPengeluaran(): void {
+    this.expenseDraft = {
+      amount: null,
+      description: '',
+      category: null,
+      keyword: '',
+    };
+    this.expenseDraftAmountDisplay = '';
+    this.expenseSubmitting = false;
+    this.expenseSaveError = '';
+    this.showTambahPengeluaran = true;
+  }
+
+  closeTambahPengeluaran(): void {
+    this.showTambahPengeluaran = false;
+    this.expenseSaveError = '';
+  }
+
+  get expenseCategoryOptions(): { value: ExpenseCategory; label: string }[] {
+    return Object.values(ExpenseCategory).map((cat) => ({
+      value: cat,
+      label: this.expenseCategoryLabels[cat],
+    }));
+  }
+
+  get expenseKeywordOptions(): string[] {
+    if (!this.expenseDraft.category) {
+      return [];
+    }
+    return [...EXPENSE_CATEGORY_KEYWORDS[this.expenseDraft.category]];
+  }
+
+  get isTambahPengeluaranSaveDisabled(): boolean {
+    const amount = this.expenseDraft.amount;
+    return (
+      this.expenseSubmitting ||
+      !amount ||
+      amount <= 0 ||
+      amount > MAX_CURRENCY_AMOUNT ||
+      !this.expenseDraft.description.trim() ||
+      !this.expenseDraft.category
+    );
+  }
+
+  onExpenseAmountChange(value: number): void {
+    this.expenseDraft.amount = value > 0 ? value : null;
+  }
+
+  onExpenseCategoryChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    this.expenseDraft.category = (select.value as ExpenseCategory) || null;
+    this.expenseDraft.keyword = '';
+    this.expenseSaveError = '';
+  }
+
+  onExpenseKeywordChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    this.expenseDraft.keyword = select.value;
+    if (select.value && !this.expenseDraft.description.trim()) {
+      this.expenseDraft.description =
+        select.value.charAt(0).toUpperCase() + select.value.slice(1);
+    }
+  }
+
+  async saveTambahPengeluaran(): Promise<void> {
+    const amount = this.expenseDraft.amount;
+    const category = this.expenseDraft.category;
+    if (
+      !amount ||
+      amount <= 0 ||
+      !this.expenseDraft.description.trim() ||
+      !category
+    ) {
+      return;
+    }
+
+    this.expenseSubmitting = true;
+    this.expenseSaveError = '';
+    try {
+      const today = this.getReferenceToday();
+      const todayKey = this.toDateKey(today);
+      const result = await this.journalService.addExpense(todayKey, {
+        amount,
+        description: this.expenseDraft.description.trim(),
+        category,
+      });
+
+      if (result.requiresTopUp) {
+        this.expenseSaveError =
+          'Anggaran pengeluaran sudah penuh. Buka halaman Transaksi untuk menambah pengeluaran dengan pilihan tambahan dana.';
+        return;
+      }
+
+      this.journal = result.journal;
+      if (result.financialData) {
+        this.financialData = result.financialData;
+        this.refreshLevelEvaluation();
+        this.computeRollingBudgetToday();
+        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        user.financialData = result.financialData;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+      }
+
+      await this.loadMonthlyExpenseTotal();
+      this.refreshMonthlyExpenses();
+      this.showTambahPengeluaran = false;
+    } finally {
+      this.expenseSubmitting = false;
+    }
   }
 
   get isTambahPemasukanSaveDisabled(): boolean {

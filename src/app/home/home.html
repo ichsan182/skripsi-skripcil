@@ -28,7 +28,11 @@
           (change)="testingDateInput = $any($event.target).value"
           aria-label="Pilih tanggal simulasi"
         />
-        <button type="button" class="time-testing-apply" (click)="applyTestingDate()">
+        <button
+          type="button"
+          class="time-testing-apply"
+          (click)="applyTestingDate()"
+        >
           Terapkan
         </button>
         <button
@@ -159,10 +163,10 @@
           />
           <p>Tambah Pemasukan</p>
         </div>
-        <div class="card-add-or-edit">
+        <div class="card-add-or-edit" (click)="openTambahPengeluaran()">
           <img
             src="assets/symbol-tambah_pengeluaran.svg"
-            alt="Description of image"
+            alt="Tambah Pengeluaran"
           />
           <p>Tambah Pengeluaran</p>
         </div>
@@ -171,6 +175,7 @@
           <p>Edit Hutang</p>
         </div>
       </section>
+
       <section class="savings-section">
         <div class="savings-container">
           <div class="title-with-icon-savings">
@@ -462,8 +467,153 @@
       </div>
     </div>
   </div>
-  }
-  @if (showSettingPersenan) {
+  } @if (showTambahPengeluaran) {
+  <div class="modal-overlay" (click)="closeTambahPengeluaran()">
+    <div
+      class="modal-content tambah-pengeluaran-modal"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <img
+            src="assets/symbol-tambah_pengeluaran.svg"
+            alt="Tambah Pengeluaran"
+            class="modal-icon"
+          />
+          <h2>Tambah Pengeluaran</h2>
+        </div>
+        <button
+          type="button"
+          class="modal-close-btn"
+          (click)="closeTambahPengeluaran()"
+          aria-label="Tutup"
+        >
+          &times;
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Amount -->
+        <app-input-field
+          label="Jumlah Pengeluaran"
+          styleVariant="prefix"
+          inputmode="numeric"
+          placeholder="0"
+          [isCurrency]="true"
+          [currencyMaxTier]="incomeAmountLimitTier"
+          [showPrefix]="true"
+          prefix="Rp"
+          [value]="expenseDraftAmountDisplay"
+          (currencyValueChange)="onExpenseAmountChange($event)"
+        ></app-input-field>
+
+        <!-- Description -->
+        <app-input-field
+          label="Deskripsi"
+          placeholder="Contoh: Makan siang, GoFood, Bensin, dll."
+          [value]="expenseDraft.description"
+          [maxlength]="100"
+          (valueChange)="expenseDraft.description = $event"
+        ></app-input-field>
+
+        <!-- Category Dropdown -->
+        <div class="te-field-group">
+          <label class="te-label">Kategori</label>
+          <div class="te-select-wrapper">
+            <select
+              class="te-select"
+              [value]="expenseDraft.category ?? ''"
+              (change)="onExpenseCategoryChange($event)"
+              aria-label="Pilih kategori pengeluaran"
+            >
+              <option value="" disabled selected>-- Pilih Kategori --</option>
+              @for (opt of expenseCategoryOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+            <span class="te-select-chevron">
+              <img src="assets/chevron-down.svg" alt="" aria-hidden="true" />
+            </span>
+          </div>
+        </div>
+
+        <!-- Keyword Dropdown (shown only when category selected and has keywords) -->
+        @if (expenseDraft.category && expenseKeywordOptions.length > 0) {
+        <div class="te-field-group te-keyword-group">
+          <label class="te-label">
+            Pilih Item
+            <span class="te-optional-tag"
+              >opsional · mengisi deskripsi otomatis</span
+            >
+          </label>
+          <div class="te-select-wrapper">
+            <select
+              class="te-select"
+              [value]="expenseDraft.keyword"
+              (change)="onExpenseKeywordChange($event)"
+              aria-label="Pilih item pengeluaran"
+            >
+              <option value="">-- Pilih Item (opsional) --</option>
+              @for (kw of expenseKeywordOptions; track kw) {
+              <option [value]="kw">{{ kw | titlecase }}</option>
+              }
+            </select>
+            <span class="te-select-chevron">
+              <img src="assets/chevron-down.svg" alt="" aria-hidden="true" />
+            </span>
+          </div>
+        </div>
+        }
+
+        <!-- Budget preview -->
+        @if (expenseDraft.amount && expenseDraft.amount > 0 && financialData) {
+        <div class="te-preview-row">
+          <span class="te-preview-label">Sisa anggaran setelah dikurangi</span>
+          <span
+            class="te-preview-value"
+            [class.te-preview-over]="
+                (financialData.currentPengeluaranLimit ?? 0) -
+                  (financialData.currentPengeluaranUsed ?? 0) -
+                  expenseDraft.amount <
+                0
+              "
+          >
+            {{ formatRupiah( (financialData.currentPengeluaranLimit ?? 0) -
+            (financialData.currentPengeluaranUsed ?? 0) - expenseDraft.amount )
+            }}
+          </span>
+        </div>
+        }
+
+        <!-- Error banner -->
+        @if (expenseSaveError) {
+        <div class="te-error-banner" role="alert">
+          <span class="te-error-icon">&#9888;</span>
+          <p>{{ expenseSaveError }}</p>
+        </div>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="sp-btn-cancel"
+          (click)="closeTambahPengeluaran()"
+        >
+          Batal
+        </button>
+        <button
+          type="button"
+          class="sp-btn-save sp-btn-save-expense"
+          [disabled]="isTambahPengeluaranSaveDisabled"
+          (click)="saveTambahPengeluaran()"
+        >
+          @if (expenseSubmitting) { Menyimpan... } @else { Tambah Pengeluaran }
+        </button>
+      </div>
+    </div>
+  </div>
+  } @if (showSettingPersenan) {
   <div class="modal-overlay" (click)="closeSettingPersenan()">
     <div
       class="modal-content setting-persenan-modal"
@@ -632,8 +782,8 @@
 
           @if (isSisaSaldoEmpty && savingsUsed === 0) {
           <div class="sp-warning-box">
-            ΓÜá∩╕Å Sisa saldo kamu sudah habis. Tidak bisa mengalokasikan tabungan
-            lagi.
+            ΓÜá∩╕Å Sisa saldo kamu sudah habis. Tidak bisa mengalokasikan
+            tabungan lagi.
           </div>
           }
 
