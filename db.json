@@ -1976,6 +1976,14 @@
       "investmentWatchlist": {
         "items": [
           {
+            "symbol": "AAPL",
+            "name": "Apple Inc.",
+            "type": "Common Stock",
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-04-10T14:44:41.364Z"
+          },
+          {
             "symbol": "PLTR",
             "name": "Palantir Technologies Inc.",
             "type": "Common Stock",
@@ -1984,11 +1992,11 @@
             "createdAt": "2026-04-09T13:29:14.253Z"
           }
         ],
-        "selectedSymbol": "PLTR",
-        "updatedAt": "2026-04-09T13:29:14.306Z"
+        "selectedSymbol": "AAPL",
+        "updatedAt": "2026-04-10T14:44:41.409Z"
       },
       "journal": {
-        "nextChatMessageId": 9,
+        "nextChatMessageId": 17,
         "chatByDate": {
           "2026-04-07": [
             {
@@ -2040,6 +2048,56 @@
               "sender": "assistant",
               "text": "Dicatat: Rp 29.189 untuk \"halah\" kategori other.",
               "time": "23.28"
+            },
+            {
+              "id": 9,
+              "sender": "user",
+              "text": "test 12948",
+              "time": "23.33"
+            },
+            {
+              "id": 10,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 12.948 untuk \"test\" kategori other.",
+              "time": "23.33"
+            },
+            {
+              "id": 11,
+              "sender": "user",
+              "text": "12124212",
+              "time": "23.33"
+            },
+            {
+              "id": 12,
+              "sender": "assistant",
+              "text": "Catatan untuk Kamis, 9 April 2026 sudah disimpan.",
+              "time": "23.33"
+            },
+            {
+              "id": 13,
+              "sender": "user",
+              "text": "aweawe 12124124",
+              "time": "23.33"
+            },
+            {
+              "id": 14,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "23.33"
+            }
+          ],
+          "2026-04-10": [
+            {
+              "id": 15,
+              "sender": "user",
+              "text": "makan 10000",
+              "time": "21.02"
+            },
+            {
+              "id": 16,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"makan\" kategori makanan.",
+              "time": "21.02"
             }
           ]
         },
@@ -2052,6 +2110,11 @@
             }
           ],
           "2026-04-09": [
+            {
+              "amount": 12948,
+              "description": "test",
+              "category": "other"
+            },
             {
               "amount": 29189,
               "description": "halah",
@@ -2070,6 +2133,18 @@
             {
               "amount": 124124,
               "description": "throat",
+              "category": "makanan"
+            }
+          ],
+          "2026-04-10": [
+            {
+              "amount": 100000,
+              "description": "gofood",
+              "category": "makanan"
+            },
+            {
+              "amount": 10000,
+              "description": "makan",
               "category": "makanan"
             }
           ]
@@ -2103,6 +2178,13 @@
               "description": "gaji",
               "source": "kantor"
             }
+          ],
+          "2026-04-10": [
+            {
+              "amount": 2000000,
+              "description": "lembur",
+              "source": "klantor"
+            }
           ]
         }
       },
@@ -2121,8 +2203,8 @@
           "savings": 46
         },
         "currentPengeluaranLimit": 2700000,
-        "currentPengeluaranUsed": 1618668,
-        "currentSisaSaldoPool": 7004124,
+        "currentPengeluaranUsed": 1741616,
+        "currentSisaSaldoPool": 9004124,
         "monthlyTopUp": {
           "cycleKey": "2026-03-25",
           "fromTabunganCount": 0,
@@ -2148,11 +2230,24 @@
         "lastCycleCarryOverSaldo": 4600000
       },
       "streak": {
-        "current": 1,
+        "current": 0,
         "longest": 18,
-        "lastActiveDate": "2026-04-09",
+        "lastActiveDate": "2026-04-10",
         "freezeUsed": false
-      }
+      },
+      "debts": [
+        {
+          "name": "kpr",
+          "category": "produktif",
+          "debtType": "KPR",
+          "principalAmount": 50000000,
+          "remainingAmount": 35000000,
+          "monthlyInstallment": 2000000,
+          "dueDay": 1,
+          "notes": "",
+          "id": "debt-1775830199635-671"
+        }
+      ]
     }
   ]
 }
