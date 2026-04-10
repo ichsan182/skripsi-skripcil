@@ -1876,6 +1876,129 @@
         "freezeUsed": false
       },
       "debts": []
+    },
+    {
+      "id": "565e",
+      "name": "Jennifer",
+      "email": "Jenni141004@gmail.com",
+      "phone": "0895702101191",
+      "password": "12345678",
+      "onboardingCompleted": true,
+      "level": 3,
+      "investmentWatchlist": {
+        "items": [
+          {
+            "symbol": "BBCA",
+            "name": "Bank Central Asia Tbk",
+            "type": "Common Stock",
+            "region": "Indonesia",
+            "currency": "IDR",
+            "createdAt": "2026-04-08T16:26:27.656Z"
+          }
+        ],
+        "selectedSymbol": "BBCA",
+        "updatedAt": "2026-04-09T14:40:02.055Z"
+      },
+      "journal": {
+        "nextChatMessageId": 7,
+        "chatByDate": {
+          "2026-04-08": [
+            {
+              "id": 1,
+              "sender": "user",
+              "text": "dimsum 20000",
+              "time": "23.25"
+            },
+            {
+              "id": 2,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 20.000 untuk \"dimsum\" kategori other.",
+              "time": "23.25"
+            }
+          ],
+          "2026-04-09": [
+            {
+              "id": 3,
+              "sender": "user",
+              "text": "makan siang 30000",
+              "time": "21.00"
+            },
+            {
+              "id": 4,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 30.000 untuk \"makan siang\" kategori makanan.",
+              "time": "21.00"
+            },
+            {
+              "id": 5,
+              "sender": "user",
+              "text": "pelunasan 11000",
+              "time": "21.01"
+            },
+            {
+              "id": 6,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 11.000 untuk \"pelunasan\" kategori other.",
+              "time": "21.01"
+            }
+          ]
+        },
+        "expensesByDate": {
+          "2026-04-08": [
+            {
+              "amount": 20000,
+              "description": "dimsum",
+              "category": "other"
+            }
+          ],
+          "2026-04-09": [
+            {
+              "amount": 11000,
+              "description": "pelunasan",
+              "category": "other"
+            },
+            {
+              "amount": 30000,
+              "description": "makan siang",
+              "category": "makanan"
+            }
+          ]
+        },
+        "incomesByDate": {}
+      },
+      "financialData": {
+        "pendapatan": 8000000,
+        "pengeluaranWajib": 2500000,
+        "tanggalPemasukan": 25,
+        "intendedTanggalPemasukan": 25,
+        "hutangWajib": 0,
+        "estimasiTabungan": 3000000,
+        "danaDarurat": 3000000,
+        "budgetAllocation": {
+          "mode": 2,
+          "pengeluaran": 31,
+          "wants": 0,
+          "savings": 69
+        },
+        "currentPengeluaranLimit": 2480000,
+        "currentPengeluaranUsed": 61000,
+        "currentSisaSaldoPool": 5520000,
+        "monthlyTopUp": {
+          "cycleKey": "2026-03-25",
+          "fromTabunganCount": 0,
+          "totalFromTabungan": 0,
+          "totalFromDanaDarurat": 0
+        },
+        "currentCycleStart": "2026-03-25",
+        "currentCycleEnd": "2026-04-24"
+      },
+      "streak": {
+        "current": 2,
+        "longest": 2,
+        "lastActiveDate": "2026-04-09",
+        "freezeUsed": false
+      }
     }
-  ]
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
 }
