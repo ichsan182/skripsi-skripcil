@@ -1,0 +1,123 @@
+@if (isOpen) {
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title-row">
+        <img
+          src="assets/symbol-tambah_pengeluaran.svg"
+          alt="Tambah Pengeluaran"
+          class="modal-icon"
+        />
+        <h2>Tambah Pengeluaran</h2>
+      </div>
+      <button
+        type="button"
+        class="modal-close-btn"
+        (click)="onClose()"
+        aria-label="Tutup"
+      >
+        &times;
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <app-input-field
+        label="Jumlah Pengeluaran"
+        styleVariant="prefix"
+        inputmode="numeric"
+        placeholder="0"
+        [isCurrency]="true"
+        [currencyMaxTier]="amountLimitTier"
+        [showPrefix]="true"
+        prefix="Rp"
+        [value]="amountDisplay"
+        (currencyValueChange)="onAmountChange($event)"
+      ></app-input-field>
+
+      <app-input-field
+        label="Deskripsi"
+        placeholder="Contoh: Makan siang, GoFood, Bensin, dll."
+        [value]="draft.description"
+        [maxlength]="100"
+        (valueChange)="onDescriptionChange($event)"
+      ></app-input-field>
+
+      <div class="te-field-group">
+        <label class="te-label">Kategori</label>
+        <div class="te-select-wrapper">
+          <select
+            class="te-select"
+            [value]="draft.category ?? ''"
+            (change)="onCategoryChange($event)"
+            aria-label="Pilih kategori pengeluaran"
+          >
+            <option value="" disabled>-- Pilih Kategori --</option>
+            @for (opt of categoryOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+          <span class="te-select-chevron">
+            <img src="assets/chevron-down.svg" alt="" aria-hidden="true" />
+          </span>
+        </div>
+      </div>
+
+      @if (draft.category && keywordOptions.length > 0) {
+      <div class="te-field-group te-keyword-group">
+        <label class="te-label">
+          Pilih Item
+          <span class="te-optional-tag"
+            >opsional · mengisi deskripsi otomatis</span
+          >
+        </label>
+        <div class="te-select-wrapper">
+          <select
+            class="te-select"
+            [value]="draft.keyword"
+            (change)="onKeywordChange($event)"
+            aria-label="Pilih item pengeluaran"
+          >
+            <option value="">-- Pilih Item (opsional) --</option>
+            @for (kw of keywordOptions; track kw) {
+            <option [value]="kw">{{ kw | titlecase }}</option>
+            }
+          </select>
+          <span class="te-select-chevron">
+            <img src="assets/chevron-down.svg" alt="" aria-hidden="true" />
+          </span>
+        </div>
+      </div>
+      } @if (draft.amount && draft.amount > 0) {
+      <div class="te-preview-row">
+        <span class="te-preview-label">Sisa anggaran setelah dikurangi</span>
+        <span
+          class="te-preview-value"
+          [class.te-preview-over]="projectedRemainingBudget < 0"
+        >
+          {{ formatRupiah(projectedRemainingBudget) }}
+        </span>
+      </div>
+      } @if (saveError) {
+      <div class="te-error-banner" role="alert">
+        <span class="te-error-icon">&#9888;</span>
+        <p>{{ saveError }}</p>
+      </div>
+      }
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="sp-btn-cancel" (click)="onClose()">
+        Batal
+      </button>
+      <button
+        type="button"
+        class="sp-btn-save sp-btn-save-expense"
+        [disabled]="isSaveDisabled"
+        (click)="onSubmit()"
+      >
+        @if (isSubmitting) { Menyimpan... } @else { Tambah Pengeluaran }
+      </button>
+    </div>
+  </div>
+</div>
+}

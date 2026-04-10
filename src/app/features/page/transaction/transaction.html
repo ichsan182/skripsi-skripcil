@@ -1,4 +1,4 @@
-<div class="page-container">
+﻿<div class="page-container">
   <app-sidebar
     [showRollingBudgetPanel]="true"
     [rollingTotalBudget]="rollingTotalBudget"
@@ -194,22 +194,19 @@
               >
             </div>
 
-            <form
-              class="entry-form entry-form-expense"
-              (submit)="addExpense(); $event.preventDefault()"
-            >
-              <input
-                type="text"
-                name="expense-description"
-                [(ngModel)]="expenseDraft.description"
-                placeholder="Deskripsi"
-                [disabled]="!isSelectedDateToday"
-              />
+            <form class="filter-form" (submit)="$event.preventDefault()">
+              <app-input-field
+                class="filter-description"
+                [type]="'text'"
+                [value]="expenseFilter.description"
+                [placeholder]="'Cari deskripsi...'"
+                (valueChange)="expenseFilter.description = $event"
+              ></app-input-field>
               <select
-                name="expense-category"
-                [(ngModel)]="expenseDraft.category"
-                [disabled]="!isSelectedDateToday"
+                name="expense-filter-category"
+                [(ngModel)]="expenseFilter.category"
               >
+                <option value="">Semua Kategori</option>
                 <option
                   *ngFor="let option of categoryOptions"
                   [value]="option.key"
@@ -217,23 +214,41 @@
                   {{ option.label }}
                 </option>
               </select>
-              <input
-                type="number"
-                min="1"
-                max="10000000000"
-                name="expense-amount"
-                [(ngModel)]="expenseDraft.amount"
-                placeholder="Nominal"
-                [disabled]="!isSelectedDateToday"
-              />
-              <button type="submit" [disabled]="!isSelectedDateToday">
-                Tambah
+              <div class="amount-range" aria-label="Range nominal pengeluaran">
+                <app-input-field
+                  [type]="'text'"
+                  [inputmode]="'numeric'"
+                  [placeholder]="'Min'"
+                  [isCurrency]="true"
+                  [showInlineCurrencyPrefix]="true"
+                  [prefix]="'Rp.'"
+                  [currencyMaxTier]="oneBillionLimitTier"
+                  [value]="expenseFilterMinInput"
+                  (valueChange)="expenseFilterMinInput = $event"
+                  (currencyValueChange)="expenseFilter.minAmount = $event > 0 ? $event : null"
+                ></app-input-field>
+                <span class="range-separator">-</span>
+                <app-input-field
+                  [type]="'text'"
+                  [inputmode]="'numeric'"
+                  [placeholder]="'Maks'"
+                  [isCurrency]="true"
+                  [showInlineCurrencyPrefix]="true"
+                  [prefix]="'Rp.'"
+                  [currencyMaxTier]="oneBillionLimitTier"
+                  [value]="expenseFilterMaxInput"
+                  (valueChange)="expenseFilterMaxInput = $event"
+                  (currencyValueChange)="expenseFilter.maxAmount = $event > 0 ? $event : null"
+                ></app-input-field>
+              </div>
+              <button
+                type="button"
+                class="send-btn filter-action-btn"
+                (click)="resetExpenseFilter()"
+              >
+                Reset
               </button>
             </form>
-
-            <p class="form-note" *ngIf="!isSelectedDateToday">
-              Hari sebelumnya hanya dapat dilihat sebagai history.
-            </p>
 
             <div class="table-and-list-pengeluaran">
               <table class="pengeluaran-table">
@@ -245,12 +260,16 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngIf="selectedExpenses.length === 0">
+                  <tr *ngIf="filteredExpenses.length === 0">
                     <td colspan="3" class="empty-table-cell">
-                      Belum ada data pengeluaran.
+                      {{
+                        selectedExpenses.length === 0
+                          ? 'Belum ada data pengeluaran.'
+                          : 'Tidak ada pengeluaran yang cocok dengan filter.'
+                      }}
                     </td>
                   </tr>
-                  <tr *ngFor="let expense of selectedExpenses">
+                  <tr *ngFor="let expense of filteredExpenses">
                     <td class="dpd-styling">
                       {{ formatCurrency(expense.amount) }}
                     </td>
@@ -284,41 +303,55 @@
               </span>
             </div>
 
-            <form
-              class="entry-form entry-form-income"
-              (submit)="addIncome(); $event.preventDefault()"
-            >
-              <input
-                type="text"
-                name="income-description"
-                [(ngModel)]="incomeDraft.description"
-                placeholder="Deskripsi"
-                [disabled]="!isSelectedDateToday"
-              />
-              <input
-                type="text"
-                name="income-source"
-                [(ngModel)]="incomeDraft.source"
-                placeholder="Sumber"
-                [disabled]="!isSelectedDateToday"
-              />
-              <input
-                type="number"
-                min="1"
-                max="10000000000"
-                name="income-amount"
-                [(ngModel)]="incomeDraft.amount"
-                placeholder="Nominal"
-                [disabled]="!isSelectedDateToday"
-              />
-              <button type="submit" [disabled]="!isSelectedDateToday">
-                Tambah
+            <form class="filter-form" (submit)="$event.preventDefault()">
+              <app-input-field
+                class="filter-description"
+                [type]="'text'"
+                [value]="incomeFilter.description"
+                [placeholder]="'Cari deskripsi...'"
+                (valueChange)="incomeFilter.description = $event"
+              ></app-input-field>
+              <app-input-field
+                [type]="'text'"
+                [value]="incomeFilter.source"
+                [placeholder]="'Cari sumber...'"
+                (valueChange)="incomeFilter.source = $event"
+              ></app-input-field>
+              <div class="amount-range" aria-label="Range nominal pemasukan">
+                <app-input-field
+                  [type]="'text'"
+                  [inputmode]="'numeric'"
+                  [placeholder]="'Min'"
+                  [isCurrency]="true"
+                  [showInlineCurrencyPrefix]="true"
+                  [prefix]="'Rp.'"
+                  [currencyMaxTier]="oneBillionLimitTier"
+                  [value]="incomeFilterMinInput"
+                  (valueChange)="incomeFilterMinInput = $event"
+                  (currencyValueChange)="incomeFilter.minAmount = $event > 0 ? $event : null"
+                ></app-input-field>
+                <span class="range-separator">-</span>
+                <app-input-field
+                  [type]="'text'"
+                  [inputmode]="'numeric'"
+                  [placeholder]="'Maks'"
+                  [isCurrency]="true"
+                  [showInlineCurrencyPrefix]="true"
+                  [prefix]="'Rp.'"
+                  [currencyMaxTier]="oneBillionLimitTier"
+                  [value]="incomeFilterMaxInput"
+                  (valueChange)="incomeFilterMaxInput = $event"
+                  (currencyValueChange)="incomeFilter.maxAmount = $event > 0 ? $event : null"
+                ></app-input-field>
+              </div>
+              <button
+                type="button"
+                class="send-btn filter-action-btn"
+                (click)="resetIncomeFilter()"
+              >
+                Reset
               </button>
             </form>
-
-            <p class="form-note" *ngIf="!isSelectedDateToday">
-              Hari sebelumnya hanya dapat dilihat sebagai history.
-            </p>
 
             <div class="table-and-list-pengeluaran">
               <table class="pengeluaran-table">
@@ -330,12 +363,16 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngIf="selectedIncomes.length === 0">
+                  <tr *ngIf="filteredIncomes.length === 0">
                     <td colspan="3" class="empty-table-cell">
-                      Belum ada data pemasukan.
+                      {{
+                        selectedIncomes.length === 0
+                          ? 'Belum ada data pemasukan.'
+                          : 'Tidak ada pemasukan yang cocok dengan filter.'
+                      }}
                     </td>
                   </tr>
-                  <tr *ngFor="let income of selectedIncomes">
+                  <tr *ngFor="let income of filteredIncomes">
                     <td class="dpd-styling">
                       {{ formatCurrency(income.amount) }}
                     </td>

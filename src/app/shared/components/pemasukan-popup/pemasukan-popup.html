@@ -1,0 +1,87 @@
+@if (isOpen) {
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title-row">
+        <img
+          src="assets/symbol-tambah_pemasukan.svg"
+          alt="Tambah Pemasukan"
+          class="modal-icon"
+        />
+        <h2>Tambah Pemasukan</h2>
+      </div>
+      <button
+        type="button"
+        class="modal-close-btn"
+        (click)="onClose()"
+        aria-label="Tutup"
+      >
+        &times;
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="ti-info-banner">
+        <span class="ti-info-icon">&#8505;&#65039;</span>
+        <p>
+          Pemasukan ini bersifat <strong>sementara</strong> dan hanya berlaku
+          pada siklus bulan ini. Jumlah langsung ditambahkan ke
+          <strong>Sisa Saldo</strong> kamu.
+        </p>
+      </div>
+
+      <app-input-field
+        label="Jumlah Pemasukan"
+        styleVariant="prefix"
+        inputmode="numeric"
+        placeholder="0"
+        [isCurrency]="true"
+        [currencyMaxTier]="amountLimitTier"
+        [showPrefix]="true"
+        prefix="Rp"
+        [value]="amountDisplay"
+        (currencyValueChange)="onAmountChange($event)"
+      ></app-input-field>
+
+      <app-input-field
+        label="Deskripsi"
+        placeholder="Contoh: Lembur kerja, Freelance, Bonus, dll."
+        [value]="draft.description"
+        [maxlength]="100"
+        (valueChange)="onDraftValueChange('description', $event)"
+      ></app-input-field>
+
+      <app-input-field
+        label="Sumber (opsional)"
+        placeholder="Contoh: Kantor, Klien, dll."
+        [value]="draft.source"
+        [maxlength]="60"
+        (valueChange)="onDraftValueChange('source', $event)"
+      ></app-input-field>
+
+      @if (draft.amount && draft.amount > 0) {
+      <div class="ti-preview-row">
+        <span class="ti-preview-label">Sisa saldo setelah ditambah</span>
+        <span class="ti-preview-value">
+          {{ formatRupiah(projectedSaldoAmount) }}
+        </span>
+      </div>
+      }
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="sp-btn-cancel" (click)="onClose()">
+        Batal
+      </button>
+      <button
+        type="button"
+        class="sp-btn-save"
+        [disabled]="isSaveDisabled"
+        (click)="onSubmit()"
+      >
+        @if (isSubmitting) { Menyimpan... } @else { Tambah Pemasukan }
+      </button>
+    </div>
+  </div>
+</div>
+}

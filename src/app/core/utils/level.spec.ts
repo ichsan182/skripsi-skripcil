@@ -63,4 +63,21 @@ describe('level utilities', () => {
     expect(evaluation.level).toBe(4);
     expect(evaluation.progressPercent).toBe(67);
   });
+
+  it('keeps progress at 67% right after reset when current cycle has no input yet', () => {
+    const financialData = createFinancialData({
+      currentCycleStart: '2026-05-01',
+      investmentTracking: {
+        cycleAmounts: {
+          '2026-03-01': 1_500_000,
+          '2026-04-01': 1_500_000,
+        },
+      },
+    });
+
+    const evaluation = evaluateFinancialLevel(buildLevelSignals(financialData));
+
+    expect(evaluation.level).toBe(4);
+    expect(evaluation.progressPercent).toBe(67);
+  });
 });

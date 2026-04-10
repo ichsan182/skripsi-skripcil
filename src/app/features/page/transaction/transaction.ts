@@ -13,19 +13,17 @@ import {
   UserJournal,
 } from '../../../core/services/journal.service';
 import { ExpenseCategory } from '../../../shared/utils/expense-category';
+import { normalizeDate, toDateKey } from '../../../core/utils/date.utils';
 import {
-  normalizeDate,
-  toDateKey,
-  parseDateKey,
-  daysBetween,
-} from '../../../core/utils/date.utils';
-import {
+  CurrencyAmountLimitTier,
   MAX_CURRENCY_AMOUNT,
   formatCurrency,
   formatCompactCurrency,
   formatPercent,
 } from '../../../core/utils/format.utils';
 import { RollingBudgetService } from '../../../core/utils/rolling-budget.service';
+import { TestingTimeService } from '../../../core/services/testing-time.service';
+import { InputField } from '../../../shared/components/input-field/input-field';
 
 interface CalendarCell {
   date: Date;
@@ -86,13 +84,14 @@ const CATEGORY_META: Record<ExpenseCategory, CategoryMeta> = {
 @Component({
   selector: 'app-transaction',
   standalone: true,
-  imports: [CommonModule, FormsModule, Sidebar],
+  imports: [CommonModule, FormsModule, Sidebar, InputField],
   templateUrl: './transaction.html',
   styleUrl: './transaction.css',
 })
 export class Transaction {
   private readonly journalService = inject(JournalService);
   private readonly rollingBudgetService = inject(RollingBudgetService);
+  private readonly testingTimeService = inject(TestingTimeService);
 
   rollingBudgetToday = 0;
   rollingBudgetRemaining = 0;
@@ -106,10 +105,11 @@ export class Transaction {
     key,
     label: CATEGORY_META[key].label,
   }));
+  readonly oneBillionLimitTier = CurrencyAmountLimitTier.ONE_BILLION;
 
-  readonly today = this.normalizeDate(new Date());
+  readonly today = normalizeDate(this.testingTimeService.getReferenceDate());
 
-  selectedDate = this.normalizeDate(new Date());
+  selectedDate = normalizeDate(new Date());
   currentMonthCursor = new Date(
     this.selectedDate.getFullYear(),
     this.selectedDate.getMonth(),
@@ -148,6 +148,25 @@ export class Transaction {
     source: '',
     amount: null,
   };
+
+  expenseFilter: {
+    description: string;
+    category: ExpenseCategory | '';
+    minAmount: number | null;
+    maxAmount: number | null;
+  } = { description: '', category: '', minAmount: null, maxAmount: null };
+
+  incomeFilter: {
+    description: string;
+    source: string;
+    minAmount: number | null;
+    maxAmount: number | null;
+  } = { description: '', source: '', minAmount: null, maxAmount: null };
+
+  expenseFilterMinInput = '';
+  expenseFilterMaxInput = '';
+  incomeFilterMinInput = '';
+  incomeFilterMaxInput = '';
 
   private journal: UserJournal = {
     nextChatMessageId: 1,
@@ -232,11 +251,11 @@ export class Transaction {
   }
 
   get selectedDateKey(): string {
-    return this.toDateKey(this.selectedDate);
+    return toDateKey(this.selectedDate);
   }
 
   get isSelectedDateToday(): boolean {
-    return this.selectedDateKey === this.toDateKey(this.today);
+    return this.selectedDateKey === toDateKey(this.today);
   }
 
   get selectedChatMessages(): ChatMessage[] {
@@ -308,6 +327,67 @@ export class Transaction {
     return this.selectedIncomes.reduce((total, item) => total + item.amount, 0);
   }
 
+  get filteredExpenses(): ExpenseEntry[] {
+    let result = this.selectedExpenses;
+    const f = this.expenseFilter;
+    if (f.description.trim()) {
+      const q = f.description.trim().toLowerCase();
+      result = result.filter((e) => e.description.toLowerCase().includes(q));
+    }
+    if (f.category) {
+      result = result.filter((e) => e.category === f.category);
+    }
+    if (f.minAmount != null && f.minAmount > 0) {
+      result = result.filter((e) => e.amount >= f.minAmount!);
+    }
+    if (f.maxAmount != null && f.maxAmount > 0) {
+      result = result.filter((e) => e.amount <= f.maxAmount!);
+    }
+    return result;
+  }
+
+  get filteredIncomes(): IncomeEntry[] {
+    let result = this.selectedIncomes;
+    const f = this.incomeFilter;
+    if (f.description.trim()) {
+      const q = f.description.trim().toLowerCase();
+      result = result.filter((i) => i.description.toLowerCase().includes(q));
+    }
+    if (f.source.trim()) {
+      const q = f.source.trim().toLowerCase();
+      result = result.filter((i) => i.source.toLowerCase().includes(q));
+    }
+    if (f.minAmount != null && f.minAmount > 0) {
+      result = result.filter((i) => i.amount >= f.minAmount!);
+    }
+    if (f.maxAmount != null && f.maxAmount > 0) {
+      result = result.filter((i) => i.amount <= f.maxAmount!);
+    }
+    return result;
+  }
+
+  resetExpenseFilter(): void {
+    this.expenseFilter = {
+      description: '',
+      category: '',
+      minAmount: null,
+      maxAmount: null,
+    };
+    this.expenseFilterMinInput = '';
+    this.expenseFilterMaxInput = '';
+  }
+
+  resetIncomeFilter(): void {
+    this.incomeFilter = {
+      description: '',
+      source: '',
+      minAmount: null,
+      maxAmount: null,
+    };
+    this.incomeFilterMinInput = '';
+    this.incomeFilterMaxInput = '';
+  }
+
   changeMonth(offset: number): void {
     this.currentMonthCursor = new Date(
       this.currentMonthCursor.getFullYear(),
@@ -318,7 +398,7 @@ export class Transaction {
   }
 
   selectDate(cell: CalendarCell): void {
-    this.selectedDate = this.normalizeDate(cell.date);
+    this.selectedDate = normalizeDate(cell.date);
 
     if (!cell.inCurrentMonth) {
       this.currentMonthCursor = new Date(
@@ -333,7 +413,7 @@ export class Transaction {
   }
 
   isSameDate(dateA: Date, dateB: Date): boolean {
-    return this.toDateKey(dateA) === this.toDateKey(dateB);
+    return toDateKey(dateA) === toDateKey(dateB);
   }
 
   async sendMessage(): Promise<void> {
@@ -445,7 +525,7 @@ export class Transaction {
   }
 
   private async initializeData(): Promise<void> {
-    this.journal = await this.journalService.loadCurrentUserJournal();
+    this.journal = await this.journalService.loadCurrentUserJournal(this.today);
     const cycle = await this.journalService.getCurrentCycleSummary(
       this.selectedDate,
     );
@@ -548,12 +628,12 @@ export class Transaction {
     this.calendarCells = Array.from({ length: 42 }, (_, index) => {
       const date = new Date(gridStart);
       date.setDate(gridStart.getDate() + index);
-      const normalizedDate = this.normalizeDate(date);
+      const normalizedDate = normalizeDate(date);
 
       return {
         date: normalizedDate,
         dayNumber: normalizedDate.getDate(),
-        key: this.toDateKey(normalizedDate),
+        key: toDateKey(normalizedDate),
         inCurrentMonth:
           normalizedDate.getMonth() === this.currentMonthCursor.getMonth(),
         isToday: this.isSameDate(normalizedDate, this.today),
@@ -561,103 +641,17 @@ export class Transaction {
     });
   }
 
-  private normalizeDate(date: Date): Date {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  }
-
-  private toDateKey(date: Date): string {
-    const year = date.getFullYear();
-    const month = `${date.getMonth() + 1}`.padStart(2, '0');
-    const day = `${date.getDate()}`.padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
   private computeRollingBudgetToday(): void {
-    if (
-      !this.currentFinancialData?.currentCycleStart ||
-      !this.currentFinancialData.currentCycleEnd
-    ) {
-      this.rollingBudgetToday = 0;
-      this.rollingBudgetRemaining = 0;
-      this.rollingDaysRemaining = 0;
-      this.rollingTotalBudget = 0;
-      this.rollingUsedBudget = 0;
-      return;
-    }
-
-    const cycleStart = this.parseDateKey(
-      this.currentFinancialData.currentCycleStart,
+    const state = this.rollingBudgetService.computeRollingBudgetState(
+      this.currentFinancialData,
+      this.journal,
+      this.today,
     );
-    const cycleEnd = this.parseDateKey(
-      this.currentFinancialData.currentCycleEnd,
-    );
-    if (!cycleStart || !cycleEnd) {
-      return;
-    }
 
-    const today = this.normalizeDate(new Date());
-    const dayBeforeToday = new Date(today);
-    dayBeforeToday.setDate(dayBeforeToday.getDate() - 1);
-
-    const usedBeforeToday = this.sumExpensesInRange(cycleStart, dayBeforeToday);
-    const totalBudget =
-      this.currentFinancialData.currentPengeluaranLimit ??
-      this.currentFinancialData.pengeluaranWajib;
-    const remainingBudget = Math.max(0, totalBudget - usedBeforeToday);
-    const remainingDays = Math.max(1, this.daysBetween(today, cycleEnd) + 1);
-
-    this.rollingTotalBudget = totalBudget;
-    this.rollingUsedBudget =
-      this.currentFinancialData.currentPengeluaranUsed || 0;
-    this.rollingBudgetRemaining = Math.max(
-      0,
-      totalBudget - this.rollingUsedBudget,
-    );
-    this.rollingDaysRemaining = remainingDays;
-    this.rollingBudgetToday = Math.max(
-      0,
-      Math.floor(remainingBudget / remainingDays),
-    );
-  }
-
-  private sumExpensesInRange(start: Date, end: Date): number {
-    if (end < start) {
-      return 0;
-    }
-
-    let total = 0;
-    for (const [dateKey, entries] of Object.entries(
-      this.journal.expensesByDate,
-    )) {
-      const date = this.parseDateKey(dateKey);
-      if (!date) {
-        continue;
-      }
-
-      if (date >= start && date <= end) {
-        total += entries.reduce((acc, item) => acc + item.amount, 0);
-      }
-    }
-
-    return total;
-  }
-
-  private parseDateKey(dateKey: string): Date | null {
-    const [yearRaw, monthRaw, dayRaw] = dateKey.split('-');
-    const year = Number(yearRaw);
-    const month = Number(monthRaw);
-    const day = Number(dayRaw);
-    if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) {
-      return null;
-    }
-
-    return new Date(year, month - 1, day);
-  }
-
-  private daysBetween(start: Date, end: Date): number {
-    const startMs = this.normalizeDate(start).getTime();
-    const endMs = this.normalizeDate(end).getTime();
-    const dayMs = 24 * 60 * 60 * 1000;
-    return Math.floor((endMs - startMs) / dayMs);
+    this.rollingTotalBudget = state.rollingTotalBudget;
+    this.rollingUsedBudget = state.rollingUsedBudget;
+    this.rollingBudgetRemaining = state.rollingBudgetRemaining;
+    this.rollingDaysRemaining = state.rollingDaysRemaining;
+    this.rollingBudgetToday = state.rollingBudgetToday;
   }
 }

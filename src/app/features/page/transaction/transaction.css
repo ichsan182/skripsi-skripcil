@@ -405,25 +405,39 @@
   margin-bottom: 2px;
 }
 
-.entry-form {
+.filter-form {
   display: grid;
   gap: 10px;
-}
-
-.entry-form-expense {
   grid-template-columns:
-    minmax(0, 1.2fr) minmax(130px, 0.9fr) minmax(100px, 0.7fr)
+    minmax(200px, 1.35fr) minmax(160px, 0.95fr) minmax(220px, 1fr)
     auto;
+  align-items: center;
 }
 
-.entry-form-income {
-  grid-template-columns:
-    minmax(0, 1fr) minmax(0, 1fr) minmax(100px, 0.75fr)
-    auto;
+.filter-description {
+  min-width: 0;
 }
 
-.entry-form input,
-.entry-form select {
+.filter-form app-input-field,
+.amount-range app-input-field {
+  min-width: 0;
+}
+
+.amount-range {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.range-separator {
+  color: var(--color-gray);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.filter-form input,
+.filter-form select {
   width: 100%;
   border-radius: 10px;
   border: 1px solid rgba(3, 15, 15, 0.16);
@@ -432,25 +446,16 @@
   background: var(--color-white);
 }
 
-.entry-form input:disabled,
-.entry-form select:disabled {
+.filter-form input:disabled,
+.filter-form select:disabled {
   cursor: not-allowed;
   background: color-mix(in srgb, var(--color-input-bg) 85%, white);
 }
 
-.entry-form button {
-  --btn-radius: 10px;
-  --btn-font-size: var(--font-size-sm);
-  --btn-font-weight: 600;
-  --btn-padding-y: 10px;
-  --btn-padding-x: 14px;
-  --btn-min-height: 40px;
-  border-radius: 10px;
-}
-
-.entry-form button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+.filter-action-btn {
+  min-height: 40px;
+  padding: 0 16px;
+  white-space: nowrap;
 }
 
 .form-note,
@@ -712,14 +717,18 @@
 }
 
 @media (max-width: 1024px) {
-  .entry-form-expense,
-  .entry-form-income {
+  .filter-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .entry-form button {
-    min-height: 40px;
+  .amount-range {
+    grid-column: span 2;
   }
+
+  .filter-action-btn {
+    grid-column: span 2;
+  }
+
 }
 
 @media (max-width: 768px) {
@@ -755,14 +764,18 @@
     max-height: 300px;
   }
 
-  .entry-form-expense,
-  .entry-form-income,
+  .filter-form,
   .chat-input-area {
     grid-template-columns: 1fr;
   }
 
+  .amount-range,
+  .filter-action-btn {
+    grid-column: auto;
+  }
+
   .send-btn,
-  .entry-form button {
+  .filter-action-btn {
     min-height: 42px;
   }
 

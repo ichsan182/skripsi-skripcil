@@ -81,9 +81,13 @@ export function buildLevelSignals(
   const trackedCycleAmounts =
     financialData?.investmentTracking?.cycleAmounts ?? {};
   const legacyInvestmentAmount = Math.max(0, financialData?.danaInvestasi ?? 0);
-  const currentCycleInvestment = getCurrentCycleInvestmentAmount(
+  const evaluationCycleKey = resolveEvaluationCycleKey(
     trackedCycleAmounts,
     currentCycleKey,
+  );
+  const currentCycleInvestment = getCurrentCycleInvestmentAmount(
+    trackedCycleAmounts,
+    evaluationCycleKey,
     legacyInvestmentAmount,
   );
   const investmentAllocationRate = toPercentValue(
@@ -91,13 +95,13 @@ export function buildLevelSignals(
   );
   const consecutiveInvestmentMonths = countConsecutiveQualifiedCycles(
     trackedCycleAmounts,
-    currentCycleKey,
+    evaluationCycleKey,
     income,
     legacyInvestmentAmount,
   );
   const pausedInvestmentMonths = countPausedCycles(
     trackedCycleAmounts,
-    currentCycleKey,
+    evaluationCycleKey,
     income,
     legacyInvestmentAmount,
   );
@@ -342,6 +346,26 @@ function resolveInvestmentCycleKey(
 
   const today = new Date();
   return toDateKey(new Date(today.getFullYear(), today.getMonth(), 1));
+}
+
+function resolveEvaluationCycleKey(
+  cycleAmounts: Record<string, number>,
+  currentCycleKey: string,
+): string {
+  if (Math.max(0, cycleAmounts[currentCycleKey] ?? 0) > 0) {
+    return currentCycleKey;
+  }
+
+  const previousCycleKey = getPreviousCycleKey(currentCycleKey);
+  if (!previousCycleKey) {
+    return currentCycleKey;
+  }
+
+  if (Math.max(0, cycleAmounts[previousCycleKey] ?? 0) > 0) {
+    return previousCycleKey;
+  }
+
+  return currentCycleKey;
 }
 
 function getCurrentCycleInvestmentAmount(

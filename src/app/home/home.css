@@ -19,6 +19,80 @@
   flex-direction: column;
 }
 
+.time-testing-panel {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(3, 98, 76, 0.2);
+  background: linear-gradient(
+    135deg,
+    rgba(3, 98, 76, 0.08) 0%,
+    rgba(3, 15, 15, 0.02) 100%
+  );
+}
+
+.time-testing-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.time-testing-subtitle {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-gray);
+}
+
+.time-testing-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.time-testing-input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(3, 15, 15, 0.14);
+  background: var(--color-white);
+  color: var(--color-black);
+  font-family: var(--font-family-base);
+}
+
+.time-testing-apply,
+.time-testing-reset {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: var(--font-family-base);
+}
+
+.time-testing-apply {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.time-testing-reset {
+  background: rgba(3, 15, 15, 0.08);
+  color: var(--color-black);
+}
+
+.time-testing-status {
+  font-size: 0.75rem;
+  color: var(--color-gray);
+}
+
+.time-testing-status.active {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
 .home-page h1 {
   font-size: clamp(1.75rem, 2.5vw, 2rem);
   line-height: 1.2;
@@ -165,10 +239,6 @@
 .mention-percent {
   color: var(--color-primary-light);
   font-weight: 600;
-}
-
-.transparant {
-  opacity: 0.8;
 }
 
 .savings-container {
@@ -361,14 +431,6 @@
   margin-bottom: 6px;
 }
 
-.insight-card-title {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
-}
-
 .img-streak,
 .img-pengeluaran {
   width: 24px;
@@ -416,38 +478,6 @@
 .streak-milestone {
   border-color: rgba(12, 165, 130, 0.24);
   background: color-mix(in srgb, var(--color-primary-light) 14%, white);
-}
-
-.rolling-budget-panel {
-  margin-top: 10px;
-  border: 1px solid rgba(3, 15, 15, 0.08);
-  border-radius: 12px;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  background: var(--color-white);
-}
-
-.rolling-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: var(--font-size-sm);
-  color: var(--color-gray);
-}
-
-.rolling-row strong {
-  color: var(--color-black);
-}
-
-.rolling-today-budget {
-  margin-top: 2px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--color-primary) 10%, white);
-  color: var(--color-primary);
-  font-size: var(--font-size-sm);
-  padding: 8px 10px;
 }
 
 .insight-card-body-pengeluaran {
@@ -1125,7 +1155,13 @@
   font-size: var(--font-size-xs);
   color: var(--color-primary-light);
   font-weight: 600;
-  margin: 0;
+}
+
+.sp-sub-info-margin {
+  font-size: var(--font-size-xs);
+  color: var(--color-primary-light);
+  font-weight: 600;
+  margin-top: 6px;
 }
 
 .sp-allocation-grid {
@@ -1347,7 +1383,6 @@
   .setting-persenan-modal {
     max-height: 85vh;
   }
-
   .sp-allocation-grid {
     flex-direction: column;
   }
