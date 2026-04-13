@@ -327,7 +327,8 @@
               <div
                 class="streak-day-cell"
                 [class.streak-empty]="cell.day === null"
-                [class.streak-success]="cell.isSuccess"
+                [class.streak-success]="cell.isSuccess && !cell.isStreakStart"
+                [class.streak-start]="cell.isStreakStart"
                 [class.streak-skipped]="cell.isSkipped"
                 [class.streak-failed]="cell.isFailed"
                 [class.streak-before-start]="cell.isBeforeStart"

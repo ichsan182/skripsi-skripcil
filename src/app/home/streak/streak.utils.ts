@@ -48,21 +48,37 @@ export function buildStreakCalendarDays(
       isFailed: false,
       isBeforeStart: false,
       isToday: false,
+      isStreakStart: false,
     });
+  }
+
+  // Check the status of the last day of the previous month to determine
+  // whether the first success day of this month is a streak start.
+  let prevDayWasSuccess = false;
+  if (daysInMonth > 0) {
+    const lastDayPrevMonth = startOfDay(new Date(year, month, 0));
+    if (lastDayPrevMonth <= normalizedToday) {
+      prevDayWasSuccess = getDayStatus(lastDayPrevMonth) === 'success';
+    }
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
     const date = startOfDay(new Date(year, month, day));
     const status = getDayStatus(date);
+    const isSuccess = status === 'success';
+    const isStreakStart = isSuccess && !prevDayWasSuccess;
+    prevDayWasSuccess = isSuccess;
+
     days.push({
       day,
       date,
       isDisabled: date > normalizedToday,
-      isSuccess: status === 'success',
+      isSuccess,
       isSkipped: status === 'skipped',
       isFailed: status === 'failed',
       isBeforeStart: status === 'before-start',
       isToday: date.getTime() === normalizedToday.getTime(),
+      isStreakStart,
     });
   }
 
@@ -82,7 +98,6 @@ export function computeLiveStreakState(
   } = input;
   let runningCurrent = 0;
   let runningLongest = 0;
-  let consecutiveMissOrFail = 0;
   const cursor = startOfDay(new Date(firstRecordDate));
   const normalizedToday = startOfDay(today);
 
@@ -91,12 +106,8 @@ export function computeLiveStreakState(
     if (status === 'success') {
       runningCurrent += 1;
       runningLongest = Math.max(runningLongest, runningCurrent);
-      consecutiveMissOrFail = 0;
     } else if (status === 'skipped' || status === 'failed') {
-      consecutiveMissOrFail += 1;
-      if (consecutiveMissOrFail >= 3) {
-        runningCurrent = 0;
-      }
+      runningCurrent = 0;
     }
     cursor.setDate(cursor.getDate() + 1);
   }

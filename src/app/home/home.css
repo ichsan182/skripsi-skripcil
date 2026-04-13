@@ -679,6 +679,26 @@
   );
 }
 
+.category-bills {
+  color: var(--color-category-bills);
+  border-color: var(--color-category-bills);
+  background-color: color-mix(
+    in srgb,
+    var(--color-category-bills) 20%,
+    transparent
+  );
+}
+
+.category-other {
+  color: var(--color-category-other);
+  border-color: var(--color-category-other);
+  background-color: color-mix(
+    in srgb,
+    var(--color-category-other) 20%,
+    transparent
+  );
+}
+
 .pengeluaran-table tbody td.dpd-styling {
   color: var(--color-gray);
   font-size: var(--font-size-sm);
@@ -746,6 +766,15 @@
   border-radius: 8px;
 }
 
+.streak-day-cell.streak-start {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  font-weight: 700;
+  border-radius: 8px;
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
 .streak-day-cell.streak-skipped {
   background-color: rgba(245, 158, 11, 0.2);
   color: #b45309;
@@ -773,6 +802,11 @@
 
 .streak-day-cell.streak-today {
   outline: 1px dashed rgba(3, 98, 76, 0.4);
+  outline-offset: -2px;
+}
+
+.streak-day-cell.streak-start.streak-today {
+  outline: 2px solid var(--color-primary);
   outline-offset: -2px;
 }
 

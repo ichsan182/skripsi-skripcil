@@ -2263,7 +2263,7 @@
         "updatedAt": "2026-04-13T14:10:37.256Z"
       },
       "journal": {
-        "nextChatMessageId": 5,
+        "nextChatMessageId": 11,
         "chatByDate": {
           "2026-04-13": [
             {
@@ -2289,6 +2289,46 @@
               "sender": "assistant",
               "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
               "time": "22.09"
+            },
+            {
+              "id": 5,
+              "sender": "user",
+              "text": "babi 100000",
+              "time": "22.55"
+            },
+            {
+              "id": 6,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 100.000 untuk \"babi\" kategori other.",
+              "time": "22.55"
+            }
+          ],
+          "2026-04-14": [
+            {
+              "id": 7,
+              "sender": "user",
+              "text": "aawiwaij 29999",
+              "time": "23.03"
+            },
+            {
+              "id": 8,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 29.999 untuk \"aawiwaij\" kategori other.",
+              "time": "23.03"
+            }
+          ],
+          "2026-04-16": [
+            {
+              "id": 9,
+              "sender": "user",
+              "text": "lezgooo 129490",
+              "time": "23.04"
+            },
+            {
+              "id": 10,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 129.490 untuk \"lezgooo\" kategori other.",
+              "time": "23.04"
             }
           ]
         },
@@ -2297,6 +2337,25 @@
             {
               "amount": 100000,
               "description": "babi",
+              "category": "other"
+            },
+            {
+              "amount": 100000,
+              "description": "babi",
+              "category": "other"
+            }
+          ],
+          "2026-04-14": [
+            {
+              "amount": 29999,
+              "description": "aawiwaij",
+              "category": "other"
+            }
+          ],
+          "2026-04-16": [
+            {
+              "amount": 129490,
+              "description": "lezgooo",
               "category": "other"
             }
           ]
@@ -2318,7 +2377,7 @@
           "savings": 65
         },
         "currentPengeluaranLimit": 3500000,
-        "currentPengeluaranUsed": 100000,
+        "currentPengeluaranUsed": 359489,
         "currentSisaSaldoPool": 13000000,
         "lastCycleCarryOverSaldo": 6500000,
         "monthlyTopUp": {
@@ -2333,7 +2392,7 @@
       "streak": {
         "current": 1,
         "longest": 2,
-        "lastActiveDate": "2026-04-13",
+        "lastActiveDate": "2026-04-16",
         "freezeUsed": false
       }
     }

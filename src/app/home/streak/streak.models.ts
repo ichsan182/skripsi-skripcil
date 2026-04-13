@@ -7,6 +7,7 @@ export interface StreakDay {
   isFailed: boolean;
   isBeforeStart: boolean;
   isToday: boolean;
+  isStreakStart: boolean;
 }
 
 export type StreakDayStatus =
