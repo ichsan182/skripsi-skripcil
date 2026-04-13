@@ -2153,6 +2153,78 @@
         "lastActiveDate": "2026-04-09",
         "freezeUsed": false
       }
+    },
+    {
+      "name": "Mrs. Kennedy",
+      "email": "karina.kennedy@gmail.com",
+      "phone": "081111111111",
+      "password": "123456",
+      "onboardingCompleted": true,
+      "level": 2,
+      "journal": {
+        "nextChatMessageId": 3,
+        "chatByDate": {
+          "2026-04-13": [
+            {
+              "id": 1,
+              "sender": "user",
+              "text": "150000 traktiran bday",
+              "time": "21.27"
+            },
+            {
+              "id": 2,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 150.000 untuk \"traktiran bday\" kategori other.",
+              "time": "21.27"
+            }
+          ]
+        },
+        "expensesByDate": {
+          "2026-04-13": [
+            {
+              "amount": 150000,
+              "description": "traktiran bday",
+              "category": "other"
+            }
+          ]
+        },
+        "incomesByDate": {}
+      },
+      "id": "TULTG0g5B9Y",
+      "financialData": {
+        "pendapatan": 8900000,
+        "pengeluaranWajib": 7000000,
+        "tanggalPemasukan": 25,
+        "hutangWajib": 1000000,
+        "estimasiTabungan": 40000000,
+        "danaDarurat": 5000000,
+        "budgetAllocation": {
+          "mode": 2,
+          "pengeluaran": 79,
+          "wants": 0,
+          "savings": 21
+        },
+        "intendedTanggalPemasukan": 25,
+        "currentPengeluaranLimit": 7031000,
+        "currentPengeluaranUsed": 150000,
+        "currentSisaSaldoPool": 11214000,
+        "lastCycleCarryOverSaldo": 9345000,
+        "monthlyTopUp": {
+          "cycleKey": "2026-03-25",
+          "fromTabunganCount": 0,
+          "totalFromTabungan": 0,
+          "totalFromDanaDarurat": 0
+        },
+        "currentCycleStart": "2026-03-25",
+        "currentCycleEnd": "2026-04-24"
+      },
+      "streak": {
+        "current": 1,
+        "longest": 38,
+        "lastActiveDate": "2026-04-13",
+        "freezeUsed": false
+      }
     }
-  ]
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
 }
