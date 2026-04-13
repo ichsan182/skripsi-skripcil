@@ -2232,7 +2232,7 @@
       "streak": {
         "current": 0,
         "longest": 18,
-        "lastActiveDate": "2026-04-10",
+        "lastActiveDate": "2026-04-13",
         "freezeUsed": false
       },
       "debts": [
@@ -2248,6 +2248,94 @@
           "id": "debt-1775830199635-671"
         }
       ]
+    },
+    {
+      "id": "e8c2",
+      "name": "sanrio",
+      "email": "sanrio@gmail.com",
+      "phone": "1241251221",
+      "password": "13qeadzc",
+      "onboardingCompleted": true,
+      "level": 4,
+      "investmentWatchlist": {
+        "items": [],
+        "selectedSymbol": null,
+        "updatedAt": "2026-04-13T14:10:37.256Z"
+      },
+      "journal": {
+        "nextChatMessageId": 5,
+        "chatByDate": {
+          "2026-04-13": [
+            {
+              "id": 1,
+              "sender": "user",
+              "text": "babi 100000",
+              "time": "21.17"
+            },
+            {
+              "id": 2,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 100.000 untuk \"babi\" kategori other.",
+              "time": "21.17"
+            },
+            {
+              "id": 3,
+              "sender": "user",
+              "text": "aweawewa 129449191",
+              "time": "22.09"
+            },
+            {
+              "id": 4,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "22.09"
+            }
+          ]
+        },
+        "expensesByDate": {
+          "2026-04-13": [
+            {
+              "amount": 100000,
+              "description": "babi",
+              "category": "other"
+            }
+          ]
+        },
+        "incomesByDate": {}
+      },
+      "financialData": {
+        "pendapatan": 10000000,
+        "pengeluaranWajib": 3500000,
+        "tanggalPemasukan": 26,
+        "intendedTanggalPemasukan": 26,
+        "hutangWajib": 0,
+        "estimasiTabungan": 40000000,
+        "danaDarurat": 35000000,
+        "budgetAllocation": {
+          "mode": 2,
+          "pengeluaran": 35,
+          "wants": 0,
+          "savings": 65
+        },
+        "currentPengeluaranLimit": 3500000,
+        "currentPengeluaranUsed": 100000,
+        "currentSisaSaldoPool": 13000000,
+        "lastCycleCarryOverSaldo": 6500000,
+        "monthlyTopUp": {
+          "cycleKey": "2026-03-26",
+          "fromTabunganCount": 0,
+          "totalFromTabungan": 0,
+          "totalFromDanaDarurat": 0
+        },
+        "currentCycleStart": "2026-03-26",
+        "currentCycleEnd": "2026-04-25"
+      },
+      "streak": {
+        "current": 1,
+        "longest": 2,
+        "lastActiveDate": "2026-04-13",
+        "freezeUsed": false
+      }
     }
   ]
 }

@@ -27,7 +27,10 @@ import {
   buildLevelSignals,
   evaluateFinancialLevel,
 } from '../core/utils/level';
-import { TestingTimeService } from '../core/services/testing-time.service';
+import {
+  StreakTestMode,
+  TestingTimeService,
+} from '../core/services/testing-time.service';
 import {
   PemasukanPopup,
   PemasukanPopupSubmitPayload,
@@ -36,6 +39,14 @@ import {
   PengeluaranPopup,
   PengeluaranPopupSubmitPayload,
 } from '../shared/components/pengeluaran-popup/pengeluaran-popup';
+import { StreakDay, StreakDayStatus, UserStreak } from './streak/streak.models';
+import {
+  buildStreakCalendarDays,
+  computeLiveStreakState,
+  computeTestingModeStreakState,
+  getStreakMilestoneLabel,
+  normalizeUserStreak,
+} from './streak/streak.utils';
 
 interface ExpenseRow {
   date: string;
@@ -44,31 +55,6 @@ interface ExpenseRow {
   categoryLabel: ExpenseCategory;
   categoryClass: string;
   day: number;
-}
-
-interface StreakDay {
-  day: number | null;
-  date: Date | null;
-  isDisabled: boolean;
-  isSuccess: boolean;
-  isSkipped: boolean;
-  isFailed: boolean;
-  isBeforeStart: boolean;
-  isToday: boolean;
-}
-
-type StreakDayStatus =
-  | 'success'
-  | 'skipped'
-  | 'failed'
-  | 'before-start'
-  | 'future';
-
-interface UserStreak {
-  current: number;
-  longest: number;
-  lastActiveDate: string;
-  freezeUsed: boolean;
 }
 
 type DebtCategory = 'konsumtif' | 'produktif';
@@ -190,6 +176,8 @@ export class Home {
     | null = null;
   pendapatanInput = 0;
   testingDateInput = '';
+  streakTestMode: StreakTestMode = 'realistic';
+  checkpointExists = false;
   monthlyExpenseTotal = 0;
   levelEvaluation: LevelEvaluation = evaluateFinancialLevel(
     buildLevelSignals(null),
@@ -227,6 +215,8 @@ export class Home {
 
   constructor() {
     this.loadUserData();
+    this.streakTestMode = this.testingTimeService.getStreakTestMode();
+    this.checkpointExists = this.testingTimeService.hasCheckpoint();
     this.syncReferenceDateControls();
     void this.initializeDashboard();
   }
@@ -248,6 +238,48 @@ export class Home {
   async resetTestingDate(): Promise<void> {
     this.testingTimeService.clearReferenceDate();
     await this.reloadForReferenceDate();
+  }
+
+  setStreakTestMode(mode: StreakTestMode): void {
+    this.streakTestMode = mode;
+    this.testingTimeService.setStreakTestMode(mode);
+    void this.reloadForReferenceDate();
+  }
+
+  saveCheckpoint(): void {
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    user.journal = {
+      nextChatMessageId: this.journal.nextChatMessageId,
+      chatByDate: this.journal.chatByDate,
+      expensesByDate: this.journal.expensesByDate,
+      incomesByDate: this.journal.incomesByDate,
+    };
+    this.testingTimeService.saveCheckpoint(JSON.stringify(user));
+    this.checkpointExists = true;
+  }
+
+  async restoreCheckpoint(): Promise<void> {
+    const snapshot = this.testingTimeService.loadCheckpoint();
+    if (!snapshot) return;
+    const user = JSON.parse(snapshot);
+    localStorage.setItem('currentUser', snapshot);
+    if (user.id) {
+      try {
+        await firstValueFrom(
+          this.http.patch(`${USERS_API_URL}/${user.id}`, {
+            financialData: user.financialData,
+            streak: user.streak,
+            journal: user.journal,
+            debts: user.debts,
+          }),
+        );
+      } catch {
+        // silent
+      }
+    }
+    this.loadUserData();
+    this.syncReferenceDateControls();
+    await this.initializeDashboard();
   }
 
   private loadUserData(): void {
@@ -559,11 +591,7 @@ export class Home {
   }
 
   get activeStreakMilestone(): string {
-    if (this.streakState.current >= 100) return 'Legenda';
-    if (this.streakState.current >= 30) return 'Master Keuangan';
-    if (this.streakState.current >= 7) return 'Seminggu Solid';
-    if (this.streakState.current >= 3) return 'Mulai Konsisten';
-    return 'Pemanasan';
+    return getStreakMilestoneLabel(this.streakState.current);
   }
 
   get streakCalendarLabel(): string {
@@ -858,46 +886,12 @@ export class Home {
   }
 
   private refreshStreakCalendar(): void {
-    const year = this.streakCalendarYear;
-    const month = this.streakCalendarMonth;
-    const firstDayOfWeek = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const days: StreakDay[] = [];
-
-    for (let i = 0; i < firstDayOfWeek; i++) {
-      days.push({
-        day: null,
-        date: null,
-        isDisabled: false,
-        isSuccess: false,
-        isSkipped: false,
-        isFailed: false,
-        isBeforeStart: false,
-        isToday: false,
-      });
-    }
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const date = new Date(year, month, d);
-      date.setHours(0, 0, 0, 0);
-      const dayStatus = this.getStreakDayStatus(date);
-      days.push({
-        day: d,
-        date,
-        isDisabled: date > today,
-        isSuccess: dayStatus === 'success',
-        isSkipped: dayStatus === 'skipped',
-        isFailed: dayStatus === 'failed',
-        isBeforeStart: dayStatus === 'before-start',
-        isToday: date.getTime() === today.getTime(),
-      });
-    }
-
-    this.streakCalendarDays = days;
+    this.streakCalendarDays = buildStreakCalendarDays({
+      year: this.streakCalendarYear,
+      month: this.streakCalendarMonth,
+      today: this.getReferenceToday(),
+      getDayStatus: (date) => this.getStreakDayStatus(date),
+    });
   }
 
   private refreshMonthlyExpenses(): void {
@@ -966,12 +960,24 @@ export class Home {
   private async syncDailyStreakState(): Promise<void> {
     const today = this.getReferenceToday();
     const todayKey = this.toDateKey(today);
-    const currentUserStreak = this.normalizeStreak(
+    const currentUserStreak = normalizeUserStreak(
       JSON.parse(localStorage.getItem('currentUser') || '{}').streak,
     );
 
-    if (this.isTestingDateActive) {
-      await this.syncTestingModeStreak(currentUserStreak, today, todayKey);
+    if (this.isTestingDateActive && this.streakTestMode === 'always-streak') {
+      const testingSync = computeTestingModeStreakState({
+        currentStreak: currentUserStreak,
+        today,
+        todayKey,
+        parseDateKey: (dateKey) => this.parseDateKey(dateKey),
+        daysBetween: (from, to) => this.daysBetween(from, to),
+      });
+
+      this.streakState = testingSync.streak;
+      if (!this.firstRecordDate) {
+        this.firstRecordDate = testingSync.inferredFirstRecordDate;
+      }
+      await this.persistStreak(testingSync.streak);
       return;
     }
 
@@ -987,73 +993,15 @@ export class Home {
       return;
     }
 
-    let runningCurrent = 0;
-    let runningLongest = 0;
-    let consecutiveMissOrFail = 0;
-    let cursor = this.startOfDay(new Date(this.firstRecordDate));
-
-    while (cursor <= today) {
-      const status = this.getStreakDayStatus(cursor);
-      if (status === 'success') {
-        runningCurrent += 1;
-        runningLongest = Math.max(runningLongest, runningCurrent);
-        consecutiveMissOrFail = 0;
-      } else if (status === 'skipped' || status === 'failed') {
-        consecutiveMissOrFail += 1;
-        if (consecutiveMissOrFail >= 3) {
-          runningCurrent = 0;
-        }
-      }
-      cursor.setDate(cursor.getDate() + 1);
-    }
-
-    const updated: UserStreak = {
-      current: runningCurrent,
-      longest: Math.max(currentUserStreak.longest, runningLongest),
-      lastActiveDate: todayKey,
+    const updated = computeLiveStreakState({
+      firstRecordDate: this.firstRecordDate,
+      today,
+      todayKey,
+      currentLongest: currentUserStreak.longest,
       freezeUsed: currentUserStreak.freezeUsed,
-    };
+      getDayStatus: (date) => this.getStreakDayStatus(date),
+    });
     this.streakState = updated;
-    await this.persistStreak(updated);
-  }
-
-  private async syncTestingModeStreak(
-    currentUserStreak: UserStreak,
-    today: Date,
-    todayKey: string,
-  ): Promise<void> {
-    const lastActive = currentUserStreak.lastActiveDate
-      ? this.parseDateKey(currentUserStreak.lastActiveDate)
-      : null;
-
-    let nextCurrent = Math.max(0, currentUserStreak.current);
-    let nextLastActiveDate = currentUserStreak.lastActiveDate || todayKey;
-
-    if (!lastActive) {
-      nextCurrent = Math.max(1, nextCurrent || 1);
-      nextLastActiveDate = todayKey;
-    } else {
-      const diff = this.daysBetween(lastActive, today);
-      if (diff > 0) {
-        nextCurrent += diff;
-        nextLastActiveDate = todayKey;
-      } else if (diff === 0) {
-        nextLastActiveDate = todayKey;
-      }
-      // if diff < 0 (mundur tanggal), keep current streak as-is.
-    }
-
-    const updated: UserStreak = {
-      current: nextCurrent,
-      longest: Math.max(currentUserStreak.longest, nextCurrent),
-      lastActiveDate: nextLastActiveDate,
-      freezeUsed: currentUserStreak.freezeUsed,
-    };
-
-    this.streakState = updated;
-    if (!this.firstRecordDate) {
-      this.firstRecordDate = lastActive ?? today;
-    }
     await this.persistStreak(updated);
   }
 
@@ -1077,25 +1025,6 @@ export class Home {
     }
   }
 
-  private normalizeStreak(value: unknown): UserStreak {
-    if (!value || typeof value !== 'object') {
-      return {
-        current: 0,
-        longest: 0,
-        lastActiveDate: '',
-        freezeUsed: false,
-      };
-    }
-
-    const raw = value as Partial<UserStreak>;
-    return {
-      current: Math.max(0, Math.floor(raw.current || 0)),
-      longest: Math.max(0, Math.floor(raw.longest || 0)),
-      lastActiveDate: raw.lastActiveDate || '',
-      freezeUsed: Boolean(raw.freezeUsed),
-    };
-  }
-
   private computeRollingBudgetToday(): void {
     const state = this.rollingBudgetService.computeRollingBudgetState(
       this.financialData,
@@ -1116,7 +1045,7 @@ export class Home {
       return 'future';
     }
 
-    if (this.isTestingDateActive) {
+    if (this.isTestingDateActive && this.streakTestMode === 'always-streak') {
       const simulatedStart =
         this.firstRecordDate ||
         this.parseDateKey(this.streakState.lastActiveDate);

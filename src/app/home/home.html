@@ -47,6 +47,64 @@
         @if (isTestingDateActive) { Menggunakan tanggal simulasi: {{
         testingDateInput }} } @else { Menggunakan tanggal sistem saat ini. }
       </span>
+      <div class="time-testing-divider"></div>
+      <div class="time-testing-section">
+        <div class="time-testing-section-title">Checkpoint</div>
+        <p class="time-testing-section-subtitle">
+          Simpan kondisi saat ini sebagai checkpoint. Reset mengembalikan semua
+          data ke kondisi saat checkpoint disimpan.
+        </p>
+        <div class="time-testing-controls">
+          <button
+            type="button"
+            class="time-testing-apply"
+            (click)="saveCheckpoint()"
+          >
+            Set Checkpoint
+          </button>
+          <button
+            type="button"
+            class="time-testing-checkpoint-reset"
+            [disabled]="!checkpointExists"
+            (click)="restoreCheckpoint()"
+          >
+            Reset ke Checkpoint
+          </button>
+        </div>
+        <span class="time-testing-status" [class.active]="checkpointExists">
+          @if (checkpointExists) { Checkpoint tersimpan. Klik "Reset ke
+          Checkpoint" untuk mengembalikan kondisi. } @else { Belum ada
+          checkpoint. Klik "Set Checkpoint" untuk menyimpan kondisi saat ini. }
+        </span>
+      </div>
+      <div class="time-testing-divider"></div>
+      <div class="time-testing-section">
+        <div class="time-testing-section-title">Mode Streak</div>
+        <p class="time-testing-section-subtitle">
+          Pilih cara streak dihitung saat tanggal simulasi aktif.
+        </p>
+        <div class="time-testing-mode-toggle">
+          <button
+            type="button"
+            [class.active]="streakTestMode === 'realistic'"
+            (click)="setStreakTestMode('realistic')"
+          >
+            Realistis
+          </button>
+          <button
+            type="button"
+            [class.active]="streakTestMode === 'always-streak'"
+            (click)="setStreakTestMode('always-streak')"
+          >
+            Selalu Streak
+          </button>
+        </div>
+        <span class="time-testing-mode-hint">
+          @if (streakTestMode === 'realistic') { Streak mengikuti data journal
+          sebenarnya. Hari tanpa catatan = skip, melebihi budget = gagal. }
+          @else { Semua hari otomatis hijau saat simulasi aktif. }
+        </span>
+      </div>
     </section>
     <div class="home-content">
       <section class="summary-cards-section">

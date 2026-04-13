@@ -262,11 +262,9 @@
                 <tbody>
                   <tr *ngIf="filteredExpenses.length === 0">
                     <td colspan="3" class="empty-table-cell">
-                      {{
-                        selectedExpenses.length === 0
-                          ? 'Belum ada data pengeluaran.'
-                          : 'Tidak ada pengeluaran yang cocok dengan filter.'
-                      }}
+                      {{ selectedExpenses.length === 0 ? 'Belum ada data
+                      pengeluaran.' : 'Tidak ada pengeluaran yang cocok dengan
+                      filter.' }}
                     </td>
                   </tr>
                   <tr *ngFor="let expense of filteredExpenses">
@@ -365,11 +363,9 @@
                 <tbody>
                   <tr *ngIf="filteredIncomes.length === 0">
                     <td colspan="3" class="empty-table-cell">
-                      {{
-                        selectedIncomes.length === 0
-                          ? 'Belum ada data pemasukan.'
-                          : 'Tidak ada pemasukan yang cocok dengan filter.'
-                      }}
+                      {{ selectedIncomes.length === 0 ? 'Belum ada data
+                      pemasukan.' : 'Tidak ada pemasukan yang cocok dengan
+                      filter.' }}
                     </td>
                   </tr>
                   <tr *ngFor="let income of filteredIncomes">
@@ -419,6 +415,15 @@
       </button>
       <button
         type="button"
+        [class.active]="topUpSource === 'sisaSaldo'"
+        [disabled]="budgetPrompt.maxTopUpFromSisaSaldo <= 0"
+        (click)="topUpSource = 'sisaSaldo'"
+      >
+        Sisa Saldo (Maks: {{ formatCurrency(budgetPrompt.maxTopUpFromSisaSaldo)
+        }})
+      </button>
+      <button
+        type="button"
         [class.active]="topUpSource === 'danaDarurat'"
         [disabled]="budgetPrompt.maxTopUpFromDanaDarurat <= 0"
         (click)="topUpSource = 'danaDarurat'"
@@ -442,6 +447,11 @@
       Sisa penarikan Tabungan periode ini: {{
       budgetPrompt.tabunganTopUpRemainingCount }}x dari {{
       budgetPrompt.tabunganTopUpAllowedCount }}x.
+    </p>
+    <p class="modal-note" *ngIf="topUpSource === 'sisaSaldo'">
+      Sisa penarikan Sisa Saldo periode ini: {{
+      budgetPrompt.sisaSaldoTopUpRemainingCount }}x dari {{
+      budgetPrompt.sisaSaldoTopUpAllowedCount }}x.
     </p>
 
     <div class="modal-actions">

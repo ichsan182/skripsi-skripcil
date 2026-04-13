@@ -195,9 +195,13 @@ export class Transaction {
     if (!this.budgetPrompt) {
       return 0;
     }
-    return this.topUpSource === 'tabungan'
-      ? this.budgetPrompt.maxTopUpFromTabungan
-      : this.budgetPrompt.maxTopUpFromDanaDarurat;
+    if (this.topUpSource === 'tabungan') {
+      return this.budgetPrompt.maxTopUpFromTabungan;
+    }
+    if (this.topUpSource === 'sisaSaldo') {
+      return this.budgetPrompt.maxTopUpFromSisaSaldo;
+    }
+    return this.budgetPrompt.maxTopUpFromDanaDarurat;
   }
 
   get cycleTopUpWarningText(): string {
@@ -603,7 +607,11 @@ export class Transaction {
     this.pendingFromChat = fromChat;
     this.pendingChatText = rawChatText;
     this.topUpSource =
-      prompt.maxTopUpFromTabungan > 0 ? 'tabungan' : 'danaDarurat';
+      prompt.maxTopUpFromTabungan > 0
+        ? 'tabungan'
+        : prompt.maxTopUpFromSisaSaldo > 0
+          ? 'sisaSaldo'
+          : 'danaDarurat';
     this.topUpAmountInput = null;
     this.topUpModalOpen = true;
   }
