@@ -171,14 +171,25 @@
         }
       </div>
 
-      <button
-        type="button"
-        class="form-btn"
-        (click)="onFinish()"
-        [disabled]="isSubmitting"
-      >
-        {{ isSubmitting ? 'Menyimpan...' : 'FINISH' }}
-      </button>
+      <div class="form-actions">
+        <button
+          type="button"
+          class="form-btn form-btn-secondary"
+          (click)="goToStep(1)"
+          [disabled]="isSubmitting"
+        >
+          PREVIOUS
+        </button>
+
+        <button
+          type="button"
+          class="form-btn"
+          (click)="onFinish()"
+          [disabled]="isSubmitting"
+        >
+          {{ isSubmitting ? 'Menyimpan...' : 'FINISH' }}
+        </button>
+      </div>
     </form>
     }
   </main>

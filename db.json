@@ -2277,10 +2277,10 @@
           }
         ],
         "selectedSymbol": "NVO",
-        "updatedAt": "2026-04-14T14:36:53.698Z"
+        "updatedAt": "2026-04-14T15:40:08.611Z"
       },
       "journal": {
-        "nextChatMessageId": 5,
+        "nextChatMessageId": 7,
         "chatByDate": {
           "2026-04-13": [
             {
@@ -2307,6 +2307,20 @@
               "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
               "time": "22.09"
             }
+          ],
+          "2026-04-14": [
+            {
+              "id": 5,
+              "sender": "user",
+              "text": "makan babi 10000",
+              "time": "21.49"
+            },
+            {
+              "id": 6,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"makan babi\" kategori makanan.",
+              "time": "21.49"
+            }
           ]
         },
         "expensesByDate": {
@@ -2315,6 +2329,13 @@
               "amount": 100000,
               "description": "babi",
               "category": "other"
+            }
+          ],
+          "2026-04-14": [
+            {
+              "amount": 10000,
+              "description": "makan babi",
+              "category": "makanan"
             }
           ]
         },
@@ -2343,7 +2364,7 @@
           "savings": 65
         },
         "currentPengeluaranLimit": 3500000,
-        "currentPengeluaranUsed": 100000,
+        "currentPengeluaranUsed": 110000,
         "currentSisaSaldoPool": 13124124,
         "lastCycleCarryOverSaldo": 6500000,
         "monthlyTopUp": {

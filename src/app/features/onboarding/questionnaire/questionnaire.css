@@ -5,8 +5,8 @@
 
 /* ── Sidebar ── */
 .questionnaire-sidebar {
-  width: 320px;
-  min-width: 320px;
+  width: 450px;
+  min-width: 450px;
   background: var(--color-primary);
   padding: 48px 30px;
   display: flex;
@@ -89,7 +89,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  max-width: 700px;
+  max-width: 800px;
   width: 100%;
 }
 
@@ -117,8 +117,15 @@
   font-size: var(--font-size-sm);
 }
 
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}
+
 .form-btn {
-  border: none;
+  border: 1px solid transparent;
   border-radius: var(--btn-radius);
   background: var(--color-primary);
   color: var(--color-white);
@@ -127,12 +134,21 @@
   padding: var(--btn-padding-y) var(--btn-padding-x);
   min-height: var(--btn-min-height);
   cursor: pointer;
-  align-self: flex-end;
   min-width: 160px;
-  margin-top: 10px;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
+}
+
+.question-form > .form-btn {
+  align-self: flex-end;
+  margin-top: 10px;
+}
+
+.form-btn-secondary {
+  border-color: var(--color-primary);
+  background: var(--color-white);
+  color: var(--color-primary);
 }
 
 .form-btn:hover:not(:disabled) {
@@ -171,5 +187,13 @@
 
   .questionnaire-content {
     padding: 24px 16px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-btn {
+    width: 100%;
   }
 }
