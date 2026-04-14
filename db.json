@@ -2258,12 +2258,29 @@
       "onboardingCompleted": true,
       "level": 4,
       "investmentWatchlist": {
-        "items": [],
-        "selectedSymbol": null,
-        "updatedAt": "2026-04-13T14:10:37.256Z"
+        "items": [
+          {
+            "symbol": "NVO",
+            "name": "Novo Nordisk A/S Sponsored ADR",
+            "type": "American Depositary Receipt",
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-04-14T14:36:53.671Z"
+          },
+          {
+            "symbol": "AAPL",
+            "name": "Apple Inc.",
+            "type": "Common Stock",
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-04-14T14:36:47.142Z"
+          }
+        ],
+        "selectedSymbol": "NVO",
+        "updatedAt": "2026-04-14T14:36:53.698Z"
       },
       "journal": {
-        "nextChatMessageId": 11,
+        "nextChatMessageId": 5,
         "chatByDate": {
           "2026-04-13": [
             {
@@ -2289,46 +2306,6 @@
               "sender": "assistant",
               "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
               "time": "22.09"
-            },
-            {
-              "id": 5,
-              "sender": "user",
-              "text": "babi 100000",
-              "time": "22.55"
-            },
-            {
-              "id": 6,
-              "sender": "assistant",
-              "text": "Dicatat: Rp 100.000 untuk \"babi\" kategori other.",
-              "time": "22.55"
-            }
-          ],
-          "2026-04-14": [
-            {
-              "id": 7,
-              "sender": "user",
-              "text": "aawiwaij 29999",
-              "time": "23.03"
-            },
-            {
-              "id": 8,
-              "sender": "assistant",
-              "text": "Dicatat: Rp 29.999 untuk \"aawiwaij\" kategori other.",
-              "time": "23.03"
-            }
-          ],
-          "2026-04-16": [
-            {
-              "id": 9,
-              "sender": "user",
-              "text": "lezgooo 129490",
-              "time": "23.04"
-            },
-            {
-              "id": 10,
-              "sender": "assistant",
-              "text": "Dicatat: Rp 129.490 untuk \"lezgooo\" kategori other.",
-              "time": "23.04"
             }
           ]
         },
@@ -2338,29 +2315,18 @@
               "amount": 100000,
               "description": "babi",
               "category": "other"
-            },
-            {
-              "amount": 100000,
-              "description": "babi",
-              "category": "other"
-            }
-          ],
-          "2026-04-14": [
-            {
-              "amount": 29999,
-              "description": "aawiwaij",
-              "category": "other"
-            }
-          ],
-          "2026-04-16": [
-            {
-              "amount": 129490,
-              "description": "lezgooo",
-              "category": "other"
             }
           ]
         },
-        "incomesByDate": {}
+        "incomesByDate": {
+          "2026-04-14": [
+            {
+              "amount": 124124,
+              "description": "1241",
+              "source": "124124"
+            }
+          ]
+        }
       },
       "financialData": {
         "pendapatan": 10000000,
@@ -2377,8 +2343,8 @@
           "savings": 65
         },
         "currentPengeluaranLimit": 3500000,
-        "currentPengeluaranUsed": 359489,
-        "currentSisaSaldoPool": 13000000,
+        "currentPengeluaranUsed": 100000,
+        "currentSisaSaldoPool": 13124124,
         "lastCycleCarryOverSaldo": 6500000,
         "monthlyTopUp": {
           "cycleKey": "2026-03-26",
@@ -2390,9 +2356,9 @@
         "currentCycleEnd": "2026-04-25"
       },
       "streak": {
-        "current": 1,
+        "current": 2,
         "longest": 2,
-        "lastActiveDate": "2026-04-16",
+        "lastActiveDate": "2026-04-14",
         "freezeUsed": false
       }
     }

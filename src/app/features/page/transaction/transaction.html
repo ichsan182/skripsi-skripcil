@@ -116,11 +116,12 @@
             />
             <button
               type="button"
-              class="send-btn"
+              class="send-btn chat-send-btn"
               (click)="sendMessage()"
               [disabled]="!isSelectedDateToday || !messageInput.trim()"
+              aria-label="Kirim pesan"
             >
-              Kirim
+              <img src="assets/send.svg" alt="" aria-hidden="true" />
             </button>
           </div>
         </article>
