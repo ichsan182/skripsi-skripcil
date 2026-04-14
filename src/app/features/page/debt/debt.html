@@ -107,15 +107,20 @@
         <div class="row-2">
           <div>
             <label>Kategori</label>
-            <select [(ngModel)]="form.category">
+            <select
+              [ngModel]="form.category"
+              (ngModelChange)="onCategoryChange($event)"
+            >
               <option value="konsumtif">Konsumtif</option>
               <option value="produktif">Produktif</option>
+              <option value="pembayaran">Pembayaran</option>
+              <option value="emergency">Emergency</option>
             </select>
           </div>
           <div>
             <label>Jenis Hutang</label>
             <select [(ngModel)]="form.debtType">
-              @for (item of debtTypeOptions; track item) {
+              @for (item of debtTypeOptionsForCategory; track item) {
               <option [value]="item">{{ item }}</option>
               }
             </select>
@@ -174,9 +179,12 @@
           </div>
           <div>
             <app-input-field
-              label="Estimasi Lunas"
-              [value]="formEstimatedLabel"
-              [readonly]="true"
+              label="Estimasi Lunas (bulan)"
+              [type]="'number'"
+              [min]="1"
+              [value]="form.estimatedMonths"
+              placeholder="Contoh: 12"
+              (valueChange)="onEstimatedMonthsInput($event)"
             ></app-input-field>
           </div>
         </div>
@@ -227,10 +235,9 @@
                   {{ item.debtType }}
                   <span
                     class="pill"
-                    [class.productive]="item.category === 'produktif'"
+                    [class.productive]="item.category !== 'konsumtif'"
                   >
-                    {{ item.category === 'konsumtif' ? 'Konsumtif' : 'Produktif'
-                    }}
+                    {{ getDebtCategoryLabel(item.category) }}
                   </span>
                 </p>
               </div>

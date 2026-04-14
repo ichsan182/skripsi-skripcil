@@ -2277,7 +2277,7 @@
           }
         ],
         "selectedSymbol": "NVO",
-        "updatedAt": "2026-04-14T15:40:08.611Z"
+        "updatedAt": "2026-04-14T15:57:54.009Z"
       },
       "journal": {
         "nextChatMessageId": 7,
@@ -2381,7 +2381,8 @@
         "longest": 2,
         "lastActiveDate": "2026-04-14",
         "freezeUsed": false
-      }
+      },
+      "debts": []
     }
   ]
 }
