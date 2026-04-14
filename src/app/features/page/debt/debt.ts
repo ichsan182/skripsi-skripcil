@@ -95,8 +95,10 @@ export class Debt {
   protected isSaving = false;
   protected formError = '';
   protected showLargeDebtPrompt = false;
+  protected showConsumptiveConfirmModal = false;
   protected editingDebtId: string | null = null;
   protected paymentInputs: Record<string, string> = {};
+  private pendingConsumptiveSubmission: Omit<DebtItem, 'id'> | null = null;
 
   protected form: DebtFormModel = {
     name: '',
@@ -289,6 +291,35 @@ export class Debt {
       return;
     }
 
+    if (parsed.category === 'konsumtif') {
+      this.pendingConsumptiveSubmission = parsed;
+      this.showConsumptiveConfirmModal = true;
+      return;
+    }
+
+    await this.commitDebtSubmission(parsed);
+  }
+
+  protected async confirmConsumptiveSubmission(): Promise<void> {
+    if (!this.pendingConsumptiveSubmission) {
+      this.showConsumptiveConfirmModal = false;
+      return;
+    }
+
+    const parsed = this.pendingConsumptiveSubmission;
+    this.pendingConsumptiveSubmission = null;
+    this.showConsumptiveConfirmModal = false;
+    await this.commitDebtSubmission(parsed);
+  }
+
+  protected cancelConsumptiveSubmission(): void {
+    this.pendingConsumptiveSubmission = null;
+    this.showConsumptiveConfirmModal = false;
+  }
+
+  private async commitDebtSubmission(
+    parsed: Omit<DebtItem, 'id'>,
+  ): Promise<void> {
     if (this.editingDebtId) {
       this.debts = this.debts.map((item) =>
         item.id === this.editingDebtId ? { ...parsed, id: item.id } : item,
@@ -618,6 +649,8 @@ export class Debt {
   private resetForm(): void {
     this.editingDebtId = null;
     this.formError = '';
+    this.pendingConsumptiveSubmission = null;
+    this.showConsumptiveConfirmModal = false;
     this.form = {
       name: '',
       category: 'konsumtif',

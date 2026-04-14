@@ -300,4 +300,32 @@
       </article>
     </section>
   </section>
+
+  @if (showConsumptiveConfirmModal) {
+  <section class="confirm-overlay" role="dialog" aria-modal="true">
+    <div class="confirm-modal">
+      <h3>Anda yakin mau memasuki konsumtif?</h3>
+      <p>
+        Kategori konsumtif dapat menurunkan level kamu ke level 2. Pastikan
+        keputusan ini memang diperlukan.
+      </p>
+      <div class="confirm-actions">
+        <button
+          type="button"
+          class="btn-confirm-yes"
+          (click)="confirmConsumptiveSubmission()"
+        >
+          Iya
+        </button>
+        <button
+          type="button"
+          class="btn-confirm-no"
+          (click)="cancelConsumptiveSubmission()"
+        >
+          Tidak
+        </button>
+      </div>
+    </div>
+  </section>
+  }
 </div>
