@@ -211,10 +211,11 @@
   padding: 14px 16px;
   display: grid;
   gap: 4px;
+  border: 1px solid var(--color-accent-red);
 }
 
 .level-relation p {
-  color: var(--color-gray);
+  color: var(--color-accent-red);
   font-size: var(--font-size-xs);
 }
 
@@ -452,6 +453,93 @@
   color: var(--color-gray);
 }
 
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: color-mix(in srgb, var(--color-black) 36%, transparent);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  backdrop-filter: blur(3px);
+  animation: confirmOverlayFadeIn 0.2s ease-out;
+}
+
+.confirm-modal {
+  width: min(460px, 100%);
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-accent-red) 42%, transparent);
+  background: color-mix(in srgb, var(--color-white) 96%, var(--color-card-bg));
+  box-shadow: 0 18px 40px rgba(3, 15, 15, 0.2);
+  padding: 18px;
+  display: grid;
+  gap: 10px;
+  transform-origin: center;
+  animation: confirmModalSlideIn 0.24s ease-out;
+}
+
+@keyframes confirmOverlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes confirmModalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.confirm-modal h3 {
+  font-size: var(--font-size-base);
+  color: var(--color-accent-red);
+}
+
+.confirm-modal p {
+  font-size: var(--font-size-xs);
+  color: color-mix(in srgb, var(--color-black) 70%, var(--color-gray));
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.btn-confirm-yes,
+.btn-confirm-no {
+  border-radius: 9px;
+  padding: 8px 12px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-confirm-yes {
+  border: none;
+  background: var(--color-accent-red);
+  color: var(--color-white);
+}
+
+.btn-confirm-no {
+  border: 1px solid color-mix(in srgb, var(--color-accent-red) 40%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--color-accent-red) 7%,
+    var(--color-white)
+  );
+  color: var(--color-accent-red);
+}
+
 @media (max-width: 1100px) {
   .debt-layout {
     grid-template-columns: 1fr;
@@ -487,5 +575,21 @@
 
   .pay-row {
     grid-template-columns: 1fr;
+  }
+
+  .confirm-actions {
+    justify-content: stretch;
+  }
+
+  .btn-confirm-yes,
+  .btn-confirm-no {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirm-overlay,
+  .confirm-modal {
+    animation: none;
   }
 }

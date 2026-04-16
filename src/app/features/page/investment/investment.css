@@ -4,7 +4,6 @@
   align-content: start;
 }
 
-.investment-header,
 .watchlist-card,
 .dashboard-card,
 .economic-card {
@@ -20,9 +19,8 @@
 }
 
 .investment-header {
-  padding: clamp(20px, 3vw, 30px);
-  display: grid;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
 }
 
 .header-kicker {
@@ -37,7 +35,6 @@
   font-size: clamp(1.45rem, 2.5vw, 2rem);
   line-height: 1.25;
   color: var(--color-black);
-  max-width: 28ch;
 }
 
 .header-caption {

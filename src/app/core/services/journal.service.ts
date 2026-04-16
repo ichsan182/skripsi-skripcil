@@ -36,7 +36,7 @@ export interface UserJournal {
   incomesByDate: Record<string, IncomeEntry[]>;
 }
 
-export type TopUpSource = 'tabungan' | 'danaDarurat';
+export type TopUpSource = 'tabungan' | 'danaDarurat' | 'sisaSaldo';
 
 export interface BudgetAllocation {
   mode: 2 | 3;
@@ -60,6 +60,8 @@ export interface MonthlyTopUpSummary {
   fromTabunganCount: number;
   totalFromTabungan: number;
   totalFromDanaDarurat: number;
+  fromSisaSaldoCount?: number;
+  totalFromSisaSaldo?: number;
 }
 
 export interface FinancialData {
@@ -90,8 +92,11 @@ export interface ExpenseBudgetPrompt {
   monthlyExpenseRemaining: number;
   maxTopUpFromTabungan: number;
   maxTopUpFromDanaDarurat: number;
+  maxTopUpFromSisaSaldo: number;
   tabunganTopUpRemainingCount: number;
   tabunganTopUpAllowedCount: number;
+  sisaSaldoTopUpRemainingCount: number;
+  sisaSaldoTopUpAllowedCount: number;
 }
 
 export interface ExpenseMutationOptions {
@@ -561,6 +566,8 @@ export class JournalService {
         fromTabunganCount: 0,
         totalFromTabungan: 0,
         totalFromDanaDarurat: 0,
+        fromSisaSaldoCount: 0,
+        totalFromSisaSaldo: 0,
       };
       changed = true;
     }
@@ -571,6 +578,8 @@ export class JournalService {
         fromTabunganCount: 0,
         totalFromTabungan: 0,
         totalFromDanaDarurat: 0,
+        fromSisaSaldoCount: 0,
+        totalFromSisaSaldo: 0,
       };
       changed = true;
     }
@@ -695,7 +704,7 @@ export class JournalService {
           prompt,
           pendingExpense: entry,
           message:
-            'Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.',
+            'Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan, Dana Darurat, atau Sisa Saldo.',
         };
       }
 
@@ -726,6 +735,35 @@ export class JournalService {
     const amount = Math.max(0, Math.floor(amountRequested));
     if (amount <= 0) {
       return { appliedAmount: 0, notice: '' };
+    }
+
+    if (source === 'sisaSaldo') {
+      const prompt = this.buildExpensePrompt(financialData, shortage);
+      const allowedSisaSaldoAmount = prompt.maxTopUpFromSisaSaldo;
+      const applied = Math.min(amount, allowedSisaSaldoAmount);
+      if (applied <= 0) {
+        return { appliedAmount: 0, notice: '' };
+      }
+      financialData.currentSisaSaldoPool = Math.max(
+        0,
+        (financialData.currentSisaSaldoPool ?? 0) - applied,
+      );
+      financialData.currentPengeluaranLimit =
+        Math.max(
+          0,
+          financialData.currentPengeluaranLimit ??
+            financialData.pengeluaranWajib,
+        ) + applied;
+      if (financialData.monthlyTopUp) {
+        financialData.monthlyTopUp.fromSisaSaldoCount =
+          (financialData.monthlyTopUp.fromSisaSaldoCount ?? 0) + 1;
+        financialData.monthlyTopUp.totalFromSisaSaldo =
+          (financialData.monthlyTopUp.totalFromSisaSaldo ?? 0) + applied;
+      }
+      return {
+        appliedAmount: applied,
+        notice: `Top up dari Sisa Saldo sebesar ${this.formatCurrency(applied)} berhasil ditambahkan ke limit pengeluaran periode ini.`,
+      };
     }
 
     if (source === 'danaDarurat') {
@@ -797,6 +835,15 @@ export class JournalService {
     const usedCount = financialData.monthlyTopUp?.fromTabunganCount ?? 0;
     const remainingCount = Math.max(0, allowedCount - usedCount);
 
+    const sisaSaldoAllowedCount = allowedCount;
+    const sisaSaldoUsedCount =
+      financialData.monthlyTopUp?.fromSisaSaldoCount ?? 0;
+    const sisaSaldoRemainingCount = Math.max(
+      0,
+      sisaSaldoAllowedCount - sisaSaldoUsedCount,
+    );
+    const sisaSaldoPool = Math.max(0, financialData.currentSisaSaldoPool ?? 0);
+
     return {
       shortage: Math.max(0, shortage),
       monthlyExpenseLimit: limit,
@@ -807,8 +854,14 @@ export class JournalService {
           ? Math.max(0, Math.min(baseLimit, financialData.estimasiTabungan))
           : 0,
       maxTopUpFromDanaDarurat: Math.max(0, financialData.danaDarurat),
+      maxTopUpFromSisaSaldo:
+        sisaSaldoRemainingCount > 0
+          ? Math.max(0, Math.min(baseLimit, sisaSaldoPool))
+          : 0,
       tabunganTopUpRemainingCount: remainingCount,
       tabunganTopUpAllowedCount: allowedCount,
+      sisaSaldoTopUpRemainingCount: sisaSaldoRemainingCount,
+      sisaSaldoTopUpAllowedCount: sisaSaldoAllowedCount,
     };
   }
 

@@ -21,7 +21,7 @@
   height: 42px;
   box-sizing: border-box;
   font-family: var(--font-family-base);
-  color: var(--color-primary);
+  color: var(--color-black);
   outline: none;
 }
 
@@ -71,6 +71,10 @@
   font-size: var(--font-size-sm);
   font-weight: 700;
   padding: 0 12px;
+  background: rgba(3, 98, 76, 0.06);
+  height: 100%;
+  align-items: center;
+  display: flex;
 }
 
 .input-field--prefix .input-field-native {

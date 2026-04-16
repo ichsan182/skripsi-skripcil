@@ -93,6 +93,76 @@
   font-weight: 600;
 }
 
+/* ── Testing Panel Sections ── */
+.time-testing-divider {
+  border-top: 1px solid rgba(3, 98, 76, 0.12);
+  margin: 4px 0;
+}
+
+.time-testing-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.time-testing-section-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.time-testing-section-subtitle {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-gray);
+}
+
+.time-testing-checkpoint-reset {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: var(--font-family-base);
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.time-testing-checkpoint-reset:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.time-testing-mode-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.time-testing-mode-toggle button {
+  border: 1px solid rgba(3, 98, 76, 0.2);
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: var(--font-family-base);
+  background: var(--color-white);
+  color: var(--color-gray);
+  transition: all 0.15s ease;
+}
+
+.time-testing-mode-toggle button.active {
+  background: var(--color-primary);
+  color: var(--color-white);
+  border-color: var(--color-primary);
+}
+
+.time-testing-mode-hint {
+  font-size: 0.75rem;
+  color: var(--color-gray);
+}
+
 .home-page h1 {
   font-size: clamp(1.75rem, 2.5vw, 2rem);
   line-height: 1.2;
@@ -609,6 +679,26 @@
   );
 }
 
+.category-bills {
+  color: var(--color-category-bills);
+  border-color: var(--color-category-bills);
+  background-color: color-mix(
+    in srgb,
+    var(--color-category-bills) 20%,
+    transparent
+  );
+}
+
+.category-other {
+  color: var(--color-category-other);
+  border-color: var(--color-category-other);
+  background-color: color-mix(
+    in srgb,
+    var(--color-category-other) 20%,
+    transparent
+  );
+}
+
 .pengeluaran-table tbody td.dpd-styling {
   color: var(--color-gray);
   font-size: var(--font-size-sm);
@@ -676,6 +766,15 @@
   border-radius: 8px;
 }
 
+.streak-day-cell.streak-start {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  font-weight: 700;
+  border-radius: 8px;
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
 .streak-day-cell.streak-skipped {
   background-color: rgba(245, 158, 11, 0.2);
   color: #b45309;
@@ -703,6 +802,11 @@
 
 .streak-day-cell.streak-today {
   outline: 1px dashed rgba(3, 98, 76, 0.4);
+  outline-offset: -2px;
+}
+
+.streak-day-cell.streak-start.streak-today {
+  outline: 2px solid var(--color-primary);
   outline-offset: -2px;
 }
 

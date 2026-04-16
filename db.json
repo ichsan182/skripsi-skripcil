@@ -1876,6 +1876,513 @@
         "freezeUsed": false
       },
       "debts": []
+    },
+    {
+      "id": "974d",
+      "name": "epa",
+      "email": "epa@gmail.com",
+      "phone": "082112488179",
+      "password": "123456",
+      "onboardingCompleted": true,
+      "level": 3,
+      "investmentWatchlist": {
+        "items": [],
+        "selectedSymbol": null,
+        "updatedAt": "2026-04-06T15:06:06.684Z"
+      },
+      "journal": {
+        "nextChatMessageId": 3,
+        "chatByDate": {
+          "2026-04-06": [
+            {
+              "id": 1,
+              "sender": "user",
+              "text": "makan 12000",
+              "time": "22.17"
+            },
+            {
+              "id": 2,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 12.000 untuk \"makan\" kategori makanan.",
+              "time": "22.17"
+            }
+          ]
+        },
+        "expensesByDate": {
+          "2026-04-06": [
+            {
+              "amount": 12000,
+              "description": "makan",
+              "category": "makanan"
+            }
+          ]
+        },
+        "incomesByDate": {}
+      },
+      "financialData": {
+        "pendapatan": 5000000,
+        "pengeluaranWajib": 2500000,
+        "tanggalPemasukan": 25,
+        "intendedTanggalPemasukan": 25,
+        "hutangWajib": 0,
+        "estimasiTabungan": 16350000,
+        "danaDarurat": 11250000,
+        "budgetAllocation": {
+          "mode": 2,
+          "pengeluaran": 50,
+          "wants": 0,
+          "savings": 50
+        },
+        "currentPengeluaranLimit": 2500000,
+        "currentPengeluaranUsed": 0,
+        "currentSisaSaldoPool": 6500000,
+        "monthlyTopUp": {
+          "cycleKey": "2026-05-25",
+          "fromTabunganCount": 0,
+          "totalFromTabungan": 0,
+          "totalFromDanaDarurat": 0
+        },
+        "currentCycleStart": "2026-05-25",
+        "currentCycleEnd": "2026-06-24",
+        "danaInvestasi": 13400000,
+        "savingsAllocation": {
+          "tabungan": 1350000,
+          "danaDarurat": 1250000,
+          "danaInvestasi": 13400000
+        },
+        "investmentTracking": {
+          "cycleAmounts": {
+            "2026-03-25": 8400000,
+            "2026-04-25": 2500000,
+            "2026-05-25": 2500000
+          }
+        }
+      },
+      "streak": {
+        "current": 50,
+        "longest": 50,
+        "lastActiveDate": "2026-05-25",
+        "freezeUsed": false
+      }
+    },
+    {
+      "id": "28b1",
+      "name": "notrayt",
+      "email": "notrayt@gmail.com",
+      "phone": "1241241121212",
+      "password": "123456",
+      "onboardingCompleted": true,
+      "level": 4,
+      "investmentWatchlist": {
+        "items": [
+          {
+            "symbol": "AAPL",
+            "name": "Apple Inc.",
+            "type": "Common Stock",
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-04-10T14:44:41.364Z"
+          },
+          {
+            "symbol": "PLTR",
+            "name": "Palantir Technologies Inc.",
+            "type": "Common Stock",
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-04-09T13:29:14.253Z"
+          }
+        ],
+        "selectedSymbol": "AAPL",
+        "updatedAt": "2026-04-10T14:44:41.409Z"
+      },
+      "journal": {
+        "nextChatMessageId": 17,
+        "chatByDate": {
+          "2026-04-07": [
+            {
+              "id": 1,
+              "sender": "user",
+              "text": "makanan 100000",
+              "time": "21.44"
+            },
+            {
+              "id": 2,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 100.000 untuk \"makanan\" kategori makanan.",
+              "time": "21.44"
+            }
+          ],
+          "2026-04-09": [
+            {
+              "id": 3,
+              "sender": "user",
+              "text": "babi 12412412",
+              "time": "22.34"
+            },
+            {
+              "id": 4,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "22.34"
+            },
+            {
+              "id": 5,
+              "sender": "user",
+              "text": "babi 2000000",
+              "time": "22.35"
+            },
+            {
+              "id": 6,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "22.35"
+            },
+            {
+              "id": 7,
+              "sender": "user",
+              "text": "halah 29189",
+              "time": "23.28"
+            },
+            {
+              "id": 8,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 29.189 untuk \"halah\" kategori other.",
+              "time": "23.28"
+            },
+            {
+              "id": 9,
+              "sender": "user",
+              "text": "test 12948",
+              "time": "23.33"
+            },
+            {
+              "id": 10,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 12.948 untuk \"test\" kategori other.",
+              "time": "23.33"
+            },
+            {
+              "id": 11,
+              "sender": "user",
+              "text": "12124212",
+              "time": "23.33"
+            },
+            {
+              "id": 12,
+              "sender": "assistant",
+              "text": "Catatan untuk Kamis, 9 April 2026 sudah disimpan.",
+              "time": "23.33"
+            },
+            {
+              "id": 13,
+              "sender": "user",
+              "text": "aweawe 12124124",
+              "time": "23.33"
+            },
+            {
+              "id": 14,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "23.33"
+            }
+          ],
+          "2026-04-10": [
+            {
+              "id": 15,
+              "sender": "user",
+              "text": "makan 10000",
+              "time": "21.02"
+            },
+            {
+              "id": 16,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"makan\" kategori makanan.",
+              "time": "21.02"
+            }
+          ]
+        },
+        "expensesByDate": {
+          "2026-04-07": [
+            {
+              "amount": 100000,
+              "description": "makanan",
+              "category": "makanan"
+            }
+          ],
+          "2026-04-09": [
+            {
+              "amount": 12948,
+              "description": "test",
+              "category": "other"
+            },
+            {
+              "amount": 29189,
+              "description": "halah",
+              "category": "other"
+            },
+            {
+              "amount": 1241241,
+              "description": "gojek",
+              "category": "travel"
+            },
+            {
+              "amount": 124114,
+              "description": "makan",
+              "category": "travel"
+            },
+            {
+              "amount": 124124,
+              "description": "throat",
+              "category": "makanan"
+            }
+          ],
+          "2026-04-10": [
+            {
+              "amount": 100000,
+              "description": "gofood",
+              "category": "makanan"
+            },
+            {
+              "amount": 10000,
+              "description": "makan",
+              "category": "makanan"
+            }
+          ]
+        },
+        "incomesByDate": {
+          "2026-04-07": [
+            {
+              "amount": 2333,
+              "description": "1",
+              "source": ""
+            },
+            {
+              "amount": 1000000000,
+              "description": "schuwpeed",
+              "source": ""
+            },
+            {
+              "amount": 2000000,
+              "description": "judi",
+              "source": "berjudi"
+            }
+          ],
+          "2026-04-09": [
+            {
+              "amount": 14124,
+              "description": "biji",
+              "source": "ntah"
+            },
+            {
+              "amount": 90000,
+              "description": "gaji",
+              "source": "kantor"
+            }
+          ],
+          "2026-04-10": [
+            {
+              "amount": 2000000,
+              "description": "lembur",
+              "source": "klantor"
+            }
+          ]
+        }
+      },
+      "financialData": {
+        "pendapatan": 5000000,
+        "pengeluaranWajib": 2700000,
+        "tanggalPemasukan": 25,
+        "intendedTanggalPemasukan": 25,
+        "hutangWajib": 0,
+        "estimasiTabungan": 522301166,
+        "danaDarurat": 319380700,
+        "budgetAllocation": {
+          "mode": 2,
+          "pengeluaran": 54,
+          "wants": 0,
+          "savings": 46
+        },
+        "currentPengeluaranLimit": 2700000,
+        "currentPengeluaranUsed": 1741616,
+        "currentSisaSaldoPool": 9004124,
+        "monthlyTopUp": {
+          "cycleKey": "2026-03-25",
+          "fromTabunganCount": 0,
+          "totalFromTabungan": 0,
+          "totalFromDanaDarurat": 0
+        },
+        "currentCycleStart": "2026-03-25",
+        "currentCycleEnd": "2026-04-24",
+        "danaInvestasi": 217920467,
+        "savingsAllocation": {
+          "tabungan": 507301166,
+          "danaDarurat": 304380700,
+          "danaInvestasi": 217920467
+        },
+        "investmentTracking": {
+          "cycleAmounts": {
+            "2026-05-25": 9000000,
+            "2026-06-25": 3000000,
+            "2026-07-25": 3000000,
+            "2026-04-25": 202920467
+          }
+        },
+        "lastCycleCarryOverSaldo": 4600000
+      },
+      "streak": {
+        "current": 0,
+        "longest": 18,
+        "lastActiveDate": "2026-04-13",
+        "freezeUsed": false
+      },
+      "debts": [
+        {
+          "name": "kpr",
+          "category": "produktif",
+          "debtType": "KPR",
+          "principalAmount": 50000000,
+          "remainingAmount": 35000000,
+          "monthlyInstallment": 2000000,
+          "dueDay": 1,
+          "notes": "",
+          "id": "debt-1775830199635-671"
+        }
+      ]
+    },
+    {
+      "id": "e8c2",
+      "name": "sanrio",
+      "email": "sanrio@gmail.com",
+      "phone": "1241251221",
+      "password": "13qeadzc",
+      "onboardingCompleted": true,
+      "level": 4,
+      "investmentWatchlist": {
+        "items": [
+          {
+            "symbol": "NVO",
+            "name": "Novo Nordisk A/S Sponsored ADR",
+            "type": "American Depositary Receipt",
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-04-14T14:36:53.671Z"
+          },
+          {
+            "symbol": "AAPL",
+            "name": "Apple Inc.",
+            "type": "Common Stock",
+            "region": "United States",
+            "currency": "USD",
+            "createdAt": "2026-04-14T14:36:47.142Z"
+          }
+        ],
+        "selectedSymbol": "NVO",
+        "updatedAt": "2026-04-14T15:57:54.009Z"
+      },
+      "journal": {
+        "nextChatMessageId": 7,
+        "chatByDate": {
+          "2026-04-13": [
+            {
+              "id": 1,
+              "sender": "user",
+              "text": "babi 100000",
+              "time": "21.17"
+            },
+            {
+              "id": 2,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 100.000 untuk \"babi\" kategori other.",
+              "time": "21.17"
+            },
+            {
+              "id": 3,
+              "sender": "user",
+              "text": "aweawewa 129449191",
+              "time": "22.09"
+            },
+            {
+              "id": 4,
+              "sender": "assistant",
+              "text": "Budget pengeluaran periode ini sudah habis. Kamu bisa top up sementara dari Tabungan atau Dana Darurat.",
+              "time": "22.09"
+            }
+          ],
+          "2026-04-14": [
+            {
+              "id": 5,
+              "sender": "user",
+              "text": "makan babi 10000",
+              "time": "21.49"
+            },
+            {
+              "id": 6,
+              "sender": "assistant",
+              "text": "Dicatat: Rp 10.000 untuk \"makan babi\" kategori makanan.",
+              "time": "21.49"
+            }
+          ]
+        },
+        "expensesByDate": {
+          "2026-04-13": [
+            {
+              "amount": 100000,
+              "description": "babi",
+              "category": "other"
+            }
+          ],
+          "2026-04-14": [
+            {
+              "amount": 10000,
+              "description": "makan babi",
+              "category": "makanan"
+            }
+          ]
+        },
+        "incomesByDate": {
+          "2026-04-14": [
+            {
+              "amount": 124124,
+              "description": "1241",
+              "source": "124124"
+            }
+          ]
+        }
+      },
+      "financialData": {
+        "pendapatan": 10000000,
+        "pengeluaranWajib": 3500000,
+        "tanggalPemasukan": 26,
+        "intendedTanggalPemasukan": 26,
+        "hutangWajib": 0,
+        "estimasiTabungan": 40000000,
+        "danaDarurat": 35000000,
+        "budgetAllocation": {
+          "mode": 2,
+          "pengeluaran": 35,
+          "wants": 0,
+          "savings": 65
+        },
+        "currentPengeluaranLimit": 3500000,
+        "currentPengeluaranUsed": 110000,
+        "currentSisaSaldoPool": 13124124,
+        "lastCycleCarryOverSaldo": 6500000,
+        "monthlyTopUp": {
+          "cycleKey": "2026-03-26",
+          "fromTabunganCount": 0,
+          "totalFromTabungan": 0,
+          "totalFromDanaDarurat": 0
+        },
+        "currentCycleStart": "2026-03-26",
+        "currentCycleEnd": "2026-04-25"
+      },
+      "streak": {
+        "current": 2,
+        "longest": 2,
+        "lastActiveDate": "2026-04-14",
+        "freezeUsed": false
+      },
+      "debts": []
     }
   ]
 }
