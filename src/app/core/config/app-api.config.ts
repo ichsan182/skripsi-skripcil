@@ -1,4 +1,4 @@
-export const USERS_API_URL = 'http://localhost:3000/users';
+export const USERS_API_URL = '/api/users';
 
 export const MARKET_DATA_API = {
   yahooFinance: {

@@ -2277,7 +2277,7 @@
           }
         ],
         "selectedSymbol": "NVO",
-        "updatedAt": "2026-04-14T15:57:54.009Z"
+        "updatedAt": "2026-04-16T15:19:50.423Z"
       },
       "journal": {
         "nextChatMessageId": 7,
@@ -2382,7 +2382,39 @@
         "lastActiveDate": "2026-04-14",
         "freezeUsed": false
       },
-      "debts": []
+      "debts": [
+        {
+          "name": "beli hp",
+          "category": "pembayaran",
+          "debtType": "Kartu Kredit",
+          "principalAmount": 1241241,
+          "remainingAmount": 124141,
+          "monthlyInstallment": 31036,
+          "dueDay": 1,
+          "notes": "",
+          "id": "debt-1776267590667-749"
+        }
+      ]
+    },
+    {
+      "id": "c273",
+      "name": "cushwake",
+      "email": "cuhwake@gmail.com",
+      "phone": "12414112412",
+      "password": "13qeadzc",
+      "onboardingCompleted": false,
+      "level": 1,
+      "investmentWatchlist": {
+        "items": [],
+        "selectedSymbol": null,
+        "updatedAt": "2026-04-20T14:36:24.927Z"
+      },
+      "journal": {
+        "nextChatMessageId": 1,
+        "chatByDate": {},
+        "expensesByDate": {},
+        "incomesByDate": {}
+      }
     }
   ]
 }
