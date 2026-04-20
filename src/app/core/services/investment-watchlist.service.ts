@@ -26,7 +26,17 @@ interface StoredUser {
 
 interface UserRecord {
   id: number | string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  password?: string;
+  onboardingCompleted?: boolean;
+  level?: number;
   investmentWatchlist?: Partial<InvestmentWatchlistState>;
+  journal?: unknown;
+  financialData?: unknown;
+  streak?: unknown;
+  debts?: unknown[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -139,10 +149,18 @@ export class InvestmentWatchlistService {
     userId: number | string,
     state: InvestmentWatchlistState,
   ): Promise<void> {
+    const currentUser = await firstValueFrom(
+      this.httpClient.get<UserRecord>(`${USERS_API_URL}/${userId}`),
+    );
+
+    const updatedUser: UserRecord = {
+      ...currentUser,
+      id: userId,
+      investmentWatchlist: state,
+    };
+
     await firstValueFrom(
-      this.httpClient.patch(`${USERS_API_URL}/${userId}`, {
-        investmentWatchlist: state,
-      }),
+      this.httpClient.put(`${USERS_API_URL}/${userId}`, updatedUser),
     );
 
     this.currentUserService.patchCurrentUser({

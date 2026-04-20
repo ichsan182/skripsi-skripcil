@@ -266,11 +266,9 @@ export class Home {
     if (user.id) {
       try {
         await firstValueFrom(
-          this.http.patch(`${USERS_API_URL}/${user.id}`, {
-            financialData: user.financialData,
-            streak: user.streak,
-            journal: user.journal,
-            debts: user.debts,
+          this.http.put(`${USERS_API_URL}/${user.id}`, {
+            ...user,
+            id: user.id,
           }),
         );
       } catch {
@@ -835,7 +833,9 @@ export class Home {
     if (user.id) {
       try {
         await firstValueFrom(
-          this.http.patch(`${USERS_API_URL}/${user.id}`, {
+          this.http.put(`${USERS_API_URL}/${user.id}`, {
+            ...user,
+            id: user.id,
             financialData: updatedFinancialData,
           }),
         );
@@ -1015,8 +1015,9 @@ export class Home {
     if (user.id) {
       try {
         await firstValueFrom(
-          this.http.patch(`${USERS_API_URL}/${user.id}`, {
-            streak,
+          this.http.put(`${USERS_API_URL}/${user.id}`, {
+            ...updatedUser,
+            id: user.id,
           }),
         );
       } catch {

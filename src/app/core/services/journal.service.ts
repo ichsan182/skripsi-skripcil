@@ -408,8 +408,15 @@ export class JournalService {
       financialData?: FinancialData | null;
     },
   ): Promise<void> {
+    const currentUser = await this.loadUserById(userId);
+    const nextUser = {
+      ...(currentUser ?? { id: userId }),
+      ...payload,
+      id: userId,
+    };
+
     await firstValueFrom(
-      this.httpClient.patch(`${USERS_API_URL}/${userId}`, payload),
+      this.httpClient.put(`${USERS_API_URL}/${userId}`, nextUser),
     );
   }
 

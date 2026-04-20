@@ -75,10 +75,9 @@ export class Register {
         debts: [],
       };
 
-      const existingUsersResponse = await firstValueFrom(
-        this.httpClient.get<unknown>(USERS_API_URL),
+      const existingUsers = await firstValueFrom(
+        this.httpClient.get<ExistingUser[]>(USERS_API_URL),
       );
-      const existingUsers = this.extractUsers(existingUsersResponse);
 
       const isEmailTaken = existingUsers.some(
         (user) => user.email.trim().toLowerCase() === payload.email,
@@ -95,69 +94,12 @@ export class Register {
       this.successMessage =
         'Registrasi berhasil. Silakan login menggunakan akun baru.';
       this.registerForm.reset();
-    } catch (error) {
-      this.errorMessage = this.buildHttpErrorMessage(error);
+    } catch {
+      this.errorMessage =
+        'Gagal menyimpan data. Pastikan backend Spring Boot berjalan.';
     } finally {
       this.isSubmitting = false;
     }
-  }
-
-  private extractUsers(response: unknown): ExistingUser[] {
-    if (Array.isArray(response)) {
-      return response as ExistingUser[];
-    }
-
-    if (
-      response &&
-      typeof response === 'object' &&
-      'content' in response &&
-      Array.isArray((response as { content: unknown }).content)
-    ) {
-      return (response as { content: ExistingUser[] }).content;
-    }
-
-    if (
-      response &&
-      typeof response === 'object' &&
-      '_embedded' in response &&
-      typeof (response as { _embedded: unknown })._embedded === 'object' &&
-      (response as { _embedded: { users?: unknown } })._embedded?.users &&
-      Array.isArray(
-        (response as { _embedded: { users: unknown[] } })._embedded.users,
-      )
-    ) {
-      return (response as { _embedded: { users: ExistingUser[] } })._embedded
-        .users;
-    }
-
-    return [];
-  }
-
-  private buildHttpErrorMessage(error: unknown): string {
-    if (!(error instanceof HttpErrorResponse)) {
-      return 'Terjadi kesalahan tidak terduga. Silakan coba lagi.';
-    }
-
-    if (error.status === 0) {
-      return 'Tidak bisa terhubung ke backend (cek http://localhost:8081 dan restart ng serve).';
-    }
-
-    if (typeof error.error === 'string' && error.error.trim().length > 0) {
-      return `Gagal (${error.status}): ${error.error}`;
-    }
-
-    if (
-      error.error &&
-      typeof error.error === 'object' &&
-      'message' in (error.error as Record<string, unknown>)
-    ) {
-      const message = (error.error as { message?: string }).message;
-      if (message) {
-        return `Gagal (${error.status}): ${message}`;
-      }
-    }
-
-    return `Gagal request ke backend (status ${error.status}).`;
   }
 
   private generateUserId(): string {

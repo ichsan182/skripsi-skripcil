@@ -231,10 +231,9 @@ export class Sidebar implements OnInit, OnChanges {
     if (updatedUser.id) {
       try {
         await firstValueFrom(
-          this.http.patch(`${USERS_API_URL}/${updatedUser.id}`, {
-            name,
-            email,
-            profileImage,
+          this.http.put(`${USERS_API_URL}/${updatedUser.id}`, {
+            ...updatedUser,
+            id: updatedUser.id,
           }),
         );
       } catch {

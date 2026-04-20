@@ -95,8 +95,9 @@ export class Login {
       } else {
         await this.router.navigateByUrl('/home');
       }
-    } catch (error) {
-      this.errorMessage = this.buildHttpErrorMessage(error);
+    } catch {
+      this.errorMessage =
+        'Gagal terhubung ke server. Pastikan backend Spring Boot berjalan.';
     } finally {
       this.isSubmitting = false;
     }
@@ -134,8 +135,9 @@ export class Login {
       alert('Reset password sudah terkirim');
       this.successMessage = 'Reset password sudah terkirim.';
       this.forgotForm.reset();
-    } catch (error) {
-      this.errorMessage = this.buildHttpErrorMessage(error);
+    } catch {
+      this.errorMessage =
+        'Gagal terhubung ke server. Pastikan backend Spring Boot berjalan.';
     } finally {
       this.isSubmitting = false;
     }
