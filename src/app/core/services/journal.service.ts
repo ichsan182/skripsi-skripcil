@@ -1,7 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { USERS_API_URL } from '../config/app-api.config';
+import {
+  USER_FINANCIAL_DATA_API_URL,
+  USERS_API_URL,
+} from '../config/app-api.config';
 import { CurrentUserService } from './current-user.service';
 import {
   ExpenseCategory,
@@ -136,9 +139,9 @@ export class JournalService {
 
   private static readonly DEFAULT_BUDGET: BudgetAllocation = {
     mode: 2,
-    pengeluaran: 80,
+    pengeluaran: 20,
     wants: 0,
-    savings: 20,
+    savings: 80,
   };
 
   async loadCurrentUserJournal(
@@ -160,11 +163,12 @@ export class JournalService {
       this.startOfDay(referenceDate),
     );
 
-    if (!user.journal || financialState.changed) {
-      await this.patchUserData(userId, {
-        journal,
-        financialData: financialState.data,
-      });
+    if (!user.journal) {
+      await this.patchJournal(userId, journal);
+    }
+
+    if (financialState.changed) {
+      await this.saveFinancialData(userId, financialState.data);
       this.patchLocalCurrentUser({ financialData: financialState.data });
     }
 
@@ -390,6 +394,18 @@ export class JournalService {
     return this.buildExpensePrompt(financialState.data, 0);
   }
 
+  async saveCurrentUserFinancialData(
+    financialData: FinancialData | null,
+  ): Promise<void> {
+    const userId = this.getCurrentUserId();
+    if (!userId) {
+      return;
+    }
+
+    await this.saveFinancialData(userId, financialData);
+    this.patchLocalCurrentUser({ financialData });
+  }
+
   private getCurrentUserId(): number | string | null {
     return this.currentUserService.getCurrentUserId();
   }
@@ -405,7 +421,6 @@ export class JournalService {
     userId: number | string,
     payload: {
       journal?: UserJournal;
-      financialData?: FinancialData | null;
     },
   ): Promise<void> {
     const currentUser = await this.loadUserById(userId);
@@ -413,6 +428,7 @@ export class JournalService {
       ...(currentUser ?? { id: userId }),
       ...payload,
       id: userId,
+      financialData: undefined,
     };
 
     await firstValueFrom(
@@ -443,7 +459,7 @@ export class JournalService {
       return null;
     }
 
-    const budget = data.budgetAllocation ?? this.deriveBudgetAllocation(data);
+    const budget = this.normalizeBudgetAllocation(data.budgetAllocation, data);
     const intendedDay = this.clampDay(
       (data.intendedTanggalPemasukan ?? data.tanggalPemasukan) || 1,
     );
@@ -491,6 +507,28 @@ export class JournalService {
       pengeluaran: expensePct,
       wants: 0,
       savings: Math.max(0, 100 - expensePct),
+    };
+  }
+
+  private normalizeBudgetAllocation(
+    budget: BudgetAllocation | undefined,
+    data: FinancialData,
+  ): BudgetAllocation {
+    if (!budget) {
+      return this.deriveBudgetAllocation(data);
+    }
+
+    const modeCandidate = Number((budget as { mode?: unknown }).mode);
+    const mode: 2 | 3 = modeCandidate === 3 ? 3 : 2;
+    const pengeluaran = this.clampPercent(budget.pengeluaran);
+    const wants = mode === 3 ? this.clampPercent(budget.wants) : 0;
+    const savings = this.clampPercent(budget.savings);
+
+    return {
+      mode,
+      pengeluaran,
+      wants,
+      savings,
     };
   }
 
@@ -1023,6 +1061,10 @@ export class JournalService {
     return Math.max(1, Math.min(31, Math.floor(day || 1)));
   }
 
+  private clampPercent(value: number): number {
+    return Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+  }
+
   private async loadUserById(
     userId: number | string | null,
   ): Promise<UserRecord | null> {
@@ -1048,11 +1090,24 @@ export class JournalService {
       return;
     }
 
-    await this.patchUserData(userId, {
-      journal,
-      financialData,
-    });
+    await this.patchJournal(userId, journal);
+    await this.saveFinancialData(userId, financialData);
     this.patchLocalCurrentUser({ financialData });
+  }
+
+  private async saveFinancialData(
+    userId: number | string,
+    financialData: FinancialData | null,
+  ): Promise<void> {
+    await firstValueFrom(
+      this.httpClient.patch(
+        USER_FINANCIAL_DATA_API_URL(userId),
+        financialData,
+        {
+          responseType: 'text',
+        },
+      ),
+    );
   }
 
   private patchLocalCurrentUser(patch: {

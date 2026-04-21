@@ -159,9 +159,9 @@ export class Home {
   expenseSaveError = '';
 
   budgetMode: 2 | 3 = 2;
-  budgetPengeluaran = 80;
+  budgetPengeluaran = 20;
   budgetWants = 0;
-  budgetSavings = 20;
+  budgetSavings = 80;
   budgetLastEdited: ('pengeluaran' | 'wants' | 'savings') | null = null;
   savingsTabunganInput = 0;
   savingsDanaDaruratInput = 0;
@@ -292,8 +292,11 @@ export class Home {
         this.financialData = user.financialData;
         this.pendapatanInput = user.financialData.pendapatan || 0;
         if (user.financialData.budgetAllocation) {
-          const ba = user.financialData.budgetAllocation;
-          this.budgetMode = ba.mode;
+          const ba = this.normalizeBudgetAllocationForEditor(
+            user.financialData.budgetAllocation,
+            user.financialData,
+          );
+          this.budgetMode = this.normalizeBudgetMode(ba.mode);
           this.budgetPengeluaran = ba.pengeluaran;
           this.budgetWants = ba.wants;
           this.budgetSavings = ba.savings;
@@ -600,8 +603,11 @@ export class Home {
     if (this.financialData) {
       this.pendapatanInput = this.financialData.pendapatan;
       if (this.financialData.budgetAllocation) {
-        const ba = this.financialData.budgetAllocation;
-        this.budgetMode = ba.mode;
+        const ba = this.normalizeBudgetAllocationForEditor(
+          this.financialData.budgetAllocation,
+          this.financialData,
+        );
+        this.budgetMode = this.normalizeBudgetMode(ba.mode);
         this.budgetPengeluaran = ba.pengeluaran;
         this.budgetWants = ba.wants;
         this.budgetSavings = ba.savings;
@@ -668,9 +674,6 @@ export class Home {
         this.financialData = result.financialData;
         this.refreshLevelEvaluation();
         this.computeRollingBudgetToday();
-        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        user.financialData = result.financialData;
-        localStorage.setItem('currentUser', JSON.stringify(user));
       }
 
       await this.loadMonthlyExpenseTotal();
@@ -697,9 +700,6 @@ export class Home {
         this.financialData = result.financialData;
         this.refreshLevelEvaluation();
         this.computeRollingBudgetToday();
-        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        user.financialData = result.financialData;
-        localStorage.setItem('currentUser', JSON.stringify(user));
       }
       this.showTambahPemasukan = false;
     } finally {
@@ -827,22 +827,9 @@ export class Home {
     };
     this.financialData = updatedFinancialData;
     this.refreshLevelEvaluation();
-    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    user.financialData = updatedFinancialData;
-    localStorage.setItem('currentUser', JSON.stringify(user));
-    if (user.id) {
-      try {
-        await firstValueFrom(
-          this.http.put(`${USERS_API_URL}/${user.id}`, {
-            ...user,
-            id: user.id,
-            financialData: updatedFinancialData,
-          }),
-        );
-      } catch {
-        // silent
-      }
-    }
+    await this.journalService.saveCurrentUserFinancialData(
+      updatedFinancialData,
+    );
     this.showSettingPersenan = false;
   }
 
@@ -1545,13 +1532,19 @@ export class Home {
 
   private computeEditableSavingsPoolTotal(): number {
     const currentBudget = this.getCurrentBudgetAllocation();
-    const currentPoolBase = this.computeSavingsPoolBase(
-      this.financialData?.pendapatan || 0,
+    const currentIncome = this.financialData?.pendapatan || 0;
+    const directCurrentPoolBase = this.computeSavingsPoolBase(
+      currentIncome,
       currentBudget,
     );
     const activePool = Math.max(
       0,
-      this.financialData?.currentSisaSaldoPool ?? currentPoolBase,
+      this.financialData?.currentSisaSaldoPool ?? directCurrentPoolBase,
+    );
+    const currentPoolBase = this.estimateCurrentPoolBase(
+      currentIncome,
+      currentBudget,
+      activePool,
     );
     const nextPoolBase = this.computeSavingsPoolBase(
       this.pendapatanInput,
@@ -1573,7 +1566,10 @@ export class Home {
   private getCurrentBudgetAllocation(): BudgetAllocation {
     const currentBudget = this.financialData?.budgetAllocation;
     if (currentBudget) {
-      return currentBudget;
+      return this.normalizeBudgetAllocationForEditor(
+        currentBudget,
+        this.financialData,
+      );
     }
 
     const pendapatan = this.financialData?.pendapatan || 0;
@@ -1613,6 +1609,69 @@ export class Home {
       0,
       Math.round((Math.max(0, pendapatan) * budget.savings) / 100),
     );
+  }
+
+  private estimateCurrentPoolBase(
+    pendapatan: number,
+    budget: BudgetAllocation,
+    activePool: number,
+  ): number {
+    if (budget.mode !== 2 || pendapatan <= 0) {
+      return this.computeSavingsPoolBase(pendapatan, budget);
+    }
+
+    const expectedFromSavings = this.computeSavingsPoolBase(pendapatan, budget);
+    const expectedFromPengeluaran = Math.max(
+      0,
+      Math.round((Math.max(0, pendapatan) * budget.pengeluaran) / 100),
+    );
+
+    const diffSavings = Math.abs(activePool - expectedFromSavings);
+    const diffPengeluaran = Math.abs(activePool - expectedFromPengeluaran);
+
+    if (diffPengeluaran < diffSavings) {
+      return expectedFromPengeluaran;
+    }
+
+    return expectedFromSavings;
+  }
+
+  private normalizeBudgetAllocationForEditor(
+    budget: BudgetAllocation,
+    financialData: FinancialData | null,
+  ): BudgetAllocation {
+    if (this.normalizeBudgetMode(budget.mode) !== 2) {
+      return budget;
+    }
+
+    const income = Math.max(0, financialData?.pendapatan || 0);
+    if (income <= 0) {
+      return budget;
+    }
+
+    const activePool = Math.max(
+      0,
+      financialData?.currentSisaSaldoPool ??
+        Math.round((income * budget.savings) / 100),
+    );
+    const savingsPoolBySavings = Math.round((income * budget.savings) / 100);
+    const savingsPoolByPengeluaran = Math.round(
+      (income * budget.pengeluaran) / 100,
+    );
+
+    const isLegacyInverted =
+      Math.abs(activePool - savingsPoolByPengeluaran) <
+      Math.abs(activePool - savingsPoolBySavings);
+
+    if (!isLegacyInverted) {
+      return budget;
+    }
+
+    return {
+      ...budget,
+      pengeluaran: budget.savings,
+      savings: budget.pengeluaran,
+    };
   }
 
   private toSafePercent(value: number): number {
@@ -1660,6 +1719,10 @@ export class Home {
       2,
       '0',
     )}-01`;
+  }
+
+  private normalizeBudgetMode(mode: number): 2 | 3 {
+    return Number(mode) === 3 ? 3 : 2;
   }
 
   formatRupiah(amount: number): string {

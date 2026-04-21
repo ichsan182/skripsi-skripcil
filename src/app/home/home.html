@@ -521,11 +521,45 @@
         <div class="sp-allocation-section">
           <h3 class="sp-section-title">Alokasi Anggaran</h3>
           <div class="sp-allocation-grid">
+            @if (budgetMode === 2) {
             <div class="sp-alloc-field">
-              <label
-                >{{ budgetMode === 3 ? 'Needs (Kebutuhan)' : 'Pengeluaran'
-                }}</label
+              <label>Tabungan / Sisa Saldo</label>
+              <div class="sp-percent-input">
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  [value]="budgetSavings"
+                  (input)="onBudgetPercentInput('savings', $event)"
+                  class="sp-input sp-input-percent"
+                />
+                <span class="sp-percent-suffix">%</span>
+              </div>
+              <span class="sp-calc-amount"
+                >{{ formatRupiah(pendapatanInput * budgetSavings / 100)
+                }}</span
               >
+            </div>
+
+            <div class="sp-alloc-field">
+              <label>Pengeluaran</label>
+              <div class="sp-percent-input">
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  [value]="budgetPengeluaran"
+                  (input)="onBudgetPercentInput('pengeluaran', $event)"
+                  class="sp-input sp-input-percent"
+                />
+                <span class="sp-percent-suffix">%</span>
+              </div>
+              <span class="sp-calc-amount"
+                >{{ formatRupiah(pendapatanInput * budgetPengeluaran / 100)
+                }}</span
+              >
+            </div>
+            } @else {
+            <div class="sp-alloc-field">
+              <label>Needs (Kebutuhan)</label>
               <div class="sp-percent-input">
                 <input
                   type="text"
@@ -542,7 +576,6 @@
               >
             </div>
 
-            @if (budgetMode === 3) {
             <div class="sp-alloc-field">
               <label>Wants (Keinginan)</label>
               <div class="sp-percent-input">
@@ -559,7 +592,6 @@
                 >{{ formatRupiah(pendapatanInput * budgetWants / 100) }}</span
               >
             </div>
-            }
 
             <div class="sp-alloc-field">
               <label>Tabungan / Sisa Saldo</label>
@@ -577,6 +609,7 @@
                 >{{ formatRupiah(pendapatanInput * budgetSavings / 100) }}</span
               >
             </div>
+            }
           </div>
 
           <div class="sp-total-bar">

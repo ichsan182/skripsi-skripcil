@@ -151,9 +151,9 @@ export class Questionnaire {
         danaDarurat,
         budgetAllocation: {
           mode: 2,
-          pengeluaran: 80,
+          pengeluaran: 20,
           wants: 0,
-          savings: 20,
+          savings: 80,
         },
         currentPengeluaranLimit,
         currentPengeluaranUsed: 0,
