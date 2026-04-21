@@ -130,6 +130,18 @@ interface UserRecord {
   journal?: Partial<UserJournal>;
 }
 
+interface ExpenseApiPayload {
+  amount: number;
+  description: string;
+  category: string;
+}
+
+interface IncomeApiPayload {
+  amount: number;
+  description: string;
+  source?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -157,15 +169,12 @@ export class JournalService {
     );
 
     const journal = this.normalizeJournal(user.journal);
+    await this.hydrateDateEntriesFromApi(userId, journal, referenceDate);
     const financialState = this.ensureFinancialState(
       this.normalizeFinancialData(user.financialData),
       journal,
       this.startOfDay(referenceDate),
     );
-
-    if (!user.journal) {
-      await this.patchJournal(userId, journal);
-    }
 
     if (financialState.changed) {
       await this.saveFinancialData(userId, financialState.data);
@@ -176,14 +185,7 @@ export class JournalService {
   }
 
   async saveCurrentUserJournal(journal: UserJournal): Promise<UserJournal> {
-    const userId = this.getCurrentUserId();
     const normalized = this.normalizeJournal(journal);
-
-    if (!userId) {
-      return normalized;
-    }
-
-    await this.patchJournal(userId, normalized);
     return normalized;
   }
 
@@ -300,7 +302,18 @@ export class JournalService {
       options,
     );
 
-    await this.saveJournalAndFinancial(userId, journal, result.financialData);
+    if (!result.requiresTopUp && userId) {
+      await this.postExpenseByDate(userId, dateKey, entry);
+      const latestJournal = await this.loadCurrentUserJournal(referenceDate);
+      journal.expensesByDate = latestJournal.expensesByDate;
+      journal.incomesByDate = latestJournal.incomesByDate;
+      journal.chatByDate = latestJournal.chatByDate;
+      journal.nextChatMessageId = latestJournal.nextChatMessageId;
+      await this.saveFinancialData(userId, result.financialData);
+      this.patchLocalCurrentUser({ financialData: result.financialData });
+    } else {
+      await this.saveJournalAndFinancial(userId, journal, result.financialData);
+    }
 
     return {
       journal,
@@ -313,9 +326,18 @@ export class JournalService {
   }
 
   async addIncome(dateKey: string, entry: IncomeEntry): Promise<UserJournal> {
-    const journal = await this.loadCurrentUserJournal();
+    const userId = this.getCurrentUserId();
+    const referenceDate =
+      this.parseDateKey(dateKey) ?? this.startOfDay(new Date());
+
+    if (userId) {
+      await this.postIncomeByDate(userId, dateKey, entry);
+      return this.loadCurrentUserJournal(referenceDate);
+    }
+
+    const journal = await this.loadCurrentUserJournal(referenceDate);
     this.ensureIncomeBucket(journal, dateKey).unshift(entry);
-    return this.saveCurrentUserJournal(journal);
+    return journal;
   }
 
   async addTemporaryIncome(
@@ -333,8 +355,6 @@ export class JournalService {
       referenceDate,
     );
 
-    this.ensureIncomeBucket(journal, dateKey).unshift(entry);
-
     const nextFinancial = financialState.data
       ? {
           ...financialState.data,
@@ -345,7 +365,20 @@ export class JournalService {
         }
       : null;
 
-    await this.saveJournalAndFinancial(userId, journal, nextFinancial);
+    if (userId) {
+      await this.postIncomeByDate(userId, dateKey, entry);
+      const latestJournal = await this.loadCurrentUserJournal(referenceDate);
+      journal.expensesByDate = latestJournal.expensesByDate;
+      journal.incomesByDate = latestJournal.incomesByDate;
+      journal.chatByDate = latestJournal.chatByDate;
+      journal.nextChatMessageId = latestJournal.nextChatMessageId;
+      await this.saveFinancialData(userId, nextFinancial);
+      this.patchLocalCurrentUser({ financialData: nextFinancial });
+    } else {
+      this.ensureIncomeBucket(journal, dateKey).unshift(entry);
+      await this.saveJournalAndFinancial(userId, journal, nextFinancial);
+    }
+
     return { journal, financialData: nextFinancial };
   }
 
@@ -355,13 +388,19 @@ export class JournalService {
     const userId = this.getCurrentUserId();
     const user = await this.loadUserById(userId);
     const journal = this.normalizeJournal(user?.journal);
+    if (userId) {
+      await this.hydrateDateEntriesFromApi(userId, journal, referenceDate);
+    }
     const financialState = this.ensureFinancialState(
       this.normalizeFinancialData(user?.financialData),
       journal,
       this.startOfDay(referenceDate),
     );
 
-    await this.saveJournalAndFinancial(userId, journal, financialState.data);
+    if (userId && financialState.changed) {
+      await this.saveFinancialData(userId, financialState.data);
+      this.patchLocalCurrentUser({ financialData: financialState.data });
+    }
 
     const rangeStart = financialState.data?.currentCycleStart ?? null;
     const rangeEnd = financialState.data?.currentCycleEnd ?? null;
@@ -387,7 +426,10 @@ export class JournalService {
       journal,
       referenceDate,
     );
-    await this.saveJournalAndFinancial(userId, journal, financialState.data);
+    if (userId && financialState.changed) {
+      await this.saveFinancialData(userId, financialState.data);
+      this.patchLocalCurrentUser({ financialData: financialState.data });
+    }
     if (!financialState.data) {
       return null;
     }
@@ -634,8 +676,12 @@ export class JournalService {
       cycle.start,
       cycle.end,
     );
-    if (next.currentPengeluaranUsed !== calculatedUsed) {
-      next.currentPengeluaranUsed = calculatedUsed;
+    const preservedUsed = Math.max(
+      Math.max(0, next.currentPengeluaranUsed ?? 0),
+      calculatedUsed,
+    );
+    if (next.currentPengeluaranUsed !== preservedUsed) {
+      next.currentPengeluaranUsed = preservedUsed;
       changed = true;
     }
 
@@ -1090,7 +1136,6 @@ export class JournalService {
       return;
     }
 
-    await this.patchJournal(userId, journal);
     await this.saveFinancialData(userId, financialData);
     this.patchLocalCurrentUser({ financialData });
   }
@@ -1108,6 +1153,152 @@ export class JournalService {
         },
       ),
     );
+  }
+
+  private async hydrateDateEntriesFromApi(
+    userId: number | string,
+    journal: UserJournal,
+    referenceDate: Date,
+  ): Promise<void> {
+    const dateKey = this.toDateKey(referenceDate);
+
+    const [expenses, incomes] = await Promise.all([
+      this.getExpensesByDate(userId, dateKey),
+      this.getIncomesByDate(userId, dateKey),
+    ]);
+
+    if (expenses !== null) {
+      journal.expensesByDate[dateKey] = expenses;
+    }
+
+    if (incomes !== null) {
+      journal.incomesByDate[dateKey] = incomes;
+    }
+  }
+
+  private async getExpensesByDate(
+    userId: number | string,
+    dateKey: string,
+  ): Promise<ExpenseEntry[] | null> {
+    try {
+      const payload = await firstValueFrom(
+        this.httpClient.get<ExpenseApiPayload[]>(
+          this.buildJournalDateUrl(userId, 'expenses', dateKey),
+        ),
+      );
+
+      return (payload || []).map((entry) => ({
+        amount: Math.max(0, Math.round(Number(entry.amount) || 0)),
+        description: String(entry.description || '').trim(),
+        category: this.fromApiExpenseCategory(entry.category),
+      }));
+    } catch {
+      return null;
+    }
+  }
+
+  private async getIncomesByDate(
+    userId: number | string,
+    dateKey: string,
+  ): Promise<IncomeEntry[] | null> {
+    try {
+      const payload = await firstValueFrom(
+        this.httpClient.get<IncomeApiPayload[]>(
+          this.buildJournalDateUrl(userId, 'incomes', dateKey),
+        ),
+      );
+
+      return (payload || []).map((entry) => ({
+        amount: Math.max(0, Math.round(Number(entry.amount) || 0)),
+        description: String(entry.description || '').trim(),
+        source: String(entry.source || '').trim() || 'Lainnya',
+      }));
+    } catch {
+      return null;
+    }
+  }
+
+  private async postExpenseByDate(
+    userId: number | string,
+    dateKey: string,
+    entry: ExpenseEntry,
+  ): Promise<void> {
+    const payload: ExpenseApiPayload = {
+      amount: Math.max(0, Math.round(entry.amount)),
+      description: entry.description,
+      category: this.toApiExpenseCategory(entry.category),
+    };
+
+    await firstValueFrom(
+      this.httpClient.post(
+        this.buildJournalDateUrl(userId, 'expenses', dateKey),
+        payload,
+      ),
+    );
+  }
+
+  private async postIncomeByDate(
+    userId: number | string,
+    dateKey: string,
+    entry: IncomeEntry,
+  ): Promise<void> {
+    const payload: IncomeApiPayload = {
+      amount: Math.max(0, Math.round(entry.amount)),
+      description: entry.description,
+      source: entry.source,
+    };
+
+    await firstValueFrom(
+      this.httpClient.post(
+        this.buildJournalDateUrl(userId, 'incomes', dateKey),
+        payload,
+      ),
+    );
+  }
+
+  private buildJournalDateUrl(
+    userId: number | string,
+    type: 'expenses' | 'incomes',
+    dateKey: string,
+  ): string {
+    return `${USERS_API_URL}/${userId}/journal/${type}?date=${encodeURIComponent(
+      dateKey,
+    )}`;
+  }
+
+  private toApiExpenseCategory(category: ExpenseCategory): string {
+    if (category === ExpenseCategory.Makanan) return 'Food';
+    if (category === ExpenseCategory.Travel) return 'Travel';
+    if (category === ExpenseCategory.Entertainment) return 'Entertainment';
+    if (category === ExpenseCategory.Subscription) return 'Subscription';
+    if (category === ExpenseCategory.Bills) return 'Bills';
+    return 'Other';
+  }
+
+  private fromApiExpenseCategory(category: string): ExpenseCategory {
+    const normalized = String(category || '')
+      .trim()
+      .toLowerCase();
+    if (normalized === 'food' || normalized === 'makanan') {
+      return ExpenseCategory.Makanan;
+    }
+    if (normalized === 'travel' || normalized === 'transport') {
+      return ExpenseCategory.Travel;
+    }
+    if (normalized === 'entertainment') {
+      return ExpenseCategory.Entertainment;
+    }
+    if (normalized === 'subscription') {
+      return ExpenseCategory.Subscription;
+    }
+    if (
+      normalized === 'bills' ||
+      normalized === 'bill' ||
+      normalized === 'tagihan'
+    ) {
+      return ExpenseCategory.Bills;
+    }
+    return ExpenseCategory.Other;
   }
 
   private patchLocalCurrentUser(patch: {
