@@ -764,6 +764,13 @@ export class Home {
         existingSavingsAlloc.danaInvestasi + this.savingsDanaInvestasiInput,
     };
     const investmentTracking = this.buildUpdatedInvestmentTracking();
+    const newlyAllocated =
+      this.savingsTabunganInput +
+      this.savingsDanaDaruratInput +
+      (this.levelEvaluation.level >= 4 ? this.savingsDanaInvestasiInput : 0);
+    const currentCycleSavingsAllocated =
+      Math.max(0, this.financialData?.currentCycleSavingsAllocated ?? 0) +
+      newlyAllocated;
     const updatedFinancialData: FinancialData = {
       ...(this.financialData || {
         pendapatan: 0,
@@ -783,6 +790,7 @@ export class Home {
       investmentTracking,
       currentPengeluaranLimit: pengeluaranWajib,
       currentSisaSaldoPool: Math.max(0, this.savingsRemaining),
+      currentCycleSavingsAllocated,
     };
     this.financialData = updatedFinancialData;
     this.refreshLevelEvaluation();
@@ -1490,25 +1498,26 @@ export class Home {
   }
 
   private computeEditableSavingsPoolTotal(): number {
-    const activePool = Math.max(
-      0,
-      this.financialData?.currentSisaSaldoPool ?? 0,
-    );
-    // currentCycleBase = the savings amount allocated for this cycle only,
-    // excluding any carryover from the previous cycle.
-    // This anchors the delta to real stored data, not to budget percentages.
-    const lastCycleCarryOver = Math.max(
-      0,
-      this.financialData?.lastCycleCarryOverSaldo ?? 0,
-    );
-    const currentCycleBase = Math.max(0, activePool - lastCycleCarryOver);
-
+    // Formula: newPool = (income × newSavings%) + carryOver - alreadyAllocatedThisCycle
+    //
+    // This correctly accounts for:
+    // - Savings percentage changes (scales from full income)
+    // - Carryover from the previous cycle
+    // - Amounts already moved to tabungan/danaDarurat/investasi this cycle
     const nextPoolBase = this.computeSavingsPoolBase(
       this.pendapatanInput,
       this.getPendingBudgetAllocation(),
     );
+    const lastCycleCarryOver = Math.max(
+      0,
+      this.financialData?.lastCycleCarryOverSaldo ?? 0,
+    );
+    const alreadyAllocated = Math.max(
+      0,
+      this.financialData?.currentCycleSavingsAllocated ?? 0,
+    );
 
-    return Math.max(0, activePool + (nextPoolBase - currentCycleBase));
+    return Math.max(0, nextPoolBase + lastCycleCarryOver - alreadyAllocated);
   }
 
   private getPendingBudgetAllocation(): BudgetAllocation {

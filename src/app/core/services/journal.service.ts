@@ -85,6 +85,7 @@ export interface FinancialData {
   currentPengeluaranUsed?: number;
   currentSisaSaldoPool?: number;
   lastCycleCarryOverSaldo?: number;
+  currentCycleSavingsAllocated?: number;
   monthlyTopUp?: MonthlyTopUpSummary;
 }
 
@@ -550,6 +551,10 @@ export class JournalService {
       currentPengeluaranUsed: Math.max(0, data.currentPengeluaranUsed ?? 0),
       currentSisaSaldoPool: Math.max(0, data.currentSisaSaldoPool ?? baseSaldo),
       lastCycleCarryOverSaldo: Math.max(0, data.lastCycleCarryOverSaldo ?? 0),
+      currentCycleSavingsAllocated: Math.max(
+        0,
+        data.currentCycleSavingsAllocated ?? 0,
+      ),
       monthlyTopUp: data.monthlyTopUp,
     };
   }
@@ -711,6 +716,7 @@ export class JournalService {
       next.currentPengeluaranLimit = baseLimit;
       next.lastCycleCarryOverSaldo = carriedSaldo;
       next.currentSisaSaldoPool = baseSaldo + carriedSaldo;
+      next.currentCycleSavingsAllocated = 0;
       next.monthlyTopUp = {
         cycleKey: cycleStartKey,
         fromTabunganCount: 0,
