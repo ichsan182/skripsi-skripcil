@@ -585,6 +585,17 @@ export class JournalService {
     const wants = mode === 3 ? this.clampPercent(budget.wants) : 0;
     const savings = this.clampPercent(budget.savings);
 
+    // For mode 2 only: verify that stored pengeluaran% matches the actual
+    // recorded pengeluaranWajib. If they diverge by more than rounding error,
+    // the budget was stored with wrong defaults (e.g. hardcoded 20/80) and
+    // must be re-derived from the real data to avoid incorrect cycle resets.
+    if (mode === 2 && data.pendapatan > 0 && (data.pengeluaranWajib ?? 0) > 0) {
+      const expectedExpense = Math.round((data.pendapatan * pengeluaran) / 100);
+      if (Math.abs(expectedExpense - data.pengeluaranWajib) > 1) {
+        return this.deriveBudgetAllocation(data);
+      }
+    }
+
     return {
       mode,
       pengeluaran,

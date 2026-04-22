@@ -15,6 +15,7 @@
   <section class="home-page">
     <h1>Selamat Datang, {{ userName }}!</h1>
     <p>Cek status kamu hari ini yuk!</p>
+    @if (testingFeaturesEnabled) {
     <section class="time-testing-panel">
       <div class="time-testing-title">Mode Testing Waktu</div>
       <p class="time-testing-subtitle">
@@ -106,6 +107,7 @@
         </span>
       </div>
     </section>
+    }
     <div class="home-content">
       <section class="summary-cards-section">
         <div class="card-with-mention">

@@ -157,6 +157,7 @@ export class Home {
   showTambahPengeluaran = false;
   expenseSubmitting = false;
   expenseSaveError = '';
+  testingFeaturesEnabled = false;
 
   budgetMode: 2 | 3 = 2;
   budgetPengeluaran = 20;
@@ -215,69 +216,32 @@ export class Home {
 
   constructor() {
     this.loadUserData();
-    this.streakTestMode = this.testingTimeService.getStreakTestMode();
-    this.checkpointExists = this.testingTimeService.hasCheckpoint();
     this.syncReferenceDateControls();
     void this.initializeDashboard();
   }
 
   get isTestingDateActive(): boolean {
-    return this.testingTimeService.isCustomDateActive();
+    return false;
   }
 
   async applyTestingDate(): Promise<void> {
-    const parsed = this.parseTestingDateInput(this.testingDateInput);
-    if (!parsed) {
-      return;
-    }
-
-    this.testingTimeService.setReferenceDate(parsed);
-    await this.reloadForReferenceDate();
+    return;
   }
 
   async resetTestingDate(): Promise<void> {
-    this.testingTimeService.clearReferenceDate();
-    await this.reloadForReferenceDate();
+    return;
   }
 
   setStreakTestMode(mode: StreakTestMode): void {
     this.streakTestMode = mode;
-    this.testingTimeService.setStreakTestMode(mode);
-    void this.reloadForReferenceDate();
   }
 
   saveCheckpoint(): void {
-    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    user.journal = {
-      nextChatMessageId: this.journal.nextChatMessageId,
-      chatByDate: this.journal.chatByDate,
-      expensesByDate: this.journal.expensesByDate,
-      incomesByDate: this.journal.incomesByDate,
-    };
-    this.testingTimeService.saveCheckpoint(JSON.stringify(user));
-    this.checkpointExists = true;
+    return;
   }
 
   async restoreCheckpoint(): Promise<void> {
-    const snapshot = this.testingTimeService.loadCheckpoint();
-    if (!snapshot) return;
-    const user = JSON.parse(snapshot);
-    localStorage.setItem('currentUser', snapshot);
-    if (user.id) {
-      try {
-        await firstValueFrom(
-          this.http.put(`${USERS_API_URL}/${user.id}`, {
-            ...user,
-            id: user.id,
-          }),
-        );
-      } catch {
-        // silent
-      }
-    }
-    this.loadUserData();
-    this.syncReferenceDateControls();
-    await this.initializeDashboard();
+    return;
   }
 
   private loadUserData(): void {
@@ -602,16 +566,11 @@ export class Home {
   openSettingPersenan(): void {
     if (this.financialData) {
       this.pendapatanInput = this.financialData.pendapatan;
-      if (this.financialData.budgetAllocation) {
-        const ba = this.normalizeBudgetAllocationForEditor(
-          this.financialData.budgetAllocation,
-          this.financialData,
-        );
-        this.budgetMode = this.normalizeBudgetMode(ba.mode);
-        this.budgetPengeluaran = ba.pengeluaran;
-        this.budgetWants = ba.wants;
-        this.budgetSavings = ba.savings;
-      }
+      const ba = this.getCurrentBudgetAllocation();
+      this.budgetMode = this.normalizeBudgetMode(ba.mode);
+      this.budgetPengeluaran = ba.pengeluaran;
+      this.budgetWants = ba.wants;
+      this.budgetSavings = ba.savings;
     }
     // savings inputs always start at 0 (sisa saldo system)
     this.savingsTabunganInput = 0;
@@ -1531,27 +1490,25 @@ export class Home {
   }
 
   private computeEditableSavingsPoolTotal(): number {
-    const currentBudget = this.getCurrentBudgetAllocation();
-    const currentIncome = this.financialData?.pendapatan || 0;
-    const directCurrentPoolBase = this.computeSavingsPoolBase(
-      currentIncome,
-      currentBudget,
-    );
     const activePool = Math.max(
       0,
-      this.financialData?.currentSisaSaldoPool ?? directCurrentPoolBase,
+      this.financialData?.currentSisaSaldoPool ?? 0,
     );
-    const currentPoolBase = this.estimateCurrentPoolBase(
-      currentIncome,
-      currentBudget,
-      activePool,
+    // currentCycleBase = the savings amount allocated for this cycle only,
+    // excluding any carryover from the previous cycle.
+    // This anchors the delta to real stored data, not to budget percentages.
+    const lastCycleCarryOver = Math.max(
+      0,
+      this.financialData?.lastCycleCarryOverSaldo ?? 0,
     );
+    const currentCycleBase = Math.max(0, activePool - lastCycleCarryOver);
+
     const nextPoolBase = this.computeSavingsPoolBase(
       this.pendapatanInput,
       this.getPendingBudgetAllocation(),
     );
 
-    return Math.max(0, activePool + (nextPoolBase - currentPoolBase));
+    return Math.max(0, activePool + (nextPoolBase - currentCycleBase));
   }
 
   private getPendingBudgetAllocation(): BudgetAllocation {
@@ -1611,31 +1568,6 @@ export class Home {
     );
   }
 
-  private estimateCurrentPoolBase(
-    pendapatan: number,
-    budget: BudgetAllocation,
-    activePool: number,
-  ): number {
-    if (budget.mode !== 2 || pendapatan <= 0) {
-      return this.computeSavingsPoolBase(pendapatan, budget);
-    }
-
-    const expectedFromSavings = this.computeSavingsPoolBase(pendapatan, budget);
-    const expectedFromPengeluaran = Math.max(
-      0,
-      Math.round((Math.max(0, pendapatan) * budget.pengeluaran) / 100),
-    );
-
-    const diffSavings = Math.abs(activePool - expectedFromSavings);
-    const diffPengeluaran = Math.abs(activePool - expectedFromPengeluaran);
-
-    if (diffPengeluaran < diffSavings) {
-      return expectedFromPengeluaran;
-    }
-
-    return expectedFromSavings;
-  }
-
   private normalizeBudgetAllocationForEditor(
     budget: BudgetAllocation,
     financialData: FinancialData | null,
@@ -1649,28 +1581,48 @@ export class Home {
       return budget;
     }
 
-    const activePool = Math.max(
+    const recordedExpense = Math.max(
       0,
-      financialData?.currentSisaSaldoPool ??
-        Math.round((income * budget.savings) / 100),
-    );
-    const savingsPoolBySavings = Math.round((income * budget.savings) / 100);
-    const savingsPoolByPengeluaran = Math.round(
-      (income * budget.pengeluaran) / 100,
+      Math.round(financialData?.pengeluaranWajib ?? 0),
     );
 
-    const isLegacyInverted =
-      Math.abs(activePool - savingsPoolByPengeluaran) <
-      Math.abs(activePool - savingsPoolBySavings);
-
-    if (!isLegacyInverted) {
+    if (recordedExpense <= 0) {
       return budget;
     }
 
+    const expectedExpenseByPengeluaran = Math.round(
+      (income * budget.pengeluaran) / 100,
+    );
+    const expectedExpenseBySavings = Math.round(
+      (income * budget.savings) / 100,
+    );
+    const diffToPengeluaran = Math.abs(
+      recordedExpense - expectedExpenseByPengeluaran,
+    );
+    const diffToSavings = Math.abs(recordedExpense - expectedExpenseBySavings);
+
+    if (diffToPengeluaran <= 1) {
+      return budget;
+    }
+
+    if (diffToSavings <= 1) {
+      return {
+        ...budget,
+        pengeluaran: budget.savings,
+        savings: budget.pengeluaran,
+      };
+    }
+
+    const derivedPengeluaran = Math.max(
+      0,
+      Math.min(100, Math.round((recordedExpense / income) * 100)),
+    );
+
     return {
       ...budget,
-      pengeluaran: budget.savings,
-      savings: budget.pengeluaran,
+      pengeluaran: derivedPengeluaran,
+      wants: 0,
+      savings: Math.max(0, 100 - derivedPengeluaran),
     };
   }
 
@@ -2088,7 +2040,9 @@ export class Home {
 
   private syncReferenceDateControls(): void {
     const reference = this.getReferenceToday();
-    this.testingDateInput = this.testingTimeService.toDateInputValue(reference);
+    this.testingDateInput = this.toDateKey(reference);
+    this.streakTestMode = 'realistic';
+    this.checkpointExists = false;
     this.selectedYear = reference.getFullYear();
     this.selectedMonthIndex = reference.getMonth();
     this.selectedMonthValue = this.toMonthInputValue(
@@ -2100,7 +2054,7 @@ export class Home {
   }
 
   private getReferenceToday(): Date {
-    return this.startOfDay(this.testingTimeService.getReferenceDate());
+    return this.startOfDay(new Date());
   }
 
   private parseTestingDateInput(value: string): Date | null {

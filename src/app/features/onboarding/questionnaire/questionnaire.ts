@@ -133,6 +133,10 @@ export class Questionnaire {
         this.form2.value.estimasiTabungan || '',
       );
       const danaDarurat = this.parseNumber(this.form2.value.danaDarurat || '');
+      const pengeluaranPercent =
+        pendapatan > 0
+          ? this.clampPercent(Math.round((pengeluaranWajib / pendapatan) * 100))
+          : 0;
       const now = new Date();
       const cycleRange = this.buildCycleRange(now, tanggalPemasukan);
       const currentPengeluaranLimit = pengeluaranWajib;
@@ -151,9 +155,9 @@ export class Questionnaire {
         danaDarurat,
         budgetAllocation: {
           mode: 2,
-          pengeluaran: 20,
+          pengeluaran: pengeluaranPercent,
           wants: 0,
-          savings: 80,
+          savings: Math.max(0, 100 - pengeluaranPercent),
         },
         currentPengeluaranLimit,
         currentPengeluaranUsed: 0,
@@ -280,6 +284,10 @@ export class Questionnaire {
 
   private clampDay(value: number): number {
     return Math.max(0, Math.min(MAX_TANGGAL_PEMASUKAN, value));
+  }
+
+  private clampPercent(value: number): number {
+    return Math.max(0, Math.min(100, value));
   }
 
   private calculateLevel(data: FinancialData): number {
