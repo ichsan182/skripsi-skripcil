@@ -488,11 +488,30 @@ export class JournalService {
   }
 
   private normalizeJournal(journal?: Partial<UserJournal>): UserJournal {
+    const chatByDate = this.normalizeRecordOfArrays(
+      journal?.chatByDate as Record<string, unknown[]> | undefined,
+      (item, index) => this.normalizeChatMessage(item, index),
+    );
+    const expensesByDate = this.normalizeRecordOfArrays(
+      journal?.expensesByDate as Record<string, unknown[]> | undefined,
+      (item) => this.normalizeExpenseEntry(item),
+    );
+    const incomesByDate = this.normalizeRecordOfArrays(
+      journal?.incomesByDate as Record<string, unknown[]> | undefined,
+      (item) => this.normalizeIncomeEntry(item),
+    );
+    const maxChatId = Object.values(chatByDate)
+      .flat()
+      .reduce((max, message) => Math.max(max, message.id), 0);
+
     return {
-      nextChatMessageId: Math.max(1, Number(journal?.nextChatMessageId) || 1),
-      chatByDate: this.cloneRecordOfArrays(journal?.chatByDate),
-      expensesByDate: this.cloneRecordOfArrays(journal?.expensesByDate),
-      incomesByDate: this.cloneRecordOfArrays(journal?.incomesByDate),
+      nextChatMessageId: Math.max(
+        maxChatId + 1,
+        Number(journal?.nextChatMessageId) || 1,
+      ),
+      chatByDate,
+      expensesByDate,
+      incomesByDate,
     };
   }
 
@@ -574,18 +593,51 @@ export class JournalService {
     };
   }
 
-  private cloneRecordOfArrays<T>(
-    source?: Record<string, T[]>,
+  private normalizeRecordOfArrays<T>(
+    source: Record<string, unknown[]> | undefined,
+    normalize: (item: unknown, index: number) => T,
   ): Record<string, T[]> {
     if (!source) {
       return {};
     }
 
-    const cloned: Record<string, T[]> = {};
+    const normalized: Record<string, T[]> = {};
     for (const [key, items] of Object.entries(source)) {
-      cloned[key] = Array.isArray(items) ? [...items] : [];
+      if (!Array.isArray(items)) {
+        normalized[key] = [];
+        continue;
+      }
+      normalized[key] = items.map((item, index) => normalize(item, index));
     }
-    return cloned;
+    return normalized;
+  }
+
+  private normalizeChatMessage(item: unknown, index: number): ChatMessage {
+    const value = item as Partial<ChatMessage> | undefined;
+    return {
+      id: Math.max(1, Number(value?.id) || index + 1),
+      sender: value?.sender === 'assistant' ? 'assistant' : 'user',
+      text: String(value?.text || '').trim(),
+      time: String(value?.time || '').trim(),
+    };
+  }
+
+  private normalizeExpenseEntry(item: unknown): ExpenseEntry {
+    const value = item as Partial<ExpenseEntry & { category?: unknown }>;
+    return {
+      amount: Math.max(0, Math.round(Number(value?.amount) || 0)),
+      description: String(value?.description || '').trim(),
+      category: this.fromApiExpenseCategory(String(value?.category || '')),
+    };
+  }
+
+  private normalizeIncomeEntry(item: unknown): IncomeEntry {
+    const value = item as Partial<IncomeEntry>;
+    return {
+      amount: Math.max(0, Math.round(Number(value?.amount) || 0)),
+      description: String(value?.description || '').trim(),
+      source: String(value?.source || '').trim() || 'Lainnya',
+    };
   }
 
   private ensureFinancialState(
