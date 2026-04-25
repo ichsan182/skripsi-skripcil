@@ -18,6 +18,8 @@ export interface ChatMessage {
   sender: ChatSender;
   text: string;
   time: string;
+  parsedText?: string | null;
+  parsedNominal?: number | null;
 }
 
 export interface ExpenseEntry {
@@ -143,6 +145,12 @@ interface IncomeApiPayload {
   source?: string;
 }
 
+interface ChatApiPayload {
+  sender: ChatSender;
+  text: string;
+  time: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -222,14 +230,17 @@ export class JournalService {
       };
     }
 
-    this.ensureChatBucket(journal, dateKey).push({
-      id: journal.nextChatMessageId++,
-      sender: 'user',
-      text: trimmedText,
-      time: this.getCurrentTimeLabel(),
-    });
+    const userMsg = await this.postChatByDate(
+      userId,
+      dateKey,
+      { sender: 'user', text: trimmedText, time: this.getCurrentTimeLabel() },
+      journal.nextChatMessageId++,
+    );
+    this.ensureChatBucket(journal, dateKey).push(userMsg);
 
-    const parsedExpense = this.parseExpenseFromMessage(trimmedText);
+    const parsedExpense =
+      this.parseExpenseFromChatMessage(userMsg) ??
+      this.parseExpenseFromMessage(trimmedText);
     let assistantText: string;
 
     let requiresTopUp = false;
@@ -254,18 +265,32 @@ export class JournalService {
       assistantText = `Catatan untuk ${selectedDateLabel} sudah disimpan.`;
     }
 
-    this.ensureChatBucket(journal, dateKey).push({
-      id: journal.nextChatMessageId++,
-      sender: 'assistant',
-      text: assistantText,
-      time: this.getCurrentTimeLabel(),
-    });
+    const assistantMsg = await this.postChatByDate(
+      userId,
+      dateKey,
+      {
+        sender: 'assistant',
+        text: assistantText,
+        time: this.getCurrentTimeLabel(),
+      },
+      journal.nextChatMessageId++,
+    );
+    this.ensureChatBucket(journal, dateKey).push(assistantMsg);
 
     const normalizedFinancial = this.ensureFinancialState(
       financialData,
       journal,
       referenceDate,
     ).data;
+
+    if (userId && parsedExpense && !requiresTopUp) {
+      await this.postExpenseByDate(userId, dateKey, parsedExpense);
+      const latestJournal = await this.loadCurrentUserJournal(referenceDate);
+      journal.expensesByDate = latestJournal.expensesByDate;
+      journal.incomesByDate = latestJournal.incomesByDate;
+      journal.chatByDate = latestJournal.chatByDate;
+      journal.nextChatMessageId = latestJournal.nextChatMessageId;
+    }
 
     await this.saveJournalAndFinancial(userId, journal, normalizedFinancial);
     return {
@@ -629,12 +654,24 @@ export class JournalService {
   }
 
   private normalizeChatMessage(item: unknown, index: number): ChatMessage {
-    const value = item as Partial<ChatMessage> | undefined;
+    const value = item as
+      | Partial<ChatMessage & { parsedText?: unknown; parsedNominal?: unknown }>
+      | undefined;
+    const parsedTextRaw = value?.parsedText;
+    const parsedNominalRaw = Number(value?.parsedNominal);
     return {
       id: Math.max(1, Number(value?.id) || index + 1),
       sender: value?.sender === 'assistant' ? 'assistant' : 'user',
       text: String(value?.text || '').trim(),
       time: String(value?.time || '').trim(),
+      parsedText:
+        typeof parsedTextRaw === 'string' && parsedTextRaw.trim().length > 0
+          ? parsedTextRaw.trim().toLowerCase()
+          : null,
+      parsedNominal:
+        Number.isFinite(parsedNominalRaw) && parsedNominalRaw > 0
+          ? Math.floor(parsedNominalRaw)
+          : null,
     };
   }
 
@@ -1058,6 +1095,27 @@ export class JournalService {
     };
   }
 
+  private parseExpenseFromChatMessage(chat: ChatMessage): ExpenseEntry | null {
+    if (chat.sender !== 'user') {
+      return null;
+    }
+
+    const description = String(chat.parsedText || '')
+      .trim()
+      .toLowerCase();
+    const amount = Math.floor(Number(chat.parsedNominal));
+
+    if (!description || !Number.isFinite(amount) || amount <= 0) {
+      return null;
+    }
+
+    return {
+      amount,
+      description,
+      category: this.inferCategory(description),
+    };
+  }
+
   private getBaseExpenseLimit(data: FinancialData): number {
     const budget = data.budgetAllocation ?? this.deriveBudgetAllocation(data);
     const pct =
@@ -1229,20 +1287,44 @@ export class JournalService {
     journal: UserJournal,
     referenceDate: Date,
   ): Promise<void> {
-    const dateKey = this.toDateKey(referenceDate);
-
-    const [expenses, incomes] = await Promise.all([
-      this.getExpensesByDate(userId, dateKey),
-      this.getIncomesByDate(userId, dateKey),
+    // Collect all date keys that need hydration: union of the reference date
+    // plus all keys already tracked in the journal from the DB snapshot.
+    const referenceDateKey = this.toDateKey(referenceDate);
+    const allKeys = new Set<string>([
+      referenceDateKey,
+      ...Object.keys(journal.expensesByDate),
+      ...Object.keys(journal.incomesByDate),
+      ...Object.keys(journal.chatByDate),
     ]);
 
-    if (expenses !== null) {
-      journal.expensesByDate[dateKey] = expenses;
-    }
+    await Promise.all(
+      Array.from(allKeys).map(async (dateKey) => {
+        const [expenses, incomes, chats] = await Promise.all([
+          this.getExpensesByDate(userId, dateKey),
+          this.getIncomesByDate(userId, dateKey),
+          this.getChatsByDate(userId, dateKey),
+        ]);
 
-    if (incomes !== null) {
-      journal.incomesByDate[dateKey] = incomes;
-    }
+        if (expenses !== null) {
+          journal.expensesByDate[dateKey] = expenses;
+        }
+
+        if (incomes !== null) {
+          journal.incomesByDate[dateKey] = incomes;
+        }
+
+        if (chats !== null) {
+          journal.chatByDate[dateKey] = chats;
+          if (chats.length > 0) {
+            const maxId = chats.reduce((max, msg) => Math.max(max, msg.id), 0);
+            journal.nextChatMessageId = Math.max(
+              journal.nextChatMessageId,
+              maxId + 1,
+            );
+          }
+        }
+      }),
+    );
   }
 
   private async getExpensesByDate(
@@ -1325,9 +1407,68 @@ export class JournalService {
     );
   }
 
+  private async getChatsByDate(
+    userId: number | string,
+    dateKey: string,
+  ): Promise<ChatMessage[] | null> {
+    try {
+      const payload = await firstValueFrom(
+        this.httpClient.get<ChatMessage[]>(
+          this.buildJournalDateUrl(userId, 'chats', dateKey),
+        ),
+      );
+      return (payload || []).map((msg, index) =>
+        this.normalizeChatMessage(msg, index),
+      );
+    } catch {
+      return null;
+    }
+  }
+
+  private async postChatByDate(
+    userId: number | string | null,
+    dateKey: string,
+    payload: ChatApiPayload,
+    fallbackId: number,
+  ): Promise<ChatMessage> {
+    if (userId) {
+      try {
+        const response = await firstValueFrom(
+          this.httpClient.post<ChatMessage>(
+            this.buildJournalDateUrl(userId, 'chats', dateKey),
+            payload,
+          ),
+        );
+        return this.normalizeChatMessage(
+          {
+            ...response,
+            id: response?.id ?? fallbackId,
+            sender: response?.sender ?? payload.sender,
+            text: response?.text ?? payload.text,
+            time: response?.time ?? payload.time,
+          },
+          fallbackId - 1,
+        );
+      } catch {
+        // fall through to local fallback
+      }
+    }
+    return this.normalizeChatMessage(
+      {
+        id: fallbackId,
+        sender: payload.sender,
+        text: payload.text,
+        time: payload.time,
+        parsedText: null,
+        parsedNominal: null,
+      },
+      fallbackId - 1,
+    );
+  }
+
   private buildJournalDateUrl(
     userId: number | string,
-    type: 'expenses' | 'incomes',
+    type: 'expenses' | 'incomes' | 'chats',
     dateKey: string,
   ): string {
     return `${USERS_API_URL}/${userId}/journal/${type}?date=${encodeURIComponent(

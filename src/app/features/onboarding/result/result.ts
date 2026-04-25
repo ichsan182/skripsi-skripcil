@@ -2,15 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CurrentUserService } from '../../../core/services/current-user.service';
-
-interface FinancialData {
-  pendapatan: number;
-  pengeluaranWajib: number;
-  tanggalPemasukan: number;
-  hutangWajib: number;
-  estimasiTabungan: number;
-  danaDarurat: number;
-}
+import { FinancialData } from '../../../core/services/journal.service';
 
 @Component({
   selector: 'app-result',
@@ -45,15 +37,14 @@ export class Result {
 
   get financialData(): FinancialData {
     return (
-      this.user.financialData ||
-      ({
+      this.user.financialData || {
         pendapatan: 0,
         pengeluaranWajib: 0,
         tanggalPemasukan: 1,
         hutangWajib: 0,
         estimasiTabungan: 0,
         danaDarurat: 0,
-      } as FinancialData)
+      }
     );
   }
 
@@ -67,23 +58,41 @@ export class Result {
     const fd = this.financialData;
 
     switch (level) {
+      case 1:
+        return `Yuk mulai perjalanan finansialmu! Fokus kumpulkan dana darurat mini minimal Rp1.000.000 sebagai pondasi pertama keuanganmu.`;
       case 2:
-        return `Kamu masih memiliki hutang sebesar ${this.formatRupiah(fd.hutangWajib)} per bulan. Fokus lunasi hutang terlebih dahulu agar keuanganmu lebih sehat. Setelah hutang lunas, kamu bisa naik ke Level 3!`;
+        return `Kamu masih memiliki hutang konsumtif sebesar ${this.formatRupiah(fd.hutangWajib)} per bulan. Fokus lunasi hutang terlebih dahulu agar keuanganmu lebih sehat. Setelah hutang lunas, kamu bisa naik ke Level 3!`;
+      case 3:
+        return `Bagus! Kamu bebas dari hutang konsumtif. Sekarang fokus bangun dana darurat minimal ${this.formatRupiah(fd.pengeluaranWajib * 3)} (3x pengeluaran bulanan) untuk naik ke Level 4.`;
       case 4:
-        return `Luar biasa! Tabunganmu sudah mencapai ${this.formatRupiah(fd.estimasiTabungan)} dan dana daruratmu ${this.formatRupiah(fd.danaDarurat)}. Kamu siap untuk mulai berinvestasi dan mengembangkan kekayaanmu!`;
+        return `Luar biasa! Dana daruratmu sudah terpenuhi. Tabunganmu saat ini ${this.formatRupiah(fd.estimasiTabungan)}. Mulai alokasikan investasi minimal 15% dari pendapatan secara konsisten selama 3 bulan berturut-turut!`;
+      case 5:
+        return `Kerja bagus! Investasimu sudah konsisten. Saatnya tetapkan tujuan finansial besar dan capai minimal 20% progressnya untuk naik ke Level 6.`;
+      case 6:
+        return `Hampir ke puncak! Fokus bebaskan diri dari kewajiban terbesar — lunasi KPR atau bangun passive income hingga minimal 30% dari pendapatanmu secara konsisten.`;
+      case 7:
+        return `Luar biasa! Kamu telah mencapai level kebebasan finansial tertinggi. Pertahankan passive income, kelola risiko, dan terus beri dampak melalui donasi rutin.`;
       default:
-        return `Mantap! Kamu sudah bebas dari hutang wajib. Sekarang fokus bangun tabungan (minimal Rp 10.000.000) dan dana darurat (minimal ${this.formatRupiah(fd.pendapatan * 3)}) untuk naik ke Level 4.`;
+        return `Yuk mulai perjalanan finansialmu dengan langkah-langkah yang tepat!`;
     }
   }
 
   get levelLabel(): string {
     switch (this.userLevel) {
+      case 1:
+        return 'Pondasi Pertama';
       case 2:
         return 'Pelunasan Hutang';
       case 3:
         return 'Membangun Fondasi';
       case 4:
         return 'Siap Investasi';
+      case 5:
+        return 'Tujuan Besar';
+      case 6:
+        return 'Bebaskan dari Kewajiban';
+      case 7:
+        return 'Kebebasan Finansial';
       default:
         return 'Pemula';
     }
