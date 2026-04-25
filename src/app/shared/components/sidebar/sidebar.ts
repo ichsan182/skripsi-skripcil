@@ -230,9 +230,17 @@ export class Sidebar implements OnInit, OnChanges {
 
     if (updatedUser.id) {
       try {
+        const serverUser = await firstValueFrom(
+          this.http.get<Record<string, unknown>>(
+            `${USERS_API_URL}/${updatedUser.id}`,
+          ),
+        );
         await firstValueFrom(
           this.http.put(`${USERS_API_URL}/${updatedUser.id}`, {
-            ...updatedUser,
+            ...serverUser,
+            name,
+            email,
+            profileImage,
             id: updatedUser.id,
           }),
         );

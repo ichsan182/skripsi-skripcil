@@ -632,9 +632,17 @@ export class Debt {
 
     this.isSaving = true;
     try {
+      const serverUser = await firstValueFrom(
+        this.http.get<Record<string, unknown>>(
+          `${USERS_API_URL}/${updatedUser.id}`,
+        ),
+      );
       await firstValueFrom(
         this.http.put(`${USERS_API_URL}/${updatedUser.id}`, {
-          ...updatedUser,
+          ...serverUser,
+          level: updatedUser.level,
+          financialData: updatedUser.financialData,
+          debts: updatedUser.debts,
           id: updatedUser.id,
         }),
       );

@@ -968,9 +968,13 @@ export class Home {
     localStorage.setItem('currentUser', JSON.stringify(updatedUser));
     if (user.id) {
       try {
+        const serverUser = await firstValueFrom(
+          this.http.get<Record<string, unknown>>(`${USERS_API_URL}/${user.id}`),
+        );
         await firstValueFrom(
           this.http.put(`${USERS_API_URL}/${user.id}`, {
-            ...updatedUser,
+            ...serverUser,
+            streak,
             id: user.id,
           }),
         );

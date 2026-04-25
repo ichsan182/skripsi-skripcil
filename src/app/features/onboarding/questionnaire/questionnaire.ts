@@ -184,9 +184,15 @@ export class Questionnaire {
         level,
       };
 
+      const serverUser = await firstValueFrom(
+        this.http.get<Record<string, unknown>>(`${USERS_API_URL}/${user.id}`),
+      );
       await firstValueFrom(
         this.http.put(`${USERS_API_URL}/${user.id}`, {
-          ...updatedUser,
+          ...serverUser,
+          onboardingCompleted: true,
+          financialData,
+          level,
           id: user.id,
         }),
       );
