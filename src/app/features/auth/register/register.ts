@@ -1,29 +1,28 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { USERS_API_URL } from '../../../core/config/app-api.config';
 
 interface RegisterPayload {
+  id: string;
   name: string;
   email: string;
   phone: string;
   password: string;
   onboardingCompleted: boolean;
   level: number;
-  investmentWatchlist: {
-    items: never[];
-    selectedSymbol: null;
-    updatedAt: string;
-  };
-  journal: {
-    nextChatMessageId: number;
-    chatByDate: Record<string, never[]>;
-    expensesByDate: Record<string, never[]>;
-    incomesByDate: Record<string, never[]>;
-  };
+  investmentWatchlist: null;
+  journal: null;
+  financialData: null;
+  streak: null;
+  debts: never[];
+}
+
+interface ExistingUser {
+  email: string;
 }
 
 @Component({
@@ -62,32 +61,29 @@ export class Register {
     try {
       const formValues = this.registerForm.getRawValue();
       const payload: RegisterPayload = {
+        id: this.generateUserId(),
         name: formValues.name ?? '',
-        email: formValues.email ?? '',
+        email: (formValues.email ?? '').trim().toLowerCase(),
         phone: formValues.phone ?? '',
         password: formValues.password ?? '',
         onboardingCompleted: false,
         level: 1,
-        investmentWatchlist: {
-          items: [],
-          selectedSymbol: null,
-          updatedAt: new Date().toISOString(),
-        },
-        journal: {
-          nextChatMessageId: 1,
-          chatByDate: {},
-          expensesByDate: {},
-          incomesByDate: {},
-        },
+        investmentWatchlist: null,
+        journal: null,
+        financialData: null,
+        streak: null,
+        debts: [],
       };
 
-      const existingUser = await firstValueFrom(
-        this.httpClient.get<RegisterPayload[]>(
-          `${USERS_API_URL}?email=${encodeURIComponent(payload.email)}`,
-        ),
+      const existingUsers = await firstValueFrom(
+        this.httpClient.get<ExistingUser[]>(USERS_API_URL),
       );
 
-      if (existingUser.length) {
+      const isEmailTaken = existingUsers.some(
+        (user) => user.email.trim().toLowerCase() === payload.email,
+      );
+
+      if (isEmailTaken) {
         this.errorMessage =
           'Email sudah terdaftar. Silakan gunakan email lain.';
         return;
@@ -100,10 +96,18 @@ export class Register {
       this.registerForm.reset();
     } catch {
       this.errorMessage =
-        'Gagal menyimpan data. Pastikan json-server berjalan.';
+        'Gagal menyimpan data. Pastikan backend Spring Boot berjalan.';
     } finally {
       this.isSubmitting = false;
     }
+  }
+
+  private generateUserId(): string {
+    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+      return `user-${crypto.randomUUID()}`;
+    }
+
+    return `user-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
   }
 
   protected showError(

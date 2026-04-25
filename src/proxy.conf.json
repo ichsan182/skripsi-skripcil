@@ -1,4 +1,9 @@
 {
+  "/api": {
+    "target": "http://localhost:8081",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/rapidapi": {
     "target": "https://yahoo-finance15.p.rapidapi.com",
     "changeOrigin": true,

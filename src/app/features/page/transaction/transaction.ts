@@ -413,7 +413,7 @@ export class Transaction {
       this.rebuildCalendar();
     }
 
-    void this.refreshPromptState();
+    void this.syncSelectedDateData();
   }
 
   isSameDate(dateA: Date, dateB: Date): boolean {
@@ -538,6 +538,13 @@ export class Transaction {
     this.budgetPrompt = await this.journalService.getExpensePromptForDate(
       this.selectedDateKey,
     );
+  }
+
+  private async syncSelectedDateData(): Promise<void> {
+    this.journal = await this.journalService.loadCurrentUserJournal(
+      this.selectedDate,
+    );
+    await this.refreshPromptState();
   }
 
   async confirmTopUpAndRetry(): Promise<void> {

@@ -157,11 +157,12 @@ export class Home {
   showTambahPengeluaran = false;
   expenseSubmitting = false;
   expenseSaveError = '';
+  testingFeaturesEnabled = false;
 
   budgetMode: 2 | 3 = 2;
-  budgetPengeluaran = 80;
+  budgetPengeluaran = 20;
   budgetWants = 0;
-  budgetSavings = 20;
+  budgetSavings = 80;
   budgetLastEdited: ('pengeluaran' | 'wants' | 'savings') | null = null;
   savingsTabunganInput = 0;
   savingsDanaDaruratInput = 0;
@@ -215,71 +216,32 @@ export class Home {
 
   constructor() {
     this.loadUserData();
-    this.streakTestMode = this.testingTimeService.getStreakTestMode();
-    this.checkpointExists = this.testingTimeService.hasCheckpoint();
     this.syncReferenceDateControls();
     void this.initializeDashboard();
   }
 
   get isTestingDateActive(): boolean {
-    return this.testingTimeService.isCustomDateActive();
+    return false;
   }
 
   async applyTestingDate(): Promise<void> {
-    const parsed = this.parseTestingDateInput(this.testingDateInput);
-    if (!parsed) {
-      return;
-    }
-
-    this.testingTimeService.setReferenceDate(parsed);
-    await this.reloadForReferenceDate();
+    return;
   }
 
   async resetTestingDate(): Promise<void> {
-    this.testingTimeService.clearReferenceDate();
-    await this.reloadForReferenceDate();
+    return;
   }
 
   setStreakTestMode(mode: StreakTestMode): void {
     this.streakTestMode = mode;
-    this.testingTimeService.setStreakTestMode(mode);
-    void this.reloadForReferenceDate();
   }
 
   saveCheckpoint(): void {
-    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    user.journal = {
-      nextChatMessageId: this.journal.nextChatMessageId,
-      chatByDate: this.journal.chatByDate,
-      expensesByDate: this.journal.expensesByDate,
-      incomesByDate: this.journal.incomesByDate,
-    };
-    this.testingTimeService.saveCheckpoint(JSON.stringify(user));
-    this.checkpointExists = true;
+    return;
   }
 
   async restoreCheckpoint(): Promise<void> {
-    const snapshot = this.testingTimeService.loadCheckpoint();
-    if (!snapshot) return;
-    const user = JSON.parse(snapshot);
-    localStorage.setItem('currentUser', snapshot);
-    if (user.id) {
-      try {
-        await firstValueFrom(
-          this.http.patch(`${USERS_API_URL}/${user.id}`, {
-            financialData: user.financialData,
-            streak: user.streak,
-            journal: user.journal,
-            debts: user.debts,
-          }),
-        );
-      } catch {
-        // silent
-      }
-    }
-    this.loadUserData();
-    this.syncReferenceDateControls();
-    await this.initializeDashboard();
+    return;
   }
 
   private loadUserData(): void {
@@ -294,8 +256,11 @@ export class Home {
         this.financialData = user.financialData;
         this.pendapatanInput = user.financialData.pendapatan || 0;
         if (user.financialData.budgetAllocation) {
-          const ba = user.financialData.budgetAllocation;
-          this.budgetMode = ba.mode;
+          const ba = this.normalizeBudgetAllocationForEditor(
+            user.financialData.budgetAllocation,
+            user.financialData,
+          );
+          this.budgetMode = this.normalizeBudgetMode(ba.mode);
           this.budgetPengeluaran = ba.pengeluaran;
           this.budgetWants = ba.wants;
           this.budgetSavings = ba.savings;
@@ -601,13 +566,11 @@ export class Home {
   openSettingPersenan(): void {
     if (this.financialData) {
       this.pendapatanInput = this.financialData.pendapatan;
-      if (this.financialData.budgetAllocation) {
-        const ba = this.financialData.budgetAllocation;
-        this.budgetMode = ba.mode;
-        this.budgetPengeluaran = ba.pengeluaran;
-        this.budgetWants = ba.wants;
-        this.budgetSavings = ba.savings;
-      }
+      const ba = this.getCurrentBudgetAllocation();
+      this.budgetMode = this.normalizeBudgetMode(ba.mode);
+      this.budgetPengeluaran = ba.pengeluaran;
+      this.budgetWants = ba.wants;
+      this.budgetSavings = ba.savings;
     }
     // savings inputs always start at 0 (sisa saldo system)
     this.savingsTabunganInput = 0;
@@ -670,9 +633,6 @@ export class Home {
         this.financialData = result.financialData;
         this.refreshLevelEvaluation();
         this.computeRollingBudgetToday();
-        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        user.financialData = result.financialData;
-        localStorage.setItem('currentUser', JSON.stringify(user));
       }
 
       await this.loadMonthlyExpenseTotal();
@@ -699,9 +659,6 @@ export class Home {
         this.financialData = result.financialData;
         this.refreshLevelEvaluation();
         this.computeRollingBudgetToday();
-        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        user.financialData = result.financialData;
-        localStorage.setItem('currentUser', JSON.stringify(user));
       }
       this.showTambahPemasukan = false;
     } finally {
@@ -807,6 +764,13 @@ export class Home {
         existingSavingsAlloc.danaInvestasi + this.savingsDanaInvestasiInput,
     };
     const investmentTracking = this.buildUpdatedInvestmentTracking();
+    const newlyAllocated =
+      this.savingsTabunganInput +
+      this.savingsDanaDaruratInput +
+      (this.levelEvaluation.level >= 4 ? this.savingsDanaInvestasiInput : 0);
+    const currentCycleSavingsAllocated =
+      Math.max(0, this.financialData?.currentCycleSavingsAllocated ?? 0) +
+      newlyAllocated;
     const updatedFinancialData: FinancialData = {
       ...(this.financialData || {
         pendapatan: 0,
@@ -826,23 +790,13 @@ export class Home {
       investmentTracking,
       currentPengeluaranLimit: pengeluaranWajib,
       currentSisaSaldoPool: Math.max(0, this.savingsRemaining),
+      currentCycleSavingsAllocated,
     };
     this.financialData = updatedFinancialData;
     this.refreshLevelEvaluation();
-    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    user.financialData = updatedFinancialData;
-    localStorage.setItem('currentUser', JSON.stringify(user));
-    if (user.id) {
-      try {
-        await firstValueFrom(
-          this.http.patch(`${USERS_API_URL}/${user.id}`, {
-            financialData: updatedFinancialData,
-          }),
-        );
-      } catch {
-        // silent
-      }
-    }
+    await this.journalService.saveCurrentUserFinancialData(
+      updatedFinancialData,
+    );
     this.showSettingPersenan = false;
   }
 
@@ -1015,8 +969,9 @@ export class Home {
     if (user.id) {
       try {
         await firstValueFrom(
-          this.http.patch(`${USERS_API_URL}/${user.id}`, {
-            streak,
+          this.http.put(`${USERS_API_URL}/${user.id}`, {
+            ...updatedUser,
+            id: user.id,
           }),
         );
       } catch {
@@ -1543,21 +1498,26 @@ export class Home {
   }
 
   private computeEditableSavingsPoolTotal(): number {
-    const currentBudget = this.getCurrentBudgetAllocation();
-    const currentPoolBase = this.computeSavingsPoolBase(
-      this.financialData?.pendapatan || 0,
-      currentBudget,
-    );
-    const activePool = Math.max(
-      0,
-      this.financialData?.currentSisaSaldoPool ?? currentPoolBase,
-    );
+    // Formula: newPool = (income × newSavings%) + carryOver - alreadyAllocatedThisCycle
+    //
+    // This correctly accounts for:
+    // - Savings percentage changes (scales from full income)
+    // - Carryover from the previous cycle
+    // - Amounts already moved to tabungan/danaDarurat/investasi this cycle
     const nextPoolBase = this.computeSavingsPoolBase(
       this.pendapatanInput,
       this.getPendingBudgetAllocation(),
     );
+    const lastCycleCarryOver = Math.max(
+      0,
+      this.financialData?.lastCycleCarryOverSaldo ?? 0,
+    );
+    const alreadyAllocated = Math.max(
+      0,
+      this.financialData?.currentCycleSavingsAllocated ?? 0,
+    );
 
-    return Math.max(0, activePool + (nextPoolBase - currentPoolBase));
+    return Math.max(0, nextPoolBase + lastCycleCarryOver - alreadyAllocated);
   }
 
   private getPendingBudgetAllocation(): BudgetAllocation {
@@ -1572,7 +1532,10 @@ export class Home {
   private getCurrentBudgetAllocation(): BudgetAllocation {
     const currentBudget = this.financialData?.budgetAllocation;
     if (currentBudget) {
-      return currentBudget;
+      return this.normalizeBudgetAllocationForEditor(
+        currentBudget,
+        this.financialData,
+      );
     }
 
     const pendapatan = this.financialData?.pendapatan || 0;
@@ -1612,6 +1575,64 @@ export class Home {
       0,
       Math.round((Math.max(0, pendapatan) * budget.savings) / 100),
     );
+  }
+
+  private normalizeBudgetAllocationForEditor(
+    budget: BudgetAllocation,
+    financialData: FinancialData | null,
+  ): BudgetAllocation {
+    if (this.normalizeBudgetMode(budget.mode) !== 2) {
+      return budget;
+    }
+
+    const income = Math.max(0, financialData?.pendapatan || 0);
+    if (income <= 0) {
+      return budget;
+    }
+
+    const recordedExpense = Math.max(
+      0,
+      Math.round(financialData?.pengeluaranWajib ?? 0),
+    );
+
+    if (recordedExpense <= 0) {
+      return budget;
+    }
+
+    const expectedExpenseByPengeluaran = Math.round(
+      (income * budget.pengeluaran) / 100,
+    );
+    const expectedExpenseBySavings = Math.round(
+      (income * budget.savings) / 100,
+    );
+    const diffToPengeluaran = Math.abs(
+      recordedExpense - expectedExpenseByPengeluaran,
+    );
+    const diffToSavings = Math.abs(recordedExpense - expectedExpenseBySavings);
+
+    if (diffToPengeluaran <= 1) {
+      return budget;
+    }
+
+    if (diffToSavings <= 1) {
+      return {
+        ...budget,
+        pengeluaran: budget.savings,
+        savings: budget.pengeluaran,
+      };
+    }
+
+    const derivedPengeluaran = Math.max(
+      0,
+      Math.min(100, Math.round((recordedExpense / income) * 100)),
+    );
+
+    return {
+      ...budget,
+      pengeluaran: derivedPengeluaran,
+      wants: 0,
+      savings: Math.max(0, 100 - derivedPengeluaran),
+    };
   }
 
   private toSafePercent(value: number): number {
@@ -1659,6 +1680,10 @@ export class Home {
       2,
       '0',
     )}-01`;
+  }
+
+  private normalizeBudgetMode(mode: number): 2 | 3 {
+    return Number(mode) === 3 ? 3 : 2;
   }
 
   formatRupiah(amount: number): string {
@@ -2024,7 +2049,9 @@ export class Home {
 
   private syncReferenceDateControls(): void {
     const reference = this.getReferenceToday();
-    this.testingDateInput = this.testingTimeService.toDateInputValue(reference);
+    this.testingDateInput = this.toDateKey(reference);
+    this.streakTestMode = 'realistic';
+    this.checkpointExists = false;
     this.selectedYear = reference.getFullYear();
     this.selectedMonthIndex = reference.getMonth();
     this.selectedMonthValue = this.toMonthInputValue(
@@ -2036,7 +2063,7 @@ export class Home {
   }
 
   private getReferenceToday(): Date {
-    return this.startOfDay(this.testingTimeService.getReferenceDate());
+    return this.startOfDay(new Date());
   }
 
   private parseTestingDateInput(value: string): Date | null {

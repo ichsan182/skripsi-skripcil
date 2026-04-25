@@ -633,10 +633,9 @@ export class Debt {
     this.isSaving = true;
     try {
       await firstValueFrom(
-        this.http.patch(`${USERS_API_URL}/${updatedUser.id}`, {
-          level: updatedUser.level,
-          financialData: nextFinancialData,
-          debts: this.debts,
+        this.http.put(`${USERS_API_URL}/${updatedUser.id}`, {
+          ...updatedUser,
+          id: updatedUser.id,
         }),
       );
     } catch {

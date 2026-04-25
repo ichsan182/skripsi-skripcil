@@ -156,10 +156,7 @@ export function evaluateFinancialLevel(signals: LevelSignals): LevelEvaluation {
       nextTarget: canStayLevel2
         ? 'Lunasi seluruh hutang konsumtif hingga nol.'
         : 'Isi ulang dana darurat mini minimal Rp500.000 sambil menahan hutang baru.',
-      progressPercent: toInversePercent(
-        signals.consumptiveDebtTotal,
-        Math.max(1, signals.consumptiveDebtTotal + 1),
-      ),
+      progressPercent: 0,
       status: canStayLevel2 ? 'in-progress' : 'warning',
     };
   }
@@ -194,9 +191,11 @@ export function evaluateFinancialLevel(signals: LevelSignals): LevelEvaluation {
   const hasInvestmentStreak = signals.consecutiveInvestmentMonths >= 3;
   const emergencyAbove2Months = signals.emergencyFund >= oneMonthExpense * 2;
   if (!(hasInvestmentRate && hasInvestmentStreak && emergencyAbove2Months)) {
-    const progressPercent = hasInvestmentRate
-      ? toPercent(signals.consecutiveInvestmentMonths / 3)
-      : toPercent(signals.investmentAllocationRate / 15 / 3);
+    const progressPercent = !hasInvestmentRate
+      ? toPercent(signals.investmentAllocationRate / 15)
+      : !hasInvestmentStreak
+        ? toPercent(signals.consecutiveInvestmentMonths / 3)
+        : toPercent(signals.emergencyFund / (oneMonthExpense * 2));
 
     return {
       level: 4,
@@ -252,16 +251,28 @@ export function evaluateFinancialLevel(signals: LevelSignals): LevelEvaluation {
         ? 'Fokus percepat pelunasan KPR.'
         : 'Tingkatkan passive income hingga >=30% pendapatan selama 3 bulan konsisten.',
       progressPercent: signals.hasMortgage
-        ? toInversePercent(
-            signals.mortgageRemaining,
-            Math.max(1, signals.mortgageRemaining + 1),
-          )
+        ? 0
         : toPercent(signals.passiveIncomeRatioToIncome / 30),
       status: 'in-progress',
     };
   }
 
   // LEVEL 7
+  // Fallback ke Level 6 jika kondisi kritis: drawdown berlebihan atau passive income terlalu rendah
+  if (
+    signals.netWorthDrawdownPercent > 40 ||
+    signals.passiveIncomeRatioToNeeds < 20
+  ) {
+    return {
+      level: 6,
+      title: LEVEL_META[6].title,
+      focus: LEVEL_META[6].focus,
+      nextTarget: 'Pulihkan net worth dan stabilkan passive income.',
+      progressPercent: 35,
+      status: 'warning',
+    };
+  }
+
   const isLevel7Stable =
     signals.passiveIncomeRatioToNeeds >= 50 &&
     signals.hasRoutineDonation &&
@@ -275,20 +286,6 @@ export function evaluateFinancialLevel(signals: LevelSignals): LevelEvaluation {
       nextTarget: 'Jaga passive income >=50% kebutuhan dan catat donasi rutin.',
       progressPercent: toPercent(signals.passiveIncomeRatioToNeeds / 50),
       status: 'in-progress',
-    };
-  }
-
-  if (
-    signals.netWorthDrawdownPercent > 40 ||
-    signals.passiveIncomeRatioToNeeds < 20
-  ) {
-    return {
-      level: 6,
-      title: LEVEL_META[6].title,
-      focus: LEVEL_META[6].focus,
-      nextTarget: 'Pulihkan net worth dan stabilkan passive income.',
-      progressPercent: 35,
-      status: 'warning',
     };
   }
 
