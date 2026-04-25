@@ -1,7 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { USERS_API_URL } from '../config/app-api.config';
+import {
+  USERS_API_URL,
+  USER_INVESTMENT_WATCHLIST_API_URL,
+} from '../config/app-api.config';
 import { CurrentUserService } from './current-user.service';
 
 export interface WatchlistItem {
@@ -24,19 +27,13 @@ interface StoredUser {
   investmentWatchlist?: Partial<InvestmentWatchlistState>;
 }
 
+type InvestmentWatchlistPatchPayload = Partial<
+  Pick<InvestmentWatchlistState, 'items' | 'selectedSymbol' | 'updatedAt'>
+>;
+
 interface UserRecord {
   id: number | string;
-  name?: string;
-  email?: string;
-  phone?: string;
-  password?: string;
-  onboardingCompleted?: boolean;
-  level?: number;
   investmentWatchlist?: Partial<InvestmentWatchlistState>;
-  journal?: unknown;
-  financialData?: unknown;
-  streak?: unknown;
-  debts?: unknown[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -57,7 +54,15 @@ export class InvestmentWatchlistService {
     const state = this.normalizeState(user.investmentWatchlist);
 
     if (!user.investmentWatchlist) {
-      await this.patchState(userId, state);
+      await this.patchState(
+        userId,
+        {
+          items: state.items,
+          selectedSymbol: state.selectedSymbol,
+          updatedAt: state.updatedAt,
+        },
+        state,
+      );
     }
 
     return state;
@@ -125,7 +130,19 @@ export class InvestmentWatchlistService {
       updatedAt: new Date().toISOString(),
     };
 
-    return this.saveCurrentUserWatchlist(nextState);
+    const userId = this.getCurrentUserId();
+    if (!userId) {
+      return nextState;
+    }
+
+    return this.patchState(
+      userId,
+      {
+        selectedSymbol: nextState.selectedSymbol,
+        updatedAt: nextState.updatedAt,
+      },
+      nextState,
+    );
   }
 
   async saveCurrentUserWatchlist(
@@ -137,8 +154,15 @@ export class InvestmentWatchlistService {
       return normalized;
     }
 
-    await this.patchState(userId, normalized);
-    return normalized;
+    return this.patchState(
+      userId,
+      {
+        items: normalized.items,
+        selectedSymbol: normalized.selectedSymbol,
+        updatedAt: normalized.updatedAt,
+      },
+      normalized,
+    );
   }
 
   private getCurrentUserId(): number | string | null {
@@ -147,25 +171,35 @@ export class InvestmentWatchlistService {
 
   private async patchState(
     userId: number | string,
-    state: InvestmentWatchlistState,
-  ): Promise<void> {
-    const currentUser = await firstValueFrom(
-      this.httpClient.get<UserRecord>(`${USERS_API_URL}/${userId}`),
-    );
+    patch: InvestmentWatchlistPatchPayload,
+    expectedState: InvestmentWatchlistState,
+  ): Promise<InvestmentWatchlistState> {
+    const payload: InvestmentWatchlistPatchPayload = {};
+    if (patch.items) {
+      payload.items = expectedState.items;
+    }
 
-    const updatedUser: UserRecord = {
-      ...currentUser,
-      id: userId,
-      investmentWatchlist: state,
-    };
+    if ('selectedSymbol' in patch) {
+      payload.selectedSymbol = expectedState.selectedSymbol;
+    }
+
+    if (patch.updatedAt) {
+      payload.updatedAt = expectedState.updatedAt;
+    }
 
     await firstValueFrom(
-      this.httpClient.put(`${USERS_API_URL}/${userId}`, updatedUser),
+      this.httpClient.patch(
+        USER_INVESTMENT_WATCHLIST_API_URL(userId),
+        payload,
+        { responseType: 'text' },
+      ),
     );
 
     this.currentUserService.patchCurrentUser({
-      investmentWatchlist: state,
+      investmentWatchlist: expectedState,
     });
+
+    return expectedState;
   }
 
   private createDefaultState(): InvestmentWatchlistState {

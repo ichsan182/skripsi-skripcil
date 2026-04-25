@@ -3,6 +3,10 @@ export const USERS_API_URL = '/api/users';
 export const USER_FINANCIAL_DATA_API_URL = (userId: number | string): string =>
   `${USERS_API_URL}/${userId}/financial-data`;
 
+export const USER_INVESTMENT_WATCHLIST_API_URL = (
+  userId: number | string,
+): string => `${USERS_API_URL}/${userId}/investment-watchlist`;
+
 export const MARKET_DATA_API = {
   yahooFinance: {
     baseUrl: '/rapidapi',
