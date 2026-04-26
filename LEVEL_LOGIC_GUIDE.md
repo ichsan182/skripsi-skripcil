@@ -34,17 +34,25 @@ Catatan periodisasi investasi:
 
 ### Kondisi level ini
 
-- Dana darurat < Rp1.000.000.
+- Tabungan (saldo awal) < Rp10.000.000.
+
+
+- Naikkan `estimasiTabungan` sampai minimal Rp10.000.000.
+- Setelah itu, syarat berikutnya akan diperiksa (hutang konsumtif).
 
 ### Cara naik ke Level 2
 
-- Naikkan `danaDarurat` sampai minimal Rp1.000.000.
+- Naikkan `estimasiTabungan` sampai minimal Rp10.000.000.
 - Setelah itu, syarat berikutnya akan diperiksa (hutang konsumtif).
+
+### Risiko turun ke Level 1 dari Level 2
+
+- Jika tabungan turun di bawah Rp5.000.000 saat masih ada hutang konsumtif, sistem fallback ke Level 1.
 
 ### Checklist praktis
 
-- Simpan dana darurat mini dulu.
-- Hindari membuka hutang konsumtif baru.
+- Alokasikan pendapatan rutin ke tabungan.
+- Hindari membuka hutang konsumtif baru selagi membangun tabungan.
 
 ## Level 2 - Bersihkan Beban
 
@@ -52,14 +60,24 @@ Catatan periodisasi investasi:
 
 - Ada hutang konsumtif (`hutangWajib > 0`) dan dana darurat masih aman minimal Rp500.000.
 
-### Risiko turun ke Level 1
-
-- Jika hutang konsumtif masih ada dan dana darurat < Rp500.000, sistem bisa menahan/menurunkan ke Level 1.
-
 ### Cara naik ke Level 3
 
 - Lunasi `hutangWajib` sampai 0.
-- Jaga dana darurat tidak jatuh terlalu rendah.
+- Ada hutang konsumtif (`hutangWajib > 0`) dan tabungan masih >= Rp5.000.000.
+
+### Progress bar Level 2
+
+Progress dihitung dari: `(totalPrincipalKonsumtif - totalSisaKonsumtif) / totalPrincipalKonsumtif`.
+Contoh: hutang konsumtif awal Rp200.000, sudah dibayar Rp100.000 → progress 50%.
+
+### Risiko turun ke Level 1
+
+- Jika tabungan (`estimasiTabungan`) turun di bawah Rp5.000.000 saat masih ada hutang konsumtif, sistem fallback ke Level 1.
+
+### Cara naik ke Level 3
+
+- Lunasi seluruh hutang konsumtif hingga 0.
+- Jaga tabungan tetap >= Rp5.000.000 selama proses pelunasan.
 
 ### Checklist praktis
 
@@ -70,16 +88,17 @@ Catatan periodisasi investasi:
 
 ### Kondisi level ini
 
-- Dana darurat belum mencapai 3x pengeluaran bulanan acuan.
+- Dana darurat belum mencapai 3x pendapatan bulanan.
 
 ### Cara naik ke Level 4
 
-- Penuhi `danaDarurat >= 3 x pengeluaran bulanan`.
+- Penuhi `danaDarurat >= 3 x pendapatan bulanan`.
+- Pendapatan dipakai sebagai acuan karena lebih stabil dibanding pengeluaran yang dinamis.
 - Pastikan kondisi aset liquid stabil dan tidak memicu fallback ke Level 2.
 
 ### Checklist praktis
 
-- Hitung target: `3 x currentPengeluaranLimit`.
+- Hitung target: `3 x pendapatan bulanan (pendapatan)`.
 - Naikkan dana darurat bertahap sampai target tercapai.
 
 ## Level 4 - Mulai Bekerja untuk Masa Depan
@@ -181,9 +200,9 @@ Setelah lolos Level 5 readiness, sistem mengecek:
 
 | Dari | Ke  | Inti Syarat                                                                      |
 | ---- | --- | -------------------------------------------------------------------------------- |
-| 1    | 2   | Dana darurat >= Rp1.000.000                                                      |
+| 1    | 2   | Tabungan (estimasiTabungan) >= Rp10.000.000                                      |
 | 2    | 3   | Hutang konsumtif lunas (0)                                                       |
-| 3    | 4   | Dana darurat >= 3x pengeluaran                                                   |
+| 3    | 4   | Dana darurat >= 3x pendapatan bulanan                                            |
 | 4    | 5   | Investasi >= 15%, streak 3 bulan, dana darurat >= 2x pengeluaran                 |
 | 5    | 6   | Goal besar terdefinisi, progress >= 20%, investasi >= 15%                        |
 | 6    | 7   | KPR lunas atau passive income >= 30% (konsisten), lalu penuhi stabilitas Level 7 |

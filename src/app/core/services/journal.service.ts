@@ -75,6 +75,7 @@ export interface FinancialData {
   tanggalPemasukan: number;
   intendedTanggalPemasukan?: number;
   hutangWajib: number;
+  hutangWajibPrincipal?: number;
   estimasiTabungan: number;
   danaDarurat: number;
   danaInvestasi?: number;

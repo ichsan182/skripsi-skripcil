@@ -133,6 +133,12 @@ export class Debt {
     return this.totalConsumptiveDebt;
   }
 
+  protected get totalConsumptivePrincipal(): number {
+    return this.debts
+      .filter((item) => item.category === 'konsumtif')
+      .reduce((sum, item) => sum + item.principalAmount, 0);
+  }
+
   protected get totalProductiveDebt(): number {
     return this.debts
       .filter((item) => item.category === 'produktif')
@@ -608,6 +614,7 @@ export class Debt {
         danaDarurat: 0,
       }),
       hutangWajib: this.totalConsumptiveDebt,
+      hutangWajibPrincipal: this.totalConsumptivePrincipal,
     };
 
     this.financialData = nextFinancialData;
