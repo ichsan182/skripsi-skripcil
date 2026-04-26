@@ -309,9 +309,7 @@ export class Home {
       );
     }
     const fallback =
-      this.financialData.pendapatan -
-      this.financialData.pengeluaranWajib -
-      this.financialData.hutangWajib;
+      this.financialData.pendapatan - this.financialData.pengeluaranWajib;
     return Math.max(0, fallback);
   }
 
@@ -1502,26 +1500,25 @@ export class Home {
   }
 
   private computeEditableSavingsPoolTotal(): number {
-    // Formula: newPool = (income × newSavings%) + carryOver - alreadyAllocatedThisCycle
+    // currentSisaSaldoPool is the ground truth for the current cycle.
+    // It already accounts for:
+    // - The original savings allocation at cycle start (pendapatan × savings%)
+    // - Any carry-over from the previous cycle
+    // - Any mid-cycle income added via "Tambah Pemasukan"
+    // - Any amounts already moved to tabungan / danaDarurat / danaInvestasi
     //
-    // This correctly accounts for:
-    // - Savings percentage changes (scales from full income)
-    // - Carryover from the previous cycle
-    // - Amounts already moved to tabungan/danaDarurat/investasi this cycle
-    const nextPoolBase = this.computeSavingsPoolBase(
+    // Changing savings% or pendapatan in this modal ONLY affects the next cycle
+    // (handled by ensureFinancialState when the cycle resets). It must NOT inflate
+    // the pool that is already fixed for the current cycle.
+    if (this.financialData?.currentSisaSaldoPool !== undefined) {
+      return Math.max(0, this.financialData.currentSisaSaldoPool);
+    }
+
+    // Fallback for first-time users who have no currentSisaSaldoPool yet.
+    return this.computeSavingsPoolBase(
       this.pendapatanInput,
       this.getPendingBudgetAllocation(),
     );
-    const lastCycleCarryOver = Math.max(
-      0,
-      this.financialData?.lastCycleCarryOverSaldo ?? 0,
-    );
-    const alreadyAllocated = Math.max(
-      0,
-      this.financialData?.currentCycleSavingsAllocated ?? 0,
-    );
-
-    return Math.max(0, nextPoolBase + lastCycleCarryOver - alreadyAllocated);
   }
 
   private getPendingBudgetAllocation(): BudgetAllocation {

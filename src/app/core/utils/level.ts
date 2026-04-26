@@ -159,8 +159,7 @@ export function evaluateFinancialLevel(signals: LevelSignals): LevelEvaluation {
     const debtPayoffProgress =
       signals.consumptiveDebtPrincipal > 0
         ? toPercent(
-            1 -
-              signals.consumptiveDebtTotal / signals.consumptiveDebtPrincipal,
+            1 - signals.consumptiveDebtTotal / signals.consumptiveDebtPrincipal,
           )
         : 0;
     return {

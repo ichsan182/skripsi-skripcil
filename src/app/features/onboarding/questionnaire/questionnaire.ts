@@ -140,10 +140,7 @@ export class Questionnaire {
       const now = new Date();
       const cycleRange = this.buildCycleRange(now, tanggalPemasukan);
       const currentPengeluaranLimit = pengeluaranWajib;
-      const currentSisaSaldoPool = Math.max(
-        0,
-        pendapatan - pengeluaranWajib - hutangWajib,
-      );
+      const currentSisaSaldoPool = Math.max(0, pendapatan - pengeluaranWajib);
 
       const financialData = {
         pendapatan,
