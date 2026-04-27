@@ -72,6 +72,10 @@
         ></app-input-field>
         @if (hasControlError('form1', 'pengeluaranWajib', 'maxAmount')) {
         <small class="error">Maksimal nominal adalah Rp 10.000.000.000.</small>
+        } @if (form1.get('pengeluaranWajib')?.hasError('exceedsPendapatan')) {
+        <small class="error"
+          >Pengeluaran wajib tidak boleh lebih dari pendapatan per bulan.</small
+        >
         } @if (showError('form1', 'pengeluaranWajib')) {
         <small class="error">Wajib diisi.</small>
         }
@@ -97,6 +101,10 @@
         @if (hasControlError('form1', 'tanggalPemasukan', 'invalidDay') ||
         hasControlError('form1', 'tanggalPemasukan', 'max')) {
         <small class="error">Tanggal maksimal adalah 31.</small>
+        } @if (form1.get('tanggalPemasukan')?.hasError('min')) {
+        <small class="error"
+          >Tanggal pemasukan tidak boleh 0. Minimal tanggal adalah 1.</small
+        >
         } @if (showError('form1', 'tanggalPemasukan')) {
         <small class="error">Wajib diisi.</small>
         }
@@ -123,7 +131,14 @@
         }
       </div>
 
-      <button type="button" class="form-btn" (click)="nextStep()">NEXT</button>
+      <button
+        type="button"
+        class="form-btn"
+        (click)="nextStep()"
+        [disabled]="form1.invalid"
+      >
+        NEXT
+      </button>
     </form>
     } @else {
     <form [formGroup]="form2" class="question-form">
@@ -136,6 +151,7 @@
         <app-input-field
           [isCurrency]="true"
           [showInlineCurrencyPrefix]="true"
+          [allowZeroValue]="true"
           [currencyMaxTier]="currencyMaxTier"
           [inputmode]="'numeric'"
           [value]="getControlValue('form2', 'estimasiTabungan')"
@@ -158,6 +174,7 @@
         <app-input-field
           [isCurrency]="true"
           [showInlineCurrencyPrefix]="true"
+          [allowZeroValue]="true"
           [currencyMaxTier]="currencyMaxTier"
           [inputmode]="'numeric'"
           [value]="getControlValue('form2', 'danaDarurat')"

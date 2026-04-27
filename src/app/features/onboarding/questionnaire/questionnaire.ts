@@ -41,6 +41,7 @@ export class Questionnaire {
       [
         Validators.required,
         Validators.pattern(/^[0-9]{1,2}$/),
+        Validators.min(1),
         Validators.max(MAX_TANGGAL_PEMASUKAN),
       ],
     ],
@@ -48,8 +49,8 @@ export class Questionnaire {
   });
 
   form2 = this.fb.group({
-    estimasiTabungan: ['', [Validators.required]],
-    danaDarurat: ['', [Validators.required]],
+    estimasiTabungan: [''],
+    danaDarurat: [''],
   });
 
   get isForm1Valid(): boolean {
@@ -80,6 +81,7 @@ export class Questionnaire {
   }
 
   nextStep(): void {
+    this.validatePengeluaranWajibLimit();
     if (this.form1.invalid) {
       this.form1.markAllAsTouched();
       return;
@@ -88,6 +90,8 @@ export class Questionnaire {
   }
 
   async onFinish(): Promise<void> {
+    this.normalizeOptionalFinancialFields();
+
     if (this.form2.invalid) {
       this.form2.markAllAsTouched();
       return;
@@ -234,6 +238,13 @@ export class Questionnaire {
     control.setValue(state.formattedValue, {
       emitEvent: false,
     });
+
+    if (
+      form === 'form1' &&
+      (controlName === 'pendapatan' || controlName === 'pengeluaranWajib')
+    ) {
+      this.validatePengeluaranWajibLimit();
+    }
   }
 
   onTanggalPemasukanInput(): void {
@@ -251,7 +262,7 @@ export class Questionnaire {
       delete currentErrors['max'];
     }
     control.setErrors(Object.keys(currentErrors).length ? currentErrors : null);
-    control.setValue(numericValue > 0 ? String(numericValue) : '', {
+    control.setValue(numericValue >= 0 ? String(numericValue) : '', {
       emitEvent: false,
     });
   }
@@ -291,6 +302,47 @@ export class Questionnaire {
 
   private clampPercent(value: number): number {
     return Math.max(0, Math.min(100, value));
+  }
+
+  private normalizeOptionalFinancialFields(): void {
+    const estimasiTabunganControl = this.form2.get('estimasiTabungan');
+    const danaDaruratControl = this.form2.get('danaDarurat');
+
+    if (
+      estimasiTabunganControl &&
+      !String(estimasiTabunganControl.value || '').trim()
+    ) {
+      estimasiTabunganControl.setValue('0', { emitEvent: false });
+    }
+
+    if (danaDaruratControl && !String(danaDaruratControl.value || '').trim()) {
+      danaDaruratControl.setValue('0', { emitEvent: false });
+    }
+  }
+
+  private validatePengeluaranWajibLimit(): void {
+    const pendapatanControl = this.form1.get('pendapatan');
+    const pengeluaranControl = this.form1.get('pengeluaranWajib');
+
+    if (!pendapatanControl || !pengeluaranControl) {
+      return;
+    }
+
+    const pendapatan = this.parseNumber(String(pendapatanControl.value || ''));
+    const pengeluaran = this.parseNumber(
+      String(pengeluaranControl.value || ''),
+    );
+    const currentErrors = { ...(pengeluaranControl.errors || {}) };
+
+    if (pendapatan > 0 && pengeluaran > pendapatan) {
+      currentErrors['exceedsPendapatan'] = true;
+    } else {
+      delete currentErrors['exceedsPendapatan'];
+    }
+
+    pengeluaranControl.setErrors(
+      Object.keys(currentErrors).length ? currentErrors : null,
+    );
   }
 
   private calculateLevel(data: FinancialData): number {
