@@ -252,10 +252,16 @@ export class Home {
       if (user.email) this.userEmail = user.email;
       if (user.profileImage) this.userProfileImage = user.profileImage;
       this.debts = this.normalizeDebts(user.debts);
+      const computedDebtSummary = this.computeDebtSummaryFromRawDebts(
+        user.debts,
+      );
       if (user.financialData) {
         this.financialData = {
           ...user.financialData,
-          debtSummary: user.financialData.debtSummary ?? user.debtSummary,
+          debtSummary:
+            computedDebtSummary ??
+            user.financialData.debtSummary ??
+            user.debtSummary,
         };
         this.pendapatanInput = user.financialData.pendapatan || 0;
         if (user.financialData.budgetAllocation) {
@@ -631,7 +637,11 @@ export class Home {
 
       this.journal = result.journal;
       if (result.financialData) {
-        this.financialData = result.financialData;
+        this.financialData = {
+          ...result.financialData,
+          debtSummary:
+            result.financialData.debtSummary ?? this.financialData?.debtSummary,
+        };
         this.refreshLevelEvaluation();
         this.computeRollingBudgetToday();
       }
@@ -657,7 +667,11 @@ export class Home {
       );
       this.journal = result.journal;
       if (result.financialData) {
-        this.financialData = result.financialData;
+        this.financialData = {
+          ...result.financialData,
+          debtSummary:
+            result.financialData.debtSummary ?? this.financialData?.debtSummary,
+        };
         this.refreshLevelEvaluation();
         this.computeRollingBudgetToday();
       }
@@ -894,7 +908,9 @@ export class Home {
       if (summary.financialData) {
         this.financialData = {
           ...summary.financialData,
-          debtSummary: summary.financialData.debtSummary ?? this.financialData?.debtSummary,
+          debtSummary:
+            summary.financialData.debtSummary ??
+            this.financialData?.debtSummary,
         };
         this.refreshLevelEvaluation();
         this.computeRollingBudgetToday();
@@ -2034,6 +2050,51 @@ export class Home {
   ): number {
     const lastDay = new Date(year, monthIndex + 1, 0).getDate();
     return Math.min(Math.max(1, intendedDay), lastDay);
+  }
+
+  private computeDebtSummaryFromRawDebts(
+    rawDebts: unknown,
+  ):
+    | { totalPrincipalAmount: number; totalRemainingAmount: number }
+    | undefined {
+    if (!Array.isArray(rawDebts) || !rawDebts.length) {
+      return undefined;
+    }
+
+    const konsumtif = rawDebts.filter(
+      (d) =>
+        d &&
+        typeof d === 'object' &&
+        (d as Record<string, unknown>)['category'] === 'konsumtif',
+    );
+    if (!konsumtif.length) {
+      return undefined;
+    }
+
+    const totalPrincipalAmount = konsumtif.reduce(
+      (sum, d) =>
+        sum +
+        Math.max(
+          0,
+          Number((d as Record<string, unknown>)['principalAmount']) || 0,
+        ),
+      0,
+    );
+    const totalRemainingAmount = konsumtif.reduce(
+      (sum, d) =>
+        sum +
+        Math.max(
+          0,
+          Number((d as Record<string, unknown>)['remainingAmount']) || 0,
+        ),
+      0,
+    );
+
+    if (totalPrincipalAmount <= 0) {
+      return undefined;
+    }
+
+    return { totalPrincipalAmount, totalRemainingAmount };
   }
 
   private buildLegacyConsumptiveDebt(amount: number): DebtItemSnapshot {
