@@ -604,6 +604,26 @@ export class Debt {
     const user = this.currentUserService.getCurrentUserOrDefault<StoredUser>(
       {},
     );
+    const currentConsumptiveDebt = this.totalConsumptiveDebt;
+    const previousConsumptiveDebt = Math.max(
+      0,
+      this.financialData?.hutangWajib ?? 0,
+    );
+    const previousPayoffBaseline = Math.max(
+      previousConsumptiveDebt,
+      this.financialData?.hutangWajibPrincipal ?? 0,
+    );
+    const consumptivePrincipalSnapshot = Math.max(
+      0,
+      this.totalConsumptivePrincipal,
+    );
+    const consumptiveDebtPayoffBaseline =
+      this.resolveConsumptiveDebtPayoffBaseline({
+        currentConsumptiveDebt,
+        previousPayoffBaseline,
+        consumptivePrincipalSnapshot,
+      });
+
     const nextFinancialData: FinancialData = {
       ...(this.financialData ?? {
         pendapatan: 0,
@@ -613,8 +633,12 @@ export class Debt {
         estimasiTabungan: 0,
         danaDarurat: 0,
       }),
-      hutangWajib: this.totalConsumptiveDebt,
-      hutangWajibPrincipal: this.totalConsumptivePrincipal,
+      hutangWajib: currentConsumptiveDebt,
+      hutangWajibPrincipal: consumptiveDebtPayoffBaseline,
+      debtSummary: {
+        totalPrincipalAmount: consumptivePrincipalSnapshot,
+        totalRemainingAmount: currentConsumptiveDebt,
+      },
     };
 
     this.financialData = nextFinancialData;
@@ -656,7 +680,7 @@ export class Debt {
     } catch {
       this.formError = 'Data tersimpan lokal, tapi sinkronisasi server gagal.';
     } finally {
-      this.isSaving = false;  
+      this.isSaving = false;
     }
   }
 
@@ -738,6 +762,34 @@ export class Debt {
     return parseCurrencyInputValue(
       value,
       resolveCurrencyAmountLimit(this.currencyMaxTier),
+    );
+  }
+
+  private resolveConsumptiveDebtPayoffBaseline(params: {
+    currentConsumptiveDebt: number;
+    previousPayoffBaseline: number;
+    consumptivePrincipalSnapshot: number;
+  }): number {
+    const {
+      currentConsumptiveDebt,
+      previousPayoffBaseline,
+      consumptivePrincipalSnapshot,
+    } = params;
+
+    if (currentConsumptiveDebt <= 0) {
+      return 0;
+    }
+
+    // Reset progress baseline only when total debt exceeds the last payoff baseline.
+    // This prevents false reset caused by stale previous hutangWajib snapshots.
+    if (currentConsumptiveDebt > previousPayoffBaseline) {
+      return currentConsumptiveDebt;
+    }
+
+    return Math.max(
+      currentConsumptiveDebt,
+      previousPayoffBaseline,
+      consumptivePrincipalSnapshot,
     );
   }
 

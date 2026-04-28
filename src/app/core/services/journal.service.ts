@@ -90,6 +90,10 @@ export interface FinancialData {
   lastCycleCarryOverSaldo?: number;
   currentCycleSavingsAllocated?: number;
   monthlyTopUp?: MonthlyTopUpSummary;
+  debtSummary?: {
+    totalPrincipalAmount: number;
+    totalRemainingAmount: number;
+  };
 }
 
 export interface ExpenseBudgetPrompt {

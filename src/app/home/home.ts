@@ -253,7 +253,10 @@ export class Home {
       if (user.profileImage) this.userProfileImage = user.profileImage;
       this.debts = this.normalizeDebts(user.debts);
       if (user.financialData) {
-        this.financialData = user.financialData;
+        this.financialData = {
+          ...user.financialData,
+          debtSummary: user.financialData.debtSummary ?? user.debtSummary,
+        };
         this.pendapatanInput = user.financialData.pendapatan || 0;
         if (user.financialData.budgetAllocation) {
           const ba = this.normalizeBudgetAllocationForEditor(
@@ -889,7 +892,10 @@ export class Home {
       );
       this.monthlyExpenseTotal = summary.monthlyExpenseTotal;
       if (summary.financialData) {
-        this.financialData = summary.financialData;
+        this.financialData = {
+          ...summary.financialData,
+          debtSummary: summary.financialData.debtSummary ?? this.financialData?.debtSummary,
+        };
         this.refreshLevelEvaluation();
         this.computeRollingBudgetToday();
       }

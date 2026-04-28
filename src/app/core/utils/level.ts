@@ -77,10 +77,17 @@ export function buildLevelSignals(
   );
   const emergencyFund = Math.max(0, financialData?.danaDarurat ?? 0);
   const savingsBalance = Math.max(0, financialData?.estimasiTabungan ?? 0);
-  const consumptiveDebt = Math.max(0, financialData?.hutangWajib ?? 0);
+  const consumptiveDebt = Math.max(
+    0,
+    financialData?.debtSummary?.totalRemainingAmount ??
+      financialData?.hutangWajib ??
+      0,
+  );
   const consumptiveDebtPrincipal = Math.max(
     consumptiveDebt,
-    financialData?.hutangWajibPrincipal ?? 0,
+    financialData?.debtSummary?.totalPrincipalAmount ??
+      financialData?.hutangWajibPrincipal ??
+      0,
   );
   const currentCycleKey = resolveInvestmentCycleKey(financialData);
   const trackedCycleAmounts =
