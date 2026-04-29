@@ -1,8 +1,15 @@
 <div class="page-container">
-  <div class="page-content">
-    <a class="back-link" routerLink="/tools">Kembali ke halaman Tools</a>
-    <h1>Konsep Pemasukan (Income) dan Pengeluaran (Expense)</h1>
-    <img src="assets/education/education01.jpg" alt="Pemasukan dan Pengeluaran">
-    <p>Pemasukan dan Pengeluaran bukan sekedar uang masuk rekening dan hilang loh...</p>
-  </div>
+  <app-sidebar></app-sidebar>
+  <section class="page-content">
+    @if (article) {
+    <a class="back-link" routerLink="/education">&larr; Kembali ke Edukasi</a>
+    <h1>{{ article.title }}</h1>
+    <img class="article-hero" [src]="article.image" [alt]="article.title" />
+    <p class="article-intro">{{ article.intro }}</p>
+    <div class="article-body" [innerHTML]="safeContent"></div>
+    } @else {
+    <a class="back-link" routerLink="/education">&larr; Kembali ke Edukasi</a>
+    <p class="not-found">Konten tidak ditemukan.</p>
+    }
+  </section>
 </div>

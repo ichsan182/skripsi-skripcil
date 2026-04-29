@@ -9,48 +9,15 @@
   ></app-sidebar>
   <section class="page-content">
     <h1>Belajar tentang keuangan yuk!</h1>
-
-    <div class="container-education">
+    <div class="education-grid">
+      @for (card of cards; track card.id) {
       <div class="card-education">
-        <img src="" alt="">
-        <h2>Investasi</h2>
-        <p>Pelajari cara mengelola investasi Anda dengan bijak untuk mencapai tujuan keuangan jangka panjang.</p>
-        <button>BACA</button>
+        <img [src]="card.image" [alt]="card.title" />
+        <h2>{{ card.title }}</h2>
+        <p>{{ card.description }}</p>
+        <button (click)="navigateTo(card.id)">BACA</button>
       </div>
-      <div class="card-education">
-        <img src="" alt="">
-        <h2>Tabungan</h2>
-        <p>Temukan strategi menabung yang efektif untuk membangun dana darurat dan meraih impian finansial Anda.</p>
-        <button>BACA</button>
-      </div>
-      <div class="card-education">
-        <img src="" alt="">
-        <h2>Perencanaan Keuangan</h2>
-        <p>Pelajari cara merencanakan keuangan Anda dengan baik untuk mencapai stabilitas dan kebebasan finansial.</p>
-        <button>BACA</button>
-      </div>
+      }
     </div>
-
-    <div class="container-education">
-      <div class="card-education">
-        <img src="" alt="">
-        <h2>Investasi</h2>
-        <p>Pelajari cara mengelola investasi Anda dengan bijak untuk mencapai tujuan keuangan jangka panjang.</p>
-        <button>BACA</button>
-      </div>
-      <div class="card-education">
-        <img src="" alt="">
-        <h2>Tabungan</h2>
-        <p>Temukan strategi menabung yang efektif untuk membangun dana darurat dan meraih impian finansial Anda.</p>
-        <button>BACA</button>
-      </div>
-      <div class="card-education">
-        <img src="" alt="">
-        <h2>Perencanaan Keuangan</h2>
-        <p>Pelajari cara merencanakan keuangan Anda dengan baik untuk mencapai stabilitas dan kebebasan finansial.</p>
-        <button>BACA</button>
-      </div>
-    </div>
-
   </section>
 </div>

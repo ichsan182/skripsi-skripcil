@@ -77,7 +77,7 @@ export const routes: Routes = [
     component: Education,
   },
   {
-    path: 'education/content',
+    path: 'education/content/:id',
     component: EducationContent,
   },
 ];
