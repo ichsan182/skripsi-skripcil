@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { USERS_API_URL } from '../../../core/config/app-api.config';
 
@@ -34,6 +34,7 @@ interface ExistingUser {
 export class Register {
   private readonly formBuilder = inject(FormBuilder);
   private readonly httpClient = inject(HttpClient);
+  private readonly router = inject(Router);
 
   protected isSubmitting = false;
   protected isPasswordVisible = false;
@@ -91,9 +92,9 @@ export class Register {
 
       await firstValueFrom(this.httpClient.post(USERS_API_URL, payload));
 
-      this.successMessage =
-        'Registrasi berhasil. Silakan login menggunakan akun baru.';
-      this.registerForm.reset();
+      await this.router.navigate(['/login'], {
+        queryParams: { registered: 'success' },
+      });
     } catch {
       this.errorMessage =
         'Gagal menyimpan data. Pastikan backend Spring Boot berjalan.';

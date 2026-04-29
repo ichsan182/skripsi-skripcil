@@ -43,6 +43,13 @@ export class Login {
   protected successMessage = '';
   protected errorMessage = '';
 
+  constructor() {
+    const registered = this.activatedRoute.snapshot.queryParamMap.get('registered');
+    if (registered === 'success') {
+      this.successMessage = 'Registrasi berhasil. Silakan login menggunakan akun baru.';
+    }
+  }
+
   protected loginForm = this.formBuilder.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
