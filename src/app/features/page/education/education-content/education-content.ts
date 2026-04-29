@@ -3,6 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Sidebar } from '../../../../shared/components/sidebar/sidebar';
+import {
+  FinancialData,
+  JournalService,
+  UserJournal,
+} from '../../../../core/services/journal.service';
+import { RollingBudgetService } from '../../../../core/utils/rolling-budget.service';
 
 interface EducationArticle {
   title: string;
@@ -22,9 +28,25 @@ export class EducationContent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   // Content is developer-authored static strings — safe to bypass sanitization
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly journalService = inject(JournalService);
+  private readonly rollingBudgetService = inject(RollingBudgetService);
+
+  rollingBudgetToday = 0;
+  rollingBudgetRemaining = 0;
+  rollingDaysRemaining = 0;
+  rollingTotalBudget = 0;
+  rollingUsedBudget = 0;
 
   article: EducationArticle | null = null;
   safeContent: SafeHtml | null = null;
+
+  private journal: UserJournal = {
+    nextChatMessageId: 1,
+    chatByDate: {},
+    expensesByDate: {},
+    incomesByDate: {},
+  };
+  private currentFinancialData: FinancialData | null = null;
 
   private readonly contentMap: Record<string, EducationArticle> = {
     'mindset-keuangan': {
@@ -378,6 +400,30 @@ export class EducationContent implements OnInit {
       this.safeContent = this.sanitizer.bypassSecurityTrustHtml(
         found.contentHtml,
       );
+    }
+    void this.loadRollingBudgetState();
+  }
+
+  private async loadRollingBudgetState(): Promise<void> {
+    try {
+      this.journal = await this.journalService.loadCurrentUserJournal();
+      const summary = await this.journalService.getCurrentCycleSummary();
+      this.currentFinancialData = summary.financialData;
+      const state = this.rollingBudgetService.computeRollingBudgetState(
+        this.currentFinancialData,
+        this.journal,
+      );
+      this.rollingTotalBudget = state.rollingTotalBudget;
+      this.rollingUsedBudget = state.rollingUsedBudget;
+      this.rollingBudgetRemaining = state.rollingBudgetRemaining;
+      this.rollingDaysRemaining = state.rollingDaysRemaining;
+      this.rollingBudgetToday = state.rollingBudgetToday;
+    } catch {
+      this.rollingBudgetToday = 0;
+      this.rollingBudgetRemaining = 0;
+      this.rollingDaysRemaining = 0;
+      this.rollingTotalBudget = 0;
+      this.rollingUsedBudget = 0;
     }
   }
 }

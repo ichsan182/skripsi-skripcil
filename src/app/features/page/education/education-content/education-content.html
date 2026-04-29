@@ -1,5 +1,12 @@
 <div class="page-container">
-  <app-sidebar></app-sidebar>
+  <app-sidebar
+    [showRollingBudgetPanel]="true"
+    [rollingTotalBudget]="rollingTotalBudget"
+    [rollingUsedBudget]="rollingUsedBudget"
+    [rollingBudgetRemaining]="rollingBudgetRemaining"
+    [rollingDaysRemaining]="rollingDaysRemaining"
+    [rollingBudgetToday]="rollingBudgetToday"
+  ></app-sidebar>
   <section class="page-content">
     @if (article) {
     <a class="back-link" routerLink="/education">&larr; Kembali ke Edukasi</a>
