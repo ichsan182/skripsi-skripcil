@@ -51,7 +51,7 @@
             (change)="onCategoryChange($event)"
             aria-label="Pilih kategori pengeluaran"
           >
-            <option value="" disabled>-- Pilih Kategori --</option>
+            <option value="" disabled>Pilih Kategori</option>
             @for (opt of categoryOptions; track opt.value) {
             <option [value]="opt.value">{{ opt.label }}</option>
             }
@@ -77,7 +77,7 @@
             (change)="onKeywordChange($event)"
             aria-label="Pilih item pengeluaran"
           >
-            <option value="">-- Pilih Item (opsional) --</option>
+            <option value="">Pilih Item (opsional)</option>
             @for (kw of keywordOptions; track kw) {
             <option [value]="kw">{{ kw | titlecase }}</option>
             }
