@@ -188,7 +188,7 @@ export class Login {
     }
 
     if (error.status === 0) {
-      return 'Tidak bisa terhubung ke backend (cek http://localhost:8081 dan restart ng serve).';
+      return 'Tidak bisa terhubung ke backend (cek http://localhost:12653 dan restart ng serve).';
     }
 
     if (typeof error.error === 'string' && error.error.trim().length > 0) {
