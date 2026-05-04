@@ -1522,24 +1522,21 @@ export class Home {
   }
 
   private computeEditableSavingsPoolTotal(): number {
-    // currentSisaSaldoPool is the ground truth for the current cycle.
-    // It already accounts for:
-    // - The original savings allocation at cycle start (pendapatan × savings%)
-    // - Any carry-over from the previous cycle
-    // - Any mid-cycle income added via "Tambah Pemasukan"
-    // - Any amounts already moved to tabungan / danaDarurat / danaInvestasi
-    //
-    // Changing savings% or pendapatan in this modal ONLY affects the next cycle
-    // (handled by ensureFinancialState when the cycle resets). It must NOT inflate
-    // the pool that is already fixed for the current cycle.
-    if (this.financialData?.currentSisaSaldoPool !== undefined) {
-      return Math.max(0, this.financialData.currentSisaSaldoPool);
-    }
-
-    // Fallback for first-time users who have no currentSisaSaldoPool yet.
-    return this.computeSavingsPoolBase(
-      this.pendapatanInput,
-      this.getPendingBudgetAllocation(),
+    // Always recompute from the pending inputs so that changing savings% or
+    // pendapatan immediately reflects in the available pool.
+    // Subtract anything already permanently moved to tabungan / danaDarurat /
+    // danaInvestasi in this cycle so the pool can never exceed what was truly
+    // earned minus what was already committed.
+    const alreadyAllocated = Math.max(
+      0,
+      this.financialData?.currentCycleSavingsAllocated ?? 0,
+    );
+    return Math.max(
+      0,
+      this.computeSavingsPoolBase(
+        this.pendapatanInput,
+        this.getPendingBudgetAllocation(),
+      ) - alreadyAllocated,
     );
   }
 
