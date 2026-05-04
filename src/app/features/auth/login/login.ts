@@ -50,6 +50,11 @@ export class Login {
       this.successMessage =
         'Registrasi berhasil. Silakan login menggunakan akun baru.';
     }
+
+    const changed = this.activatedRoute.snapshot.queryParamMap.get('changed');
+    if (changed === 'success') {
+      this.successMessage = 'Password berhasil diperbarui. Silakan login.';
+    }
   }
 
   protected loginForm = this.formBuilder.group({
@@ -152,8 +157,8 @@ export class Login {
         }),
       );
 
-      this.successMessage = 'Password berhasil diperbarui. Silakan login.';
       this.forgotForm.reset();
+      await this.router.navigateByUrl('/login?changed=success');
     } catch {
       this.errorMessage =
         'Gagal terhubung ke server. Pastikan backend Spring Boot berjalan.';
