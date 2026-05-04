@@ -59,7 +59,10 @@ export class Login {
 
   protected forgotForm = this.formBuilder.group({
     email: ['', [Validators.required, Validators.email]],
+    newPassword: ['', [Validators.required, Validators.minLength(6)]],
   });
+
+  protected isForgotPasswordVisible = false;
 
   protected get isForgotMode(): boolean {
     return this.activatedRoute.routeConfig?.path === 'forgot-password';
@@ -124,16 +127,17 @@ export class Login {
     this.isSubmitting = true;
 
     try {
-      const email = (this.forgotForm.getRawValue().email ?? '')
-        .trim()
-        .toLowerCase();
+      const { email, newPassword } = this.forgotForm.getRawValue();
+      const normalizedEmail = (email ?? '').trim().toLowerCase();
+      const trimmedPassword = (newPassword ?? '').trim();
+
       const usersResponse = await firstValueFrom(
         this.httpClient.get<unknown>(USERS_API_URL),
       );
       const users = this.extractUsers(usersResponse);
 
       const user = users.find(
-        (item) => item.email.trim().toLowerCase() === email,
+        (item) => item.email.trim().toLowerCase() === normalizedEmail,
       );
 
       if (!user) {
@@ -141,8 +145,14 @@ export class Login {
         return;
       }
 
-      alert('Reset password sudah terkirim');
-      this.successMessage = 'Reset password sudah terkirim.';
+      await firstValueFrom(
+        this.httpClient.put(`${USERS_API_URL}/${user.id}`, {
+          ...user,
+          password: trimmedPassword,
+        }),
+      );
+
+      this.successMessage = 'Password berhasil diperbarui. Silakan login.';
       this.forgotForm.reset();
     } catch {
       this.errorMessage =
@@ -150,6 +160,10 @@ export class Login {
     } finally {
       this.isSubmitting = false;
     }
+  }
+
+  protected toggleForgotPasswordVisibility(): void {
+    this.isForgotPasswordVisible = !this.isForgotPasswordVisible;
   }
 
   private extractUsers(response: unknown): User[] {
@@ -210,11 +224,11 @@ export class Login {
   }
 
   protected showError(
-    controlName: 'email' | 'password',
+    controlName: 'email' | 'password' | 'newPassword',
     formType: 'login' | 'forgot' = 'login',
   ): boolean {
     if (formType === 'forgot') {
-      const forgotControl = this.forgotForm.get('email');
+      const forgotControl = this.forgotForm.get(controlName);
       return Boolean(
         forgotControl &&
         forgotControl.invalid &&
