@@ -786,6 +786,27 @@ export class Home {
     const currentCycleSavingsAllocated =
       Math.max(0, this.financialData?.currentCycleSavingsAllocated ?? 0) +
       newlyAllocated;
+    // Preserve any "extra" accumulated in the pool beyond the formula base
+    // (e.g. income added directly via the transaction page).
+    // extra = existingPool - (oldFormulaBase - alreadyAllocated)
+    // newPool = savingsRemaining + extra
+    //         = (newFormulaBase - alreadyAllocated - newlyAllocated) + extra
+    // This keeps income additions intact when the user changes budget %s.
+    const prevAlreadyAllocated = Math.max(
+      0,
+      this.financialData?.currentCycleSavingsAllocated ?? 0,
+    );
+    const oldSavingsBase = this.computeSavingsPoolBase(
+      this.financialData?.pendapatan ?? pendapatan,
+      this.getCurrentBudgetAllocation(),
+    );
+    const existingPool = Math.max(
+      0,
+      this.financialData?.currentSisaSaldoPool ?? 0,
+    );
+    const poolExtra =
+      existingPool - Math.max(0, oldSavingsBase - prevAlreadyAllocated);
+    const newSisaSaldoPool = Math.max(0, this.savingsRemaining + poolExtra);
     const updatedFinancialData: FinancialData = {
       ...(this.financialData || {
         pendapatan: 0,
@@ -804,7 +825,7 @@ export class Home {
       savingsAllocation,
       investmentTracking,
       currentPengeluaranLimit: pengeluaranWajib,
-      currentSisaSaldoPool: Math.max(0, this.savingsRemaining),
+      currentSisaSaldoPool: newSisaSaldoPool,
       currentCycleSavingsAllocated,
     };
     this.financialData = updatedFinancialData;
