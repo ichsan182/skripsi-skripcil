@@ -197,11 +197,13 @@
   .page-content {
     margin-left: 0;
     padding: var(--page-content-padding-tablet);
+    padding-top: calc(60px + var(--page-content-padding-tablet));
   }
 }
 
 @media (max-width: 480px) {
   .page-content {
     padding: var(--page-content-padding-mobile);
+    padding-top: calc(60px + var(--page-content-padding-mobile));
   }
 }

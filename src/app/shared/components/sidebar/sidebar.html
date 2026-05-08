@@ -1,4 +1,42 @@
-<aside class="sidebar">
+<!-- Mobile: top bar -->
+<header class="mobile-topbar">
+  <img
+    src="assets/graphic/logo.svg"
+    alt="Logo MauWealthy"
+    class="mobile-topbar-logo"
+  />
+  <button
+    type="button"
+    class="mobile-menu-btn"
+    (click)="toggleMobileMenu()"
+    aria-label="Buka menu"
+    [attr.aria-expanded]="isMobileMenuOpen"
+  >
+    <span class="mobile-menu-icon" aria-hidden="true">
+      {{ isMobileMenuOpen ? "✕" : "☰" }}
+    </span>
+  </button>
+</header>
+
+<!-- Mobile: backdrop -->
+<div
+  class="mobile-backdrop"
+  [class.mobile-backdrop--visible]="isMobileMenuOpen"
+  (click)="closeMobileMenu()"
+  aria-hidden="true"
+></div>
+
+<aside class="sidebar" [class.sidebar--mobile-open]="isMobileMenuOpen">
+  <!-- Mobile: drawer close button -->
+  <button
+    type="button"
+    class="sidebar-drawer-close"
+    (click)="closeMobileMenu()"
+    aria-label="Tutup menu"
+  >
+    ✕
+  </button>
+
   <!-- Brand -->
   <div class="sidebar-brand">
     <img
@@ -17,6 +55,7 @@
           [routerLink]="item.path"
           routerLinkActive="nav-item--active"
           class="nav-item"
+          (click)="closeMobileMenu()"
         >
           <img [src]="item.icon" [alt]="item.label" class="nav-icon" />
           <span class="nav-label">{{ item.label }}</span>
@@ -44,8 +83,63 @@
       <span>Sisa hari</span>
       <strong>{{ rollingDaysRemaining }} hari</strong>
     </div>
-    <div class="rolling-sidebar-highlight">
-      Jatah hari ini: <strong>{{ formatRupiahFn(rollingBudgetToday) }}</strong>
+
+    <!-- Today's budget card -->
+    <div
+      class="rolling-today-card"
+      [class.rolling-today-card--ok]="rollingRemainingToday >= 0"
+      [class.rolling-today-card--over]="rollingRemainingToday < 0"
+    >
+      <div class="rolling-today-top">
+        <span class="rolling-today-title">Hari Ini</span>
+        <span
+          class="rolling-today-badge"
+          [class.rolling-today-badge--ok]="rollingRemainingToday >= 0"
+          [class.rolling-today-badge--over]="rollingRemainingToday < 0"
+        >
+          {{ rollingRemainingToday >= 0 ? "Aman ✓" : "Over !" }}
+        </span>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="rolling-today-bar-track" aria-hidden="true">
+        <div
+          class="rolling-today-bar-fill"
+          [class.rolling-today-bar-fill--over]="rollingRemainingToday < 0"
+          [style.width.%]="rollingTodayUsagePercent"
+        ></div>
+      </div>
+      <div class="rolling-today-bar-labels">
+        <span>0%</span>
+        <span>{{ rollingTodayUsagePercent }}% terpakai</span>
+      </div>
+
+      <!-- Remaining amount -->
+      <div
+        class="rolling-today-amount"
+        [class.rolling-today-amount--ok]="rollingRemainingToday >= 0"
+        [class.rolling-today-amount--over]="rollingRemainingToday < 0"
+      >
+        {{ formatRupiahFn(rollingRemainingToday) }}
+      </div>
+      <p class="rolling-today-sub">sisa dari jatah hari ini</p>
+
+      <!-- Breakdown -->
+      <div class="rolling-today-breakdown">
+        <div class="rolling-today-breakdown-item">
+          <span class="rolling-today-breakdown-label">Jatah</span>
+          <span class="rolling-today-breakdown-val"
+            >{{ formatRupiahFn(rollingBudgetToday) }}</span
+          >
+        </div>
+        <div class="rolling-today-breakdown-sep" aria-hidden="true">−</div>
+        <div class="rolling-today-breakdown-item">
+          <span class="rolling-today-breakdown-label">Terpakai</span>
+          <span class="rolling-today-breakdown-val"
+            >{{ formatRupiahFn(rollingSpentToday) }}</span
+          >
+        </div>
+      </div>
     </div>
   </section>
   }

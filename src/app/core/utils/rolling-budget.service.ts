@@ -8,6 +8,7 @@ export interface RollingBudgetState {
   rollingBudgetRemaining: number;
   rollingDaysRemaining: number;
   rollingBudgetToday: number;
+  rollingSpentToday: number;
 }
 
 /**
@@ -42,6 +43,7 @@ export class RollingBudgetService {
         rollingBudgetRemaining: 0,
         rollingDaysRemaining: 0,
         rollingBudgetToday: 0,
+        rollingSpentToday: 0,
       };
     }
 
@@ -54,6 +56,7 @@ export class RollingBudgetService {
         rollingBudgetRemaining: 0,
         rollingDaysRemaining: 0,
         rollingBudgetToday: 0,
+        rollingSpentToday: 0,
       };
     }
 
@@ -72,6 +75,7 @@ export class RollingBudgetService {
     const remainingDays = Math.max(1, daysBetween(today, cycleEnd) + 1);
 
     const rollingUsedBudget = financialData.currentPengeluaranUsed || 0;
+    const rollingSpentToday = this.sumExpensesInRange(today, today, journal);
 
     return {
       rollingTotalBudget: totalBudget,
@@ -82,6 +86,7 @@ export class RollingBudgetService {
         0,
         Math.floor(remainingBudget / remainingDays),
       ),
+      rollingSpentToday,
     };
   }
 

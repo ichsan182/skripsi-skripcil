@@ -98,6 +98,7 @@ export class Transaction {
   rollingDaysRemaining = 0;
   rollingTotalBudget = 0;
   rollingUsedBudget = 0;
+  rollingSpentToday = 0;
 
   readonly weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   readonly categoryMeta = CATEGORY_META;
@@ -668,5 +669,6 @@ export class Transaction {
     this.rollingBudgetRemaining = state.rollingBudgetRemaining;
     this.rollingDaysRemaining = state.rollingDaysRemaining;
     this.rollingBudgetToday = state.rollingBudgetToday;
+    this.rollingSpentToday = state.rollingSpentToday;
   }
 }

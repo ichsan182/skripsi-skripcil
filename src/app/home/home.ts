@@ -137,6 +137,7 @@ export class Home {
   rollingDaysRemaining = 0;
   rollingTotalBudget = 0;
   rollingUsedBudget = 0;
+  rollingSpentToday = 0;
 
   showMentions = {
     saldo: false,
@@ -1036,6 +1037,7 @@ export class Home {
     this.rollingBudgetRemaining = state.rollingBudgetRemaining;
     this.rollingDaysRemaining = state.rollingDaysRemaining;
     this.rollingBudgetToday = state.rollingBudgetToday;
+    this.rollingSpentToday = state.rollingSpentToday;
   }
 
   private getStreakDayStatus(date: Date): StreakDayStatus {

@@ -54,6 +54,7 @@ export class Sidebar implements OnInit, OnChanges {
   @Input() rollingBudgetRemaining = 0;
   @Input() rollingDaysRemaining = 0;
   @Input() rollingBudgetToday = 0;
+  @Input() rollingSpentToday = 0;
   @Input() profileName = '';
   @Input() profileEmail = '';
   @Input() profileImage = '';
@@ -66,6 +67,20 @@ export class Sidebar implements OnInit, OnChanges {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+
+  get rollingRemainingToday(): number {
+    return this.rollingBudgetToday - this.rollingSpentToday;
+  }
+
+  get rollingTodayUsagePercent(): number {
+    if (this.rollingBudgetToday <= 0) {
+      return this.rollingSpentToday > 0 ? 100 : 0;
+    }
+    return Math.min(
+      100,
+      Math.round((this.rollingSpentToday / this.rollingBudgetToday) * 100),
+    );
+  }
 
   protected readonly defaultProfileName = 'User';
   protected readonly defaultProfileEmail = 'user@example.com';
@@ -85,6 +100,7 @@ export class Sidebar implements OnInit, OnChanges {
   protected cropZoom = 1;
   protected cropOffsetX = 50;
   protected cropOffsetY = 50;
+  protected isMobileMenuOpen = false;
 
   private cropSourceImage: HTMLImageElement | null = null;
 
@@ -136,12 +152,21 @@ export class Sidebar implements OnInit, OnChanges {
     this.cropOffsetX = 50;
     this.cropOffsetY = 50;
     this.cropSourceImage = null;
+    this.isMobileMenuOpen = false;
     this.showProfileModal = true;
   }
 
   protected closeProfileModal(): void {
     this.showProfileModal = false;
     this.profileFormError = '';
+  }
+
+  protected toggleMobileMenu(): void {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
+
+  protected closeMobileMenu(): void {
+    this.isMobileMenuOpen = false;
   }
 
   protected triggerImagePicker(): void {
