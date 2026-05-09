@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { USERS_API_URL } from '../../../core/config/app-api.config';
 import { CurrentUserService } from '../../../core/services/current-user.service';
@@ -63,7 +64,7 @@ interface StoredUser {
 @Component({
   selector: 'app-debt',
   standalone: true,
-  imports: [CommonModule, FormsModule, Sidebar, InputField],
+  imports: [CommonModule, FormsModule, RouterLink, Sidebar, InputField],
   templateUrl: './debt.html',
   styleUrl: './debt.css',
 })
