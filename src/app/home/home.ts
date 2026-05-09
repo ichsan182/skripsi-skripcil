@@ -1687,8 +1687,26 @@ export class Home {
   }
 
   private refreshLevelEvaluation(): void {
+    const consumptiveTotal = this.debts
+      .filter((d) => d.category === 'konsumtif')
+      .reduce((sum, d) => sum + d.remainingAmount, 0);
+
+    const financialDataForLevel =
+      consumptiveTotal > 0 && this.financialData
+        ? {
+            ...this.financialData,
+            debtSummary: {
+              totalPrincipalAmount: Math.max(
+                consumptiveTotal,
+                this.financialData.debtSummary?.totalPrincipalAmount ?? 0,
+              ),
+              totalRemainingAmount: consumptiveTotal,
+            },
+          }
+        : this.financialData;
+
     this.levelEvaluation = evaluateFinancialLevel(
-      buildLevelSignals(this.financialData),
+      buildLevelSignals(financialDataForLevel),
     );
   }
 
