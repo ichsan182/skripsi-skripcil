@@ -672,6 +672,48 @@
   accent-color: var(--color-primary);
 }
 
+/* ── Language Toggle ─────────────────────────────────────── */
+.lang-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.lang-toggle-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1.5px solid rgba(3, 98, 76, 0.2);
+  border-radius: 10px;
+  background: transparent;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-gray);
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    color 0.18s;
+  text-align: center;
+}
+
+.lang-toggle-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(3, 98, 76, 0.05);
+}
+
+.lang-toggle-btn--active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.lang-toggle-btn--active:hover {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  color: #fff;
+}
+
 .profile-form-error {
   margin: 0;
   font-size: var(--font-size-xs);
