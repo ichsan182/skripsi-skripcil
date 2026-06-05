@@ -2,11 +2,6 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Sidebar } from '../../../shared/components/sidebar/sidebar';
-import {
-  FinancialData,
-  JournalService,
-  UserJournal,
-} from '../../../core/services/journal.service';
 import { RollingBudgetService } from '../../../core/utils/rolling-budget.service';
 
 export interface EducationCard {
@@ -24,15 +19,8 @@ export interface EducationCard {
   styleUrl: './education.css',
 })
 export class Education implements OnInit {
-  private readonly journalService = inject(JournalService);
-  private readonly rollingBudgetService = inject(RollingBudgetService);
+  protected readonly rollingBudgetService = inject(RollingBudgetService);
   private readonly router = inject(Router);
-
-  rollingBudgetToday = 0;
-  rollingBudgetRemaining = 0;
-  rollingDaysRemaining = 0;
-  rollingTotalBudget = 0;
-  rollingUsedBudget = 0;
 
   readonly cards: EducationCard[] = [
     {
@@ -79,47 +67,11 @@ export class Education implements OnInit {
     },
   ];
 
-  private journal: UserJournal = {
-    nextChatMessageId: 1,
-    chatByDate: {},
-    expensesByDate: {},
-    incomesByDate: {},
-  };
-  private currentFinancialData: FinancialData | null = null;
-
   async ngOnInit(): Promise<void> {
-    await this.loadRollingBudgetState();
+    await this.rollingBudgetService.refresh();
   }
 
   navigateTo(id: string): void {
-    this.router.navigate(['/education/content', id]);
-  }
-
-  private async loadRollingBudgetState(): Promise<void> {
-    try {
-      this.journal = await this.journalService.loadCurrentUserJournal();
-      const summary = await this.journalService.getCurrentCycleSummary();
-      this.currentFinancialData = summary.financialData;
-      this.computeRollingBudgetToday();
-    } catch {
-      this.rollingBudgetToday = 0;
-      this.rollingBudgetRemaining = 0;
-      this.rollingDaysRemaining = 0;
-      this.rollingTotalBudget = 0;
-      this.rollingUsedBudget = 0;
-    }
-  }
-
-  private computeRollingBudgetToday(): void {
-    const state = this.rollingBudgetService.computeRollingBudgetState(
-      this.currentFinancialData,
-      this.journal,
-    );
-
-    this.rollingTotalBudget = state.rollingTotalBudget;
-    this.rollingUsedBudget = state.rollingUsedBudget;
-    this.rollingBudgetRemaining = state.rollingBudgetRemaining;
-    this.rollingDaysRemaining = state.rollingDaysRemaining;
-    this.rollingBudgetToday = state.rollingBudgetToday;
+    void this.router.navigate(['/education/content', id]);
   }
 }

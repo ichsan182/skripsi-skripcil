@@ -1,12 +1,12 @@
 ﻿<div class="page-container">
   <app-sidebar
     [showRollingBudgetPanel]="true"
-    [rollingTotalBudget]="rollingTotalBudget"
-    [rollingUsedBudget]="rollingUsedBudget"
-    [rollingBudgetRemaining]="rollingBudgetRemaining"
-    [rollingDaysRemaining]="rollingDaysRemaining"
-    [rollingBudgetToday]="rollingBudgetToday"
-    [rollingSpentToday]="rollingSpentToday"
+    [rollingTotalBudget]="rollingBudgetService.currentState.rollingTotalBudget"
+    [rollingUsedBudget]="rollingBudgetService.currentState.rollingUsedBudget"
+    [rollingBudgetRemaining]="rollingBudgetService.currentState.rollingBudgetRemaining"
+    [rollingDaysRemaining]="rollingBudgetService.currentState.rollingDaysRemaining"
+    [rollingBudgetToday]="rollingBudgetService.currentState.rollingBudgetToday"
+    [rollingSpentToday]="rollingBudgetService.currentState.rollingSpentToday"
   ></app-sidebar>
   <section class="page-content">
     <h1>Transaction</h1>

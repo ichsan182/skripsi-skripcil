@@ -1,12 +1,12 @@
 ﻿<div class="home-container">
   <app-sidebar
     [showRollingBudgetPanel]="true"
-    [rollingTotalBudget]="rollingTotalBudget"
-    [rollingUsedBudget]="rollingUsedBudget"
-    [rollingBudgetRemaining]="rollingBudgetRemaining"
-    [rollingDaysRemaining]="rollingDaysRemaining"
-    [rollingBudgetToday]="rollingBudgetToday"
-    [rollingSpentToday]="rollingSpentToday"
+    [rollingTotalBudget]="rollingBudgetService.currentState.rollingTotalBudget"
+    [rollingUsedBudget]="rollingBudgetService.currentState.rollingUsedBudget"
+    [rollingBudgetRemaining]="rollingBudgetService.currentState.rollingBudgetRemaining"
+    [rollingDaysRemaining]="rollingBudgetService.currentState.rollingDaysRemaining"
+    [rollingBudgetToday]="rollingBudgetService.currentState.rollingBudgetToday"
+    [rollingSpentToday]="rollingBudgetService.currentState.rollingSpentToday"
     [profileName]="userName"
     [profileEmail]="userEmail"
     [profileImage]="userProfileImage"

@@ -1,5 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { FinancialData, UserJournal } from '../services/journal.service';
+import {
+  JournalService,
+  FinancialData,
+  UserJournal,
+} from '../services/journal.service';
+import { TestingTimeService } from '../services/testing-time.service';
 import { daysBetween, parseDateKey, normalizeDate } from './date.utils';
 
 export interface RollingBudgetState {
@@ -11,29 +16,55 @@ export interface RollingBudgetState {
   rollingSpentToday: number;
 }
 
+const ZERO_STATE: RollingBudgetState = {
+  rollingTotalBudget: 0,
+  rollingUsedBudget: 0,
+  rollingBudgetRemaining: 0,
+  rollingDaysRemaining: 0,
+  rollingBudgetToday: 0,
+  rollingSpentToday: 0,
+};
+
 /**
- * Service untuk menghitung rolling budget state
- * Digunakan oleh komponen Home dan Transaction
- *
- * Best practice:
- * - Centralized calculation logic untuk rolling budget
- * - Pure functions ketika memungkinkan (perlu journal data dari komponen)
- * - Consistent calculation across all pages
+ * Single source of truth untuk rolling budget state di seluruh aplikasi.
+ * Semua halaman memanggil refresh() saat init dan setelah mutasi data,
+ * lalu membaca dari currentState — sehingga nilai selalu konsisten.
  */
 @Injectable({
   providedIn: 'root',
 })
 export class RollingBudgetService {
+  private readonly journalService = inject(JournalService);
+  private readonly testingTimeService = inject(TestingTimeService);
+
+  /** State rolling budget yang dibagikan ke semua halaman. */
+  currentState: RollingBudgetState = { ...ZERO_STATE };
+
   /**
-   * Compute rolling budget state berdasarkan financial data dan journal
-   * @param financialData - Current financial data
-   * @param journal - User journal dengan expense entries
-   * @returns Rolling budget state object
+   * Muat ulang data dari server dan perbarui currentState.
+   * Selalu menggunakan referenceDate dari TestingTimeService agar konsisten.
    */
+  async refresh(): Promise<void> {
+    try {
+      const referenceDate = this.testingTimeService.getReferenceDate();
+      const journal =
+        await this.journalService.loadCurrentUserJournal(referenceDate);
+      const { financialData } =
+        await this.journalService.getCurrentCycleSummary(referenceDate);
+      this.currentState = this.computeRollingBudgetState(
+        financialData,
+        journal,
+        referenceDate,
+      );
+    } catch {
+      this.currentState = { ...ZERO_STATE };
+    }
+  }
+
   computeRollingBudgetState(
     financialData: FinancialData | null,
     journal: UserJournal,
-    referenceDate: Date = new Date(),
+    referenceDate: Date = this.testingTimeService.getReferenceDate(),
   ): RollingBudgetState {
     // Default state jika data tidak lengkap
     if (!financialData?.currentCycleStart || !financialData.currentCycleEnd) {

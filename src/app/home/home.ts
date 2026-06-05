@@ -98,7 +98,7 @@ export class Home {
   private readonly journalService = inject(JournalService);
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly rollingBudgetService = inject(RollingBudgetService);
+  protected readonly rollingBudgetService = inject(RollingBudgetService);
   private readonly testingTimeService = inject(TestingTimeService);
   protected readonly levelCardComponent = LevelCardComponent;
   private journal: UserJournal = {
@@ -137,13 +137,6 @@ export class Home {
     lastActiveDate: '',
     freezeUsed: false,
   };
-  rollingBudgetToday = 0;
-  rollingBudgetRemaining = 0;
-  rollingDaysRemaining = 0;
-  rollingTotalBudget = 0;
-  rollingUsedBudget = 0;
-  rollingSpentToday = 0;
-
   showMentions = {
     saldo: false,
     pemasukan: true,
@@ -651,7 +644,7 @@ export class Home {
         };
         this.syncFinancialDataToLocalStorage();
         this.refreshLevelEvaluation();
-        this.computeRollingBudgetToday();
+        await this.rollingBudgetService.refresh();
       }
 
       // skipFinancialUpdate=true because result already carries fresh financialData.
@@ -684,7 +677,7 @@ export class Home {
         };
         this.syncFinancialDataToLocalStorage();
         this.refreshLevelEvaluation();
-        this.computeRollingBudgetToday();
+        await this.rollingBudgetService.refresh();
       }
       this.showTambahPemasukan = false;
     } finally {
@@ -950,7 +943,6 @@ export class Home {
         // page load starts from fresh data instead of stale cache.
         this.syncFinancialDataToLocalStorage();
         this.refreshLevelEvaluation();
-        this.computeRollingBudgetToday();
       }
     } catch {
       // keep default 0
@@ -963,6 +955,7 @@ export class Home {
     this.journal = await this.journalService.loadCurrentUserJournal(
       this.getReferenceToday(),
     );
+    await this.rollingBudgetService.refresh();
     this.firstRecordDate = this.getFirstRecordDate();
     this.syncDailyStreakState();
     this.refreshMonthlyExpenses();
@@ -1042,20 +1035,6 @@ export class Home {
         }
       })();
     }
-  }
-
-  private computeRollingBudgetToday(): void {
-    const state = this.rollingBudgetService.computeRollingBudgetState(
-      this.financialData,
-      this.journal,
-      this.getReferenceToday(),
-    );
-    this.rollingTotalBudget = state.rollingTotalBudget;
-    this.rollingUsedBudget = state.rollingUsedBudget;
-    this.rollingBudgetRemaining = state.rollingBudgetRemaining;
-    this.rollingDaysRemaining = state.rollingDaysRemaining;
-    this.rollingBudgetToday = state.rollingBudgetToday;
-    this.rollingSpentToday = state.rollingSpentToday;
   }
 
   private getStreakDayStatus(date: Date): StreakDayStatus {
