@@ -52,13 +52,16 @@ export class Sidebar implements OnInit, OnChanges {
   @Input() profileImage = '';
 
   @Output() profileUpdated = new EventEmitter<ProfileUpdatePayload>();
-  @Input() formatRupiahFn: (amount: number) => string = (amount: number) =>
-    new Intl.NumberFormat('id-ID', {
+  @Input() formatRupiahFn: (amount: number) => string = (amount: number) => {
+    const abs = Math.abs(amount);
+    const formatted = new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(abs);
+    return amount < 0 ? `-${formatted}` : formatted;
+  };
 
   get rollingRemainingToday(): number {
     return this.rollingBudgetToday - this.rollingSpentToday;
