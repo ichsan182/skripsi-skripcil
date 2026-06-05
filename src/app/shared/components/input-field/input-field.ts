@@ -35,10 +35,10 @@ export class InputField implements OnChanges {
   @Input() inputmode: 'text' | 'decimal' | 'numeric' | 'email' | 'tel' = 'text';
   @Input() maxlength?: number;
 
-  @Input() min?: number;
-  @Input() max?: number;
-  @Input() step?: number;
-  @Input() disabled = false;
+  @Input() min?: number; // ada g befungsi
+  @Input() max?: number; // ada g befungsi
+  @Input() step?: number; // ada g befungsi
+  @Input() disabled = false; // ada g befungsi
   @Input() readonly = false;
   @Input() required = false;
 

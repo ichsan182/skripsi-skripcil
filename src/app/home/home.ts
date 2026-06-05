@@ -110,6 +110,11 @@ export class Home {
   private readonly noExpensePolicy: 'allow-no-expense' | 'require-entry' =
     'require-entry';
   private readonly debtSnapshotStorageKey = 'homeDebtMonthlySnapshots';
+  /** Per-date cache for computeRollingBudgetForDate — cleared on every data mutation. */
+  private readonly rollingBudgetCache = new Map<
+    string,
+    { hasBudget: boolean; dailyBudget: number }
+  >();
   private debts: DebtItemSnapshot[] = [];
   private debtCardState: DebtCardState = {
     mode: 'clear',
@@ -637,17 +642,20 @@ export class Home {
       }
 
       this.journal = result.journal;
+      this.rollingBudgetCache.clear();
       if (result.financialData) {
         this.financialData = {
           ...result.financialData,
           debtSummary:
             result.financialData.debtSummary ?? this.financialData?.debtSummary,
         };
+        this.syncFinancialDataToLocalStorage();
         this.refreshLevelEvaluation();
         this.computeRollingBudgetToday();
       }
 
-      await this.loadMonthlyExpenseTotal();
+      // skipFinancialUpdate=true because result already carries fresh financialData.
+      await this.loadMonthlyExpenseTotal(!!result.financialData);
       this.refreshMonthlyExpenses();
       this.showTambahPengeluaran = false;
     } finally {
@@ -667,12 +675,14 @@ export class Home {
         payload,
       );
       this.journal = result.journal;
+      this.rollingBudgetCache.clear();
       if (result.financialData) {
         this.financialData = {
           ...result.financialData,
           debtSummary:
             result.financialData.debtSummary ?? this.financialData?.debtSummary,
         };
+        this.syncFinancialDataToLocalStorage();
         this.refreshLevelEvaluation();
         this.computeRollingBudgetToday();
       }
@@ -921,19 +931,24 @@ export class Home {
     this.monthlyExpenses = rows.sort((a, b) => a.day - b.day);
   }
 
-  private async loadMonthlyExpenseTotal(): Promise<void> {
+  private async loadMonthlyExpenseTotal(
+    skipFinancialUpdate = false,
+  ): Promise<void> {
     try {
       const summary = await this.journalService.getCurrentCycleSummary(
         this.getReferenceToday(),
       );
       this.monthlyExpenseTotal = summary.monthlyExpenseTotal;
-      if (summary.financialData) {
+      if (!skipFinancialUpdate && summary.financialData) {
         this.financialData = {
           ...summary.financialData,
           debtSummary:
             summary.financialData.debtSummary ??
             this.financialData?.debtSummary,
         };
+        // Server is source of truth — write back to localStorage so the next
+        // page load starts from fresh data instead of stale cache.
+        this.syncFinancialDataToLocalStorage();
         this.refreshLevelEvaluation();
         this.computeRollingBudgetToday();
       }
@@ -943,17 +958,18 @@ export class Home {
   }
 
   private async initializeDashboard(): Promise<void> {
+    this.rollingBudgetCache.clear();
     await this.loadMonthlyExpenseTotal();
     this.journal = await this.journalService.loadCurrentUserJournal(
       this.getReferenceToday(),
     );
     this.firstRecordDate = this.getFirstRecordDate();
-    await this.syncDailyStreakState();
+    this.syncDailyStreakState();
     this.refreshMonthlyExpenses();
     this.refreshStreakCalendar();
   }
 
-  private async syncDailyStreakState(): Promise<void> {
+  private syncDailyStreakState(): void {
     const today = this.getReferenceToday();
     const todayKey = this.toDateKey(today);
     const currentUserStreak = normalizeUserStreak(
@@ -973,7 +989,7 @@ export class Home {
       if (!this.firstRecordDate) {
         this.firstRecordDate = testingSync.inferredFirstRecordDate;
       }
-      await this.persistStreak(testingSync.streak);
+      this.persistStreak(testingSync.streak);
       return;
     }
 
@@ -985,7 +1001,7 @@ export class Home {
         freezeUsed: currentUserStreak.freezeUsed,
       };
       this.streakState = emptyStreak;
-      await this.persistStreak(emptyStreak);
+      this.persistStreak(emptyStreak);
       return;
     }
 
@@ -998,31 +1014,33 @@ export class Home {
       getDayStatus: (date) => this.getStreakDayStatus(date),
     });
     this.streakState = updated;
-    await this.persistStreak(updated);
+    this.persistStreak(updated);
   }
 
-  private async persistStreak(streak: UserStreak): Promise<void> {
+  private persistStreak(streak: UserStreak): void {
+    // Synchronous: update local cache immediately so subsequent reads are consistent.
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    const updatedUser = {
-      ...user,
-      streak,
-    };
-    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    localStorage.setItem('currentUser', JSON.stringify({ ...user, streak }));
+    // Async: server sync is non-blocking — UI does not wait for this.
     if (user.id) {
-      try {
-        const serverUser = await firstValueFrom(
-          this.http.get<Record<string, unknown>>(`${USERS_API_URL}/${user.id}`),
-        );
-        await firstValueFrom(
-          this.http.put(`${USERS_API_URL}/${user.id}`, {
-            ...serverUser,
-            streak,
-            id: user.id,
-          }),
-        );
-      } catch {
-        // silent
-      }
+      void (async () => {
+        try {
+          const serverUser = await firstValueFrom(
+            this.http.get<Record<string, unknown>>(
+              `${USERS_API_URL}/${user.id}`,
+            ),
+          );
+          await firstValueFrom(
+            this.http.put(`${USERS_API_URL}/${user.id}`, {
+              ...serverUser,
+              streak,
+              id: user.id,
+            }),
+          );
+        } catch {
+          // silent
+        }
+      })();
     }
   }
 
@@ -1080,14 +1098,24 @@ export class Home {
     hasBudget: boolean;
     dailyBudget: number;
   } {
+    const cacheKey = this.toDateKey(date);
+    const cached = this.rollingBudgetCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     if (!this.financialData) {
-      return { hasBudget: false, dailyBudget: 0 };
+      const miss = { hasBudget: false, dailyBudget: 0 };
+      this.rollingBudgetCache.set(cacheKey, miss);
+      return miss;
     }
 
     const cycle = this.resolveCycleRangeByDate(date);
     const totalBudget = this.getCycleBudgetByDate(date);
     if (totalBudget <= 0) {
-      return { hasBudget: false, dailyBudget: 0 };
+      const miss = { hasBudget: false, dailyBudget: 0 };
+      this.rollingBudgetCache.set(cacheKey, miss);
+      return miss;
     }
 
     const dayBefore = new Date(date);
@@ -1095,10 +1123,12 @@ export class Home {
     const usedBefore = this.sumExpensesInRange(cycle.start, dayBefore);
     const remainingBudget = Math.max(0, totalBudget - usedBefore);
     const remainingDays = Math.max(1, this.daysBetween(date, cycle.end) + 1);
-    return {
+    const result = {
       hasBudget: true,
       dailyBudget: Math.floor(remainingBudget / remainingDays),
     };
+    this.rollingBudgetCache.set(cacheKey, result);
+    return result;
   }
 
   private resolveCycleRangeByDate(referenceDate: Date): {
@@ -2170,6 +2200,21 @@ export class Home {
 
   private getReferenceToday(): Date {
     return this.startOfDay(new Date());
+  }
+
+  /** Write current financialData back into the localStorage user cache so the
+   *  next cold start reads fresh server-authoritative data, not stale snapshot. */
+  private syncFinancialDataToLocalStorage(): void {
+    if (!this.financialData) return;
+    try {
+      const cached = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      localStorage.setItem(
+        'currentUser',
+        JSON.stringify({ ...cached, financialData: this.financialData }),
+      );
+    } catch {
+      // localStorage quota exceeded or unavailable — ignore
+    }
   }
 
   private parseTestingDateInput(value: string): Date | null {
