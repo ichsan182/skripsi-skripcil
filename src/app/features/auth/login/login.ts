@@ -1,29 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
-import { USERS_API_URL } from '../../../core/config/app-api.config';
+import { AuthService } from '../../../core/services/auth.service';
 import { CurrentUserService } from '../../../core/services/current-user.service';
-
-interface User {
-  id?: number | string;
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-  onboardingCompleted?: boolean;
-  financialData?: {
-    pendapatan: number;
-    pengeluaranWajib: number;
-    tanggalPemasukan: number;
-    hutangWajib: number;
-    estimasiTabungan: number;
-    danaDarurat: number;
-  };
-  level?: number;
-}
 
 @Component({
   selector: 'app-login',
@@ -33,7 +13,7 @@ interface User {
 })
 export class Login {
   private readonly formBuilder = inject(FormBuilder);
-  private readonly httpClient = inject(HttpClient);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly currentUserService = inject(CurrentUserService);
@@ -89,10 +69,7 @@ export class Login {
       const normalizedEmail = (email ?? '').trim().toLowerCase();
       const normalizedPassword = (password ?? '').trim();
 
-      const usersResponse = await firstValueFrom(
-        this.httpClient.get<unknown>(USERS_API_URL),
-      );
-      const users = this.extractUsers(usersResponse);
+      const users = await this.authService.getAllUsers();
 
       const user = users.find(
         (item) =>
@@ -136,10 +113,7 @@ export class Login {
       const normalizedEmail = (email ?? '').trim().toLowerCase();
       const trimmedPassword = (newPassword ?? '').trim();
 
-      const usersResponse = await firstValueFrom(
-        this.httpClient.get<unknown>(USERS_API_URL),
-      );
-      const users = this.extractUsers(usersResponse);
+      const users = await this.authService.getAllUsers();
 
       const user = users.find(
         (item) => item.email.trim().toLowerCase() === normalizedEmail,
@@ -150,12 +124,7 @@ export class Login {
         return;
       }
 
-      await firstValueFrom(
-        this.httpClient.put(`${USERS_API_URL}/${user.id}`, {
-          ...user,
-          password: trimmedPassword,
-        }),
-      );
+      await this.authService.updatePassword(user, trimmedPassword);
 
       this.forgotForm.reset();
       await this.router.navigateByUrl('/login?changed=success');
@@ -169,63 +138,6 @@ export class Login {
 
   protected toggleForgotPasswordVisibility(): void {
     this.isForgotPasswordVisible = !this.isForgotPasswordVisible;
-  }
-
-  private extractUsers(response: unknown): User[] {
-    if (Array.isArray(response)) {
-      return response as User[];
-    }
-
-    if (
-      response &&
-      typeof response === 'object' &&
-      'content' in response &&
-      Array.isArray((response as { content: unknown }).content)
-    ) {
-      return (response as { content: User[] }).content;
-    }
-
-    if (
-      response &&
-      typeof response === 'object' &&
-      '_embedded' in response &&
-      typeof (response as { _embedded: unknown })._embedded === 'object' &&
-      (response as { _embedded: { users?: unknown } })._embedded?.users &&
-      Array.isArray(
-        (response as { _embedded: { users: unknown[] } })._embedded.users,
-      )
-    ) {
-      return (response as { _embedded: { users: User[] } })._embedded.users;
-    }
-
-    return [];
-  }
-
-  private buildHttpErrorMessage(error: unknown): string {
-    if (!(error instanceof HttpErrorResponse)) {
-      return 'Terjadi kesalahan tidak terduga. Silakan coba lagi.';
-    }
-
-    if (error.status === 0) {
-      return 'Tidak bisa terhubung ke backend (cek http://localhost:12653 dan restart ng serve).';
-    }
-
-    if (typeof error.error === 'string' && error.error.trim().length > 0) {
-      return `Gagal (${error.status}): ${error.error}`;
-    }
-
-    if (
-      error.error &&
-      typeof error.error === 'object' &&
-      'message' in (error.error as Record<string, unknown>)
-    ) {
-      const message = (error.error as { message?: string }).message;
-      if (message) {
-        return `Gagal (${error.status}): ${message}`;
-      }
-    }
-
-    return `Gagal request ke backend (status ${error.status}).`;
   }
 
   protected showError(

@@ -1,8 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
 import { Sidebar } from '../shared/components/sidebar/sidebar';
 import { LevelCardComponent } from '../shared/components/level-card/level-card';
 import {
@@ -13,7 +11,8 @@ import {
   SavingsAllocation,
   UserJournal,
 } from '../core/services/journal.service';
-import { USERS_API_URL } from '../core/config/app-api.config';
+import { UserService } from '../core/services/user.service';
+import { User } from '../core/models/user.model';
 import {
   CurrencyAmountLimitTier,
   formatCurrency as formatRupiahUtil,
@@ -28,6 +27,7 @@ import {
 } from '../core/utils/level';
 import {
   StreakTestMode,
+  StreakTestModes,
   TestingTimeService,
 } from '../core/services/testing-time.service';
 import {
@@ -49,11 +49,21 @@ import {
 
 // Home-scoped models and helpers
 import {
+  ALL_BUDGET_FIELDS,
+  ALL_SAVINGS_FIELDS,
+  BudgetField,
+  BudgetFields,
+  DebtCardModes,
   DebtCardState,
+  DebtCategories,
   DebtChangeDirection,
   DebtItemSnapshot,
   DebtMonthlySnapshot,
   ExpenseRow,
+  NoExpensePolicies,
+  NoExpensePolicy,
+  SavingsField,
+  SavingsFields,
 } from './home.models';
 import {
   buildLegacyConsumptiveDebt,
@@ -63,7 +73,6 @@ import {
   normalizeDueDay,
   normalizeDebts,
   sumDebtRemaining,
-  toPositiveInt,
 } from './home-debt.helpers';
 import {
   computeSavingsPoolBase,
@@ -99,7 +108,7 @@ import {
 })
 export class Home {
   private readonly journalService = inject(JournalService);
-  private readonly http = inject(HttpClient);
+  private readonly userService = inject(UserService);
   private readonly router = inject(Router);
   protected readonly rollingBudgetService = inject(RollingBudgetService);
   private readonly testingTimeService = inject(TestingTimeService);
@@ -110,9 +119,7 @@ export class Home {
     expensesByDate: {},
     incomesByDate: {},
   };
-  private readonly noExpensePolicy: 'allow-no-expense' | 'require-entry' =
-    'require-entry';
-  private readonly debtSnapshotStorageKey = 'homeDebtMonthlySnapshots';
+  private readonly noExpensePolicy: NoExpensePolicy = NoExpensePolicies.REQUIRE;
   /** Per-date cache for computeRollingBudgetForDate — cleared on every data mutation. */
   private readonly rollingBudgetCache = new Map<
     string,
@@ -120,7 +127,7 @@ export class Home {
   >();
   private debts: DebtItemSnapshot[] = [];
   private debtCardState: DebtCardState = {
-    mode: 'clear',
+    mode: DebtCardModes.CLEAR,
     total: 0,
     activeCount: 0,
     changePercent: null,
@@ -165,21 +172,17 @@ export class Home {
   budgetPengeluaran = 20;
   budgetWants = 0;
   budgetSavings = 80;
-  budgetLastEdited: ('pengeluaran' | 'wants' | 'savings') | null = null;
+  budgetLastEdited: BudgetField | null = null;
   savingsTabunganInput = 0;
   savingsDanaDaruratInput = 0;
   savingsDanaInvestasiInput = 0;
   savingsTabunganPercent = 0;
   savingsDanaDaruratPercent = 0;
   savingsDanaInvestasiPercent = 0;
-  savingsPercentLastEdited:
-    | 'tabungan'
-    | 'danaDarurat'
-    | 'danaInvestasi'
-    | null = null;
+  savingsPercentLastEdited: SavingsField | null = null;
   pendapatanInput = 0;
   testingDateInput = '';
-  streakTestMode: StreakTestMode = 'realistic';
+  streakTestMode: StreakTestMode = StreakTestModes.REALISTIC;
   checkpointExists = false;
   monthlyExpenseTotal = 0;
   levelEvaluation: LevelEvaluation = evaluateFinancialLevel(
@@ -245,7 +248,7 @@ export class Home {
 
   private loadUserData(): void {
     try {
-      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      const user = (this.userService.getCurrentUser() ?? {}) as Partial<User>;
       this.userId = user.id ?? null;
       if (user.name) this.userName = user.name;
       if (user.email) this.userEmail = user.email;
@@ -257,8 +260,7 @@ export class Home {
           ...user.financialData,
           debtSummary:
             computedDebtSummary ??
-            user.financialData.debtSummary ??
-            user.debtSummary,
+            user.financialData.debtSummary,
         };
         this.pendapatanInput = user.financialData.pendapatan || 0;
         if (user.financialData.budgetAllocation) {
@@ -355,37 +357,37 @@ export class Home {
   }
 
   get debtCardTitle(): string {
-    if (this.debtCardState.mode === 'consumptive') return 'Hutang Konsumtif';
-    if (this.debtCardState.mode === 'productive') return 'Hutang Produktif';
+    if (this.debtCardState.mode === DebtCardModes.CONSUMPTIVE) return 'Hutang Konsumtif';
+    if (this.debtCardState.mode === DebtCardModes.PRODUCTIVE) return 'Hutang Produktif';
     return 'Status Hutang';
   }
 
   get debtCardPrimaryValue(): string {
-    if (this.debtCardState.mode === 'clear') return 'Bebas Hutang';
+    if (this.debtCardState.mode === DebtCardModes.CLEAR) return 'Bebas Hutang';
     return this.formatRupiah(this.debtCardState.total);
   }
 
   get debtCardSecondaryValue(): string {
-    if (this.debtCardState.mode === 'consumptive') {
+    if (this.debtCardState.mode === DebtCardModes.CONSUMPTIVE) {
       return `${this.debtCardState.activeCount} Hutang Konsumtif Aktif`;
     }
-    if (this.debtCardState.mode === 'productive') {
+    if (this.debtCardState.mode === DebtCardModes.PRODUCTIVE) {
       return `Estimasi lunas: ${this.debtCardState.payoffLabel}`;
     }
     return '';
   }
 
   get debtCardMessage(): string {
-    if (this.debtCardState.mode === 'consumptive') return this.debtCardState.urgentLine;
-    if (this.debtCardState.mode === 'productive') {
+    if (this.debtCardState.mode === DebtCardModes.CONSUMPTIVE) return this.debtCardState.urgentLine;
+    if (this.debtCardState.mode === DebtCardModes.PRODUCTIVE) {
       return 'Hutang produktif berjalan sesuai rencana jangka panjang.';
     }
     return 'Semua hutang sudah lunas. Pertahankan kondisi sehat ini.';
   }
 
   get debtCardToneClass(): string {
-    if (this.debtCardState.mode === 'consumptive') return 'debt-tone-alert';
-    if (this.debtCardState.mode === 'productive') return 'debt-tone-progress';
+    if (this.debtCardState.mode === DebtCardModes.CONSUMPTIVE) return 'debt-tone-alert';
+    if (this.debtCardState.mode === DebtCardModes.PRODUCTIVE) return 'debt-tone-progress';
     return 'debt-tone-clear';
   }
 
@@ -665,7 +667,7 @@ export class Home {
   }
 
   onBudgetPercentInput(
-    field: 'pengeluaran' | 'wants' | 'savings',
+    field: BudgetField,
     event: Event,
   ): void {
     const input = event.target as HTMLInputElement;
@@ -681,7 +683,7 @@ export class Home {
   }
 
   onSavingsAmountInput(
-    field: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
+    field: SavingsField,
     event: Event,
   ): void {
     const input = event.target as HTMLInputElement;
@@ -689,15 +691,15 @@ export class Home {
     let value = parseInt(cleaned, 10) || 0;
     const maxForField = this.getSavingsMaxForField(field);
     if (value > maxForField) value = maxForField;
-    if (field === 'tabungan') this.savingsTabunganInput = value;
-    else if (field === 'danaDarurat') this.savingsDanaDaruratInput = value;
+    if (field === SavingsFields.TABUNGAN) this.savingsTabunganInput = value;
+    else if (field === SavingsFields.DANA_DARURAT) this.savingsDanaDaruratInput = value;
     else this.savingsDanaInvestasiInput = value;
     input.value = this.formatNumber(value);
     this.syncSavingsPercentFromAmounts();
   }
 
   onSavingsPercentInput(
-    field: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
+    field: SavingsField,
     event: Event,
   ): void {
     const input = event.target as HTMLInputElement;
@@ -897,10 +899,10 @@ export class Home {
     const today = this.getReferenceToday();
     const todayKey = toDateKey(today);
     const currentUserStreak = normalizeUserStreak(
-      JSON.parse(localStorage.getItem('currentUser') || '{}').streak,
+      this.userService.getCurrentUser()?.streak ?? null,
     );
 
-    if (this.isTestingDateActive && this.streakTestMode === 'always-streak') {
+    if (this.isTestingDateActive && this.streakTestMode === StreakTestModes.ALWAYS_STREAK) {
       const testingSync = computeTestingModeStreakState({
         currentStreak: currentUserStreak,
         today,
@@ -942,30 +944,7 @@ export class Home {
   }
 
   private persistStreak(streak: UserStreak): void {
-    // Synchronous: update local cache immediately so subsequent reads are consistent.
-    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    localStorage.setItem('currentUser', JSON.stringify({ ...user, streak }));
-    // Async: server sync is non-blocking — UI does not wait for this.
-    if (user.id) {
-      void (async () => {
-        try {
-          const serverUser = await firstValueFrom(
-            this.http.get<Record<string, unknown>>(
-              `${USERS_API_URL}/${user.id}`,
-            ),
-          );
-          await firstValueFrom(
-            this.http.put(`${USERS_API_URL}/${user.id}`, {
-              ...serverUser,
-              streak,
-              id: user.id,
-            }),
-          );
-        } catch {
-          // silent
-        }
-      })();
-    }
+    this.userService.saveStreak(this.userId, streak);
   }
 
   private getStreakDayStatus(date: Date): StreakDayStatus {
@@ -973,7 +952,7 @@ export class Home {
     const today = this.getReferenceToday();
     if (day > today) return 'future';
 
-    if (this.isTestingDateActive && this.streakTestMode === 'always-streak') {
+    if (this.isTestingDateActive && this.streakTestMode === StreakTestModes.ALWAYS_STREAK) {
       const simulatedStart =
         this.firstRecordDate ||
         parseDateKey(this.streakState.lastActiveDate);
@@ -984,7 +963,7 @@ export class Home {
     if (!this.firstRecordDate || day < this.firstRecordDate) return 'before-start';
 
     const hasEntry = getTotalEntryCountByDate(this.journal, day) > 0;
-    if (!hasEntry && this.noExpensePolicy === 'require-entry') return 'skipped';
+    if (!hasEntry && this.noExpensePolicy === NoExpensePolicies.REQUIRE) return 'skipped';
 
     const rolling = this.computeRollingBudgetForDate(day);
     if (!rolling.hasBudget) return hasEntry ? 'success' : 'skipped';
@@ -1028,29 +1007,22 @@ export class Home {
     return result;
   }
 
-  private setBudgetField(
-    field: 'pengeluaran' | 'wants' | 'savings',
-    value: number,
-  ): void {
-    if (field === 'pengeluaran') this.budgetPengeluaran = value;
-    else if (field === 'wants') this.budgetWants = value;
+  private setBudgetField(field: BudgetField, value: number): void {
+    if (field === BudgetFields.PENGELUARAN) this.budgetPengeluaran = value;
+    else if (field === BudgetFields.WANTS) this.budgetWants = value;
     else this.budgetSavings = value;
   }
 
-  private getBudgetFieldVal(
-    field: 'pengeluaran' | 'wants' | 'savings',
-  ): number {
-    if (field === 'pengeluaran') return this.budgetPengeluaran;
-    if (field === 'wants') return this.budgetWants;
+  private getBudgetFieldVal(field: BudgetField): number {
+    if (field === BudgetFields.PENGELUARAN) return this.budgetPengeluaran;
+    if (field === BudgetFields.WANTS) return this.budgetWants;
     return this.budgetSavings;
   }
 
-  private autoFillBudget(
-    editedField: 'pengeluaran' | 'wants' | 'savings',
-  ): void {
+  private autoFillBudget(editedField: BudgetField): void {
     if (this.budgetMode === 2) {
       const absorber =
-        editedField === 'pengeluaran' ? 'savings' : 'pengeluaran';
+        editedField === BudgetFields.PENGELUARAN ? BudgetFields.SAVINGS : BudgetFields.PENGELUARAN;
       this.setBudgetField(
         absorber,
         Math.max(0, 100 - this.getBudgetFieldVal(editedField)),
@@ -1059,18 +1031,18 @@ export class Home {
     }
     // 3-field mode: absorb remainder into the field that wasn't just edited.
     // Priority: adjust the last field in order that isn't the edited one.
-    const priority: ('pengeluaran' | 'wants' | 'savings')[] = [
-      'savings',
-      'wants',
-      'pengeluaran',
+    const priority: BudgetField[] = [
+      BudgetFields.SAVINGS,
+      BudgetFields.WANTS,
+      BudgetFields.PENGELUARAN,
     ];
-    let absorber: 'pengeluaran' | 'wants' | 'savings';
+    let absorber: BudgetField;
     if (this.budgetLastEdited && this.budgetLastEdited !== editedField) {
       absorber = this.budgetLastEdited;
     } else {
-      absorber = priority.find((f) => f !== editedField) || 'savings';
+      absorber = priority.find((f) => f !== editedField) || BudgetFields.SAVINGS;
     }
-    const thirdField = (['pengeluaran', 'wants', 'savings'] as const).find(
+    const thirdField = ALL_BUDGET_FIELDS.find(
       (f) => f !== editedField && f !== absorber,
     )!;
     const remainder =
@@ -1088,23 +1060,19 @@ export class Home {
     }
   }
 
-  private getSavingsMaxForField(
-    field: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
-  ): number {
+  private getSavingsMaxForField(field: SavingsField): number {
     const total = this.savingsTotalAmount;
     let othersSum = 0;
-    if (field !== 'tabungan') othersSum += this.savingsTabunganInput;
-    if (field !== 'danaDarurat') othersSum += this.savingsDanaDaruratInput;
-    if (field !== 'danaInvestasi' && this.levelEvaluation.level >= 4)
+    if (field !== SavingsFields.TABUNGAN) othersSum += this.savingsTabunganInput;
+    if (field !== SavingsFields.DANA_DARURAT) othersSum += this.savingsDanaDaruratInput;
+    if (field !== SavingsFields.DANA_INVESTASI && this.levelEvaluation.level >= 4)
       othersSum += this.savingsDanaInvestasiInput;
     return Math.max(0, total - othersSum);
   }
 
-  private autoFillSavingsPercent(
-    editedField: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
-  ): void {
+  private autoFillSavingsPercent(editedField: SavingsField): void {
     if (this.levelEvaluation.level < 4) {
-      const absorber = editedField === 'tabungan' ? 'danaDarurat' : 'tabungan';
+      const absorber = editedField === SavingsFields.TABUNGAN ? SavingsFields.DANA_DARURAT : SavingsFields.TABUNGAN;
       this.setSavingsPercentField(
         absorber,
         Math.max(0, 100 - this.getSavingsPercentField(editedField)),
@@ -1113,13 +1081,7 @@ export class Home {
       return;
     }
 
-    const allFields: ('tabungan' | 'danaDarurat' | 'danaInvestasi')[] = [
-      'tabungan',
-      'danaDarurat',
-      'danaInvestasi',
-    ];
-
-    let absorber: 'tabungan' | 'danaDarurat' | 'danaInvestasi';
+    let absorber: SavingsField;
     if (
       this.savingsPercentLastEdited &&
       this.savingsPercentLastEdited !== editedField
@@ -1127,10 +1089,10 @@ export class Home {
       absorber = this.savingsPercentLastEdited;
     } else {
       absorber =
-        allFields.find((field) => field !== editedField) ?? 'danaDarurat';
+        ALL_SAVINGS_FIELDS.find((field) => field !== editedField) ?? SavingsFields.DANA_DARURAT;
     }
 
-    const thirdField = allFields.find(
+    const thirdField = ALL_SAVINGS_FIELDS.find(
       (field) => field !== editedField && field !== absorber,
     );
     if (!thirdField) return;
@@ -1178,9 +1140,7 @@ export class Home {
     this.savingsDanaInvestasiPercent = 0;
   }
 
-  private syncSavingsAmountsFromPercentages(
-    primaryField: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
-  ): void {
+  private syncSavingsAmountsFromPercentages(primaryField: SavingsField): void {
     const total = this.savingsTotalAmount;
     if (total <= 0) {
       this.savingsTabunganInput = 0;
@@ -1212,15 +1172,10 @@ export class Home {
     this.setSavingsAmountField(primaryField, 0);
     let remainder = overflow - primaryValue;
 
-    const allSavingsFields = [
-      'tabungan',
-      'danaDarurat',
-      'danaInvestasi',
-    ] as const;
-    const otherFields = allSavingsFields.filter(
-      (field): field is 'tabungan' | 'danaDarurat' | 'danaInvestasi' =>
+    const otherFields = ALL_SAVINGS_FIELDS.filter(
+      (field) =>
         field !== primaryField &&
-        (this.levelEvaluation.level >= 4 || field !== 'danaInvestasi'),
+        (this.levelEvaluation.level >= 4 || field !== SavingsFields.DANA_INVESTASI),
     );
 
     for (const field of otherFields) {
@@ -1232,39 +1187,29 @@ export class Home {
     }
   }
 
-  private setSavingsPercentField(
-    field: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
-    value: number,
-  ): void {
+  private setSavingsPercentField(field: SavingsField, value: number): void {
     const normalized = Math.max(0, Math.min(100, Math.floor(value)));
-    if (field === 'tabungan') this.savingsTabunganPercent = normalized;
-    else if (field === 'danaDarurat') this.savingsDanaDaruratPercent = normalized;
+    if (field === SavingsFields.TABUNGAN) this.savingsTabunganPercent = normalized;
+    else if (field === SavingsFields.DANA_DARURAT) this.savingsDanaDaruratPercent = normalized;
     else this.savingsDanaInvestasiPercent = normalized;
   }
 
-  private getSavingsPercentField(
-    field: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
-  ): number {
-    if (field === 'tabungan') return this.savingsTabunganPercent;
-    if (field === 'danaDarurat') return this.savingsDanaDaruratPercent;
+  private getSavingsPercentField(field: SavingsField): number {
+    if (field === SavingsFields.TABUNGAN) return this.savingsTabunganPercent;
+    if (field === SavingsFields.DANA_DARURAT) return this.savingsDanaDaruratPercent;
     return this.savingsDanaInvestasiPercent;
   }
 
-  private setSavingsAmountField(
-    field: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
-    value: number,
-  ): void {
+  private setSavingsAmountField(field: SavingsField, value: number): void {
     const normalized = Math.max(0, Math.floor(value));
-    if (field === 'tabungan') this.savingsTabunganInput = normalized;
-    else if (field === 'danaDarurat') this.savingsDanaDaruratInput = normalized;
+    if (field === SavingsFields.TABUNGAN) this.savingsTabunganInput = normalized;
+    else if (field === SavingsFields.DANA_DARURAT) this.savingsDanaDaruratInput = normalized;
     else this.savingsDanaInvestasiInput = normalized;
   }
 
-  private getSavingsAmountField(
-    field: 'tabungan' | 'danaDarurat' | 'danaInvestasi',
-  ): number {
-    if (field === 'tabungan') return this.savingsTabunganInput;
-    if (field === 'danaDarurat') return this.savingsDanaDaruratInput;
+  private getSavingsAmountField(field: SavingsField): number {
+    if (field === SavingsFields.TABUNGAN) return this.savingsTabunganInput;
+    if (field === SavingsFields.DANA_DARURAT) return this.savingsDanaDaruratInput;
     return this.savingsDanaInvestasiInput;
   }
 
@@ -1313,7 +1258,7 @@ export class Home {
 
   private refreshLevelEvaluation(): void {
     const consumptiveTotal = this.debts
-      .filter((d) => d.category === 'konsumtif')
+      .filter((d) => d.category === DebtCategories.KONSUMTIF)
       .reduce((sum, d) => sum + d.remainingAmount, 0);
 
     const financialDataForLevel =
@@ -1384,8 +1329,8 @@ export class Home {
       today,
     );
 
-    const consumptiveActive = getActiveDebtsByCategory(this.debts, 'konsumtif');
-    const productiveActive = getActiveDebtsByCategory(this.debts, 'produktif');
+    const consumptiveActive = getActiveDebtsByCategory(this.debts, DebtCategories.KONSUMTIF);
+    const productiveActive = getActiveDebtsByCategory(this.debts, DebtCategories.PRODUKTIF);
     this.persistCurrentDebtSnapshot(
       sumDebtRemaining(consumptiveActive),
       sumDebtRemaining(productiveActive),
@@ -1396,40 +1341,15 @@ export class Home {
     consumptiveTotal: number,
     productiveTotal: number,
   ): void {
-    const snapshots = this.getDebtSnapshots();
     const currentKey = toYearMonthKey(this.getReferenceToday());
-    snapshots[currentKey] = {
+    this.userService.saveDebtSnapshot(currentKey, {
       consumptiveActiveTotal: Math.max(0, Math.round(consumptiveTotal)),
       productiveActiveTotal: Math.max(0, Math.round(productiveTotal)),
-    };
-    localStorage.setItem(
-      this.debtSnapshotStorageKey,
-      JSON.stringify(snapshots),
-    );
+    });
   }
 
   private getDebtSnapshots(): Record<string, DebtMonthlySnapshot> {
-    try {
-      const parsed = JSON.parse(
-        localStorage.getItem(this.debtSnapshotStorageKey) || '{}',
-      );
-      if (!parsed || typeof parsed !== 'object') return {};
-
-      const entries = Object.entries(parsed as Record<string, unknown>);
-      const snapshots: Record<string, DebtMonthlySnapshot> = {};
-      for (const [key, value] of entries) {
-        if (!value || typeof value !== 'object') continue;
-        const raw = value as Partial<DebtMonthlySnapshot>;
-        snapshots[key] = {
-          consumptiveActiveTotal: toPositiveInt(raw.consumptiveActiveTotal),
-          productiveActiveTotal: toPositiveInt(raw.productiveActiveTotal),
-        };
-      }
-
-      return snapshots;
-    } catch {
-      return {};
-    }
+    return this.userService.getDebtSnapshots();
   }
 
   private async reloadForReferenceDate(): Promise<void> {
@@ -1440,7 +1360,7 @@ export class Home {
   private syncReferenceDateControls(): void {
     const reference = this.getReferenceToday();
     this.testingDateInput = toDateKey(reference);
-    this.streakTestMode = 'realistic';
+    this.streakTestMode = StreakTestModes.REALISTIC;
     this.checkpointExists = false;
     this.selectedYear = reference.getFullYear();
     this.selectedMonthIndex = reference.getMonth();
@@ -1456,19 +1376,9 @@ export class Home {
     return startOfDay(new Date());
   }
 
-  /** Write current financialData back into the localStorage user cache so the
-   *  next cold start reads fresh server-authoritative data, not stale snapshot. */
   private syncFinancialDataToLocalStorage(): void {
     if (!this.financialData) return;
-    try {
-      const cached = JSON.parse(localStorage.getItem('currentUser') || '{}');
-      localStorage.setItem(
-        'currentUser',
-        JSON.stringify({ ...cached, financialData: this.financialData }),
-      );
-    } catch {
-      // localStorage quota exceeded or unavailable — ignore
-    }
+    this.userService.syncFinancialData(this.financialData);
   }
 
   private parseTestingDateInput(value: string): Date | null {

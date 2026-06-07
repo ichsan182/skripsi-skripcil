@@ -6,7 +6,9 @@
 import { formatCurrency as formatRupiahUtil } from '../core/utils/format.utils';
 import { startOfDay } from './home-date.helpers';
 import {
+  DebtCardModes,
   DebtCardState,
+  DebtCategories,
   DebtCategory,
   DebtChangeDirection,
   DebtItemSnapshot,
@@ -47,7 +49,7 @@ export function normalizeSingleDebt(raw: unknown): DebtItemSnapshot | null {
   return {
     id: (value.id || `${Date.now()}`) as string,
     name: String(value.name || 'Hutang').trim(),
-    category: value.category === 'produktif' ? 'produktif' : 'konsumtif',
+    category: value.category === DebtCategories.PRODUKTIF ? DebtCategories.PRODUKTIF : DebtCategories.KONSUMTIF,
     remainingAmount: toPositiveInt(value.remainingAmount),
     monthlyInstallment: toPositiveInt(value.monthlyInstallment),
     dueDay: normalizeDueDay(value.dueDay),
@@ -71,7 +73,7 @@ export function computeDebtSummaryFromRawDebts(
     (d) =>
       d &&
       typeof d === 'object' &&
-      (d as Record<string, unknown>)['category'] === 'konsumtif',
+      (d as Record<string, unknown>)['category'] === DebtCategories.KONSUMTIF,
   );
   if (!konsumtif.length) return undefined;
   const totalPrincipalAmount = konsumtif.reduce(
@@ -103,7 +105,7 @@ export function buildLegacyConsumptiveDebt(
   return {
     id: 'legacy-consumptive-debt',
     name: 'Hutang Konsumtif',
-    category: 'konsumtif',
+    category: DebtCategories.KONSUMTIF,
     remainingAmount: Math.max(0, Math.round(amount)),
     monthlyInstallment: Math.max(1, Math.round(amount * 0.1)),
     dueDay,
@@ -210,8 +212,8 @@ export function computeDebtCardState(
   previousMonthSnapshot: DebtMonthlySnapshot | null,
   today: Date,
 ): DebtCardState {
-  const consumptiveActive = getActiveDebtsByCategory(debts, 'konsumtif');
-  const productiveActive = getActiveDebtsByCategory(debts, 'produktif');
+  const consumptiveActive = getActiveDebtsByCategory(debts, DebtCategories.KONSUMTIF);
+  const productiveActive = getActiveDebtsByCategory(debts, DebtCategories.PRODUKTIF);
   const consumptiveTotal = sumDebtRemaining(consumptiveActive);
   const productiveTotal = sumDebtRemaining(productiveActive);
 
@@ -219,7 +221,7 @@ export function computeDebtCardState(
     const urgent = findMostUrgentDebt(consumptiveActive, today);
     const prevConsumptive = previousMonthSnapshot?.consumptiveActiveTotal ?? 0;
     return {
-      mode: 'consumptive',
+      mode: DebtCardModes.CONSUMPTIVE,
       total: consumptiveTotal,
       activeCount: consumptiveActive.length,
       changePercent: computeChangePercent(consumptiveTotal, prevConsumptive),
@@ -237,7 +239,7 @@ export function computeDebtCardState(
   if (productiveActive.length > 0) {
     const prevProductive = previousMonthSnapshot?.productiveActiveTotal ?? 0;
     return {
-      mode: 'productive',
+      mode: DebtCardModes.PRODUCTIVE,
       total: productiveTotal,
       activeCount: productiveActive.length,
       changePercent: computeChangePercent(productiveTotal, prevProductive),
@@ -248,7 +250,7 @@ export function computeDebtCardState(
   }
 
   return {
-    mode: 'clear',
+    mode: DebtCardModes.CLEAR,
     total: 0,
     activeCount: 0,
     changePercent: null,
