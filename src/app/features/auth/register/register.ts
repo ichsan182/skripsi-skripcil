@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -95,9 +95,12 @@ export class Register {
       await this.router.navigate(['/login'], {
         queryParams: { registered: 'success' },
       });
-    } catch {
-      this.errorMessage =
-        'Gagal menyimpan data. Pastikan backend Spring Boot berjalan.';
+    } catch (err) {
+      if (err instanceof HttpErrorResponse && err.status === 409) {
+        this.errorMessage = 'Nomor telepon sudah terdaftar. Silakan gunakan nomor lain.';
+      } else {
+        this.errorMessage = 'Gagal menyimpan data. Pastikan backend Spring Boot berjalan.';
+      }
     } finally {
       this.isSubmitting = false;
     }

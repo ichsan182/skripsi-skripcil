@@ -50,7 +50,7 @@ export class Result {
 
   get uangSisa(): number {
     const fd = this.financialData;
-    return fd.pendapatan - fd.pengeluaranWajib - fd.hutangWajib;
+    return fd.pendapatan - fd.pengeluaranWajib;
   }
 
   get resultDescription(): string {

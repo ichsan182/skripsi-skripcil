@@ -13,7 +13,6 @@ import {
   SavingsAllocation,
   UserJournal,
 } from '../core/services/journal.service';
-import { ExpenseCategory } from '../shared/utils/expense-category';
 import { USERS_API_URL } from '../core/config/app-api.config';
 import {
   CurrencyAmountLimitTier,
@@ -48,44 +47,48 @@ import {
   normalizeUserStreak,
 } from './streak/streak.utils';
 
-interface ExpenseRow {
-  date: string;
-  amount: string;
-  description: string;
-  categoryLabel: ExpenseCategory;
-  categoryClass: string;
-  day: number;
-}
-
-type DebtCategory = 'konsumtif' | 'produktif';
-type DebtCardMode = 'consumptive' | 'productive' | 'clear';
-type DebtChangeDirection = 'up' | 'down';
-
-interface DebtItemSnapshot {
-  id: string;
-  name: string;
-  category: DebtCategory;
-  remainingAmount: number;
-  monthlyInstallment: number;
-  dueDay: number;
-  dueDate: string;
-  status: string;
-}
-
-interface DebtMonthlySnapshot {
-  consumptiveActiveTotal: number;
-  productiveActiveTotal: number;
-}
-
-interface DebtCardState {
-  mode: DebtCardMode;
-  total: number;
-  activeCount: number;
-  changePercent: number | null;
-  changeDirection: DebtChangeDirection | null;
-  urgentLine: string;
-  payoffLabel: string;
-}
+// Home-scoped models and helpers
+import {
+  DebtCardState,
+  DebtChangeDirection,
+  DebtItemSnapshot,
+  DebtMonthlySnapshot,
+  ExpenseRow,
+} from './home.models';
+import {
+  buildLegacyConsumptiveDebt,
+  computeDebtCardState,
+  computeDebtSummaryFromRawDebts,
+  getActiveDebtsByCategory,
+  normalizeDueDay,
+  normalizeDebts,
+  sumDebtRemaining,
+  toPositiveInt,
+} from './home-debt.helpers';
+import {
+  computeSavingsPoolBase,
+  getBudgetExpensePercent,
+  getCycleBudgetByDate,
+  normalizeBudgetAllocationForEditor,
+  normalizeBudgetMode,
+  resolveCycleRangeByDate,
+  toSafePercent,
+} from './home-budget.helpers';
+import {
+  daysBetween,
+  parseDateKey,
+  startOfDay,
+  toDateKey,
+  toMonthInputValue,
+  toYearMonthKey,
+} from './home-date.helpers';
+import {
+  buildMonthlyExpenseRows,
+  getFirstRecordDate,
+  getTotalEntryCountByDate,
+  getTotalExpenseByDate,
+  sumExpensesInRange,
+} from './home-journal.helpers';
 
 @Component({
   selector: 'app-home',
@@ -200,10 +203,7 @@ export class Home {
 
   selectedMonthIndex = new Date().getMonth();
   selectedYear = new Date().getFullYear();
-  selectedMonthValue = this.toMonthInputValue(
-    this.selectedYear,
-    this.selectedMonthIndex,
-  );
+  selectedMonthValue = toMonthInputValue(this.selectedYear, this.selectedMonthIndex);
   monthlyExpenses: ExpenseRow[] = [];
 
   readonly dayHeaders = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -250,10 +250,8 @@ export class Home {
       if (user.name) this.userName = user.name;
       if (user.email) this.userEmail = user.email;
       if (user.profileImage) this.userProfileImage = user.profileImage;
-      this.debts = this.normalizeDebts(user.debts);
-      const computedDebtSummary = this.computeDebtSummaryFromRawDebts(
-        user.debts,
-      );
+      this.debts = normalizeDebts(user.debts);
+      const computedDebtSummary = computeDebtSummaryFromRawDebts(user.debts);
       if (user.financialData) {
         this.financialData = {
           ...user.financialData,
@@ -264,11 +262,11 @@ export class Home {
         };
         this.pendapatanInput = user.financialData.pendapatan || 0;
         if (user.financialData.budgetAllocation) {
-          const ba = this.normalizeBudgetAllocationForEditor(
+          const ba = normalizeBudgetAllocationForEditor(
             user.financialData.budgetAllocation,
             user.financialData,
           );
-          this.budgetMode = this.normalizeBudgetMode(ba.mode);
+          this.budgetMode = normalizeBudgetMode(ba.mode);
           this.budgetPengeluaran = ba.pengeluaran;
           this.budgetWants = ba.wants;
           this.budgetSavings = ba.savings;
@@ -278,7 +276,10 @@ export class Home {
 
       if (!this.debts.length && (this.financialData?.hutangWajib ?? 0) > 0) {
         this.debts = [
-          this.buildLegacyConsumptiveDebt(this.financialData?.hutangWajib ?? 0),
+          buildLegacyConsumptiveDebt(
+            this.financialData?.hutangWajib ?? 0,
+            normalizeDueDay(this.financialData?.tanggalPemasukan),
+          ),
         ];
       }
 
@@ -354,22 +355,13 @@ export class Home {
   }
 
   get debtCardTitle(): string {
-    if (this.debtCardState.mode === 'consumptive') {
-      return 'Hutang Konsumtif';
-    }
-
-    if (this.debtCardState.mode === 'productive') {
-      return 'Hutang Produktif';
-    }
-
+    if (this.debtCardState.mode === 'consumptive') return 'Hutang Konsumtif';
+    if (this.debtCardState.mode === 'productive') return 'Hutang Produktif';
     return 'Status Hutang';
   }
 
   get debtCardPrimaryValue(): string {
-    if (this.debtCardState.mode === 'clear') {
-      return 'Bebas Hutang';
-    }
-
+    if (this.debtCardState.mode === 'clear') return 'Bebas Hutang';
     return this.formatRupiah(this.debtCardState.total);
   }
 
@@ -377,35 +369,23 @@ export class Home {
     if (this.debtCardState.mode === 'consumptive') {
       return `${this.debtCardState.activeCount} Hutang Konsumtif Aktif`;
     }
-
     if (this.debtCardState.mode === 'productive') {
       return `Estimasi lunas: ${this.debtCardState.payoffLabel}`;
     }
-
     return '';
   }
 
   get debtCardMessage(): string {
-    if (this.debtCardState.mode === 'consumptive') {
-      return this.debtCardState.urgentLine;
-    }
-
+    if (this.debtCardState.mode === 'consumptive') return this.debtCardState.urgentLine;
     if (this.debtCardState.mode === 'productive') {
       return 'Hutang produktif berjalan sesuai rencana jangka panjang.';
     }
-
     return 'Semua hutang sudah lunas. Pertahankan kondisi sehat ini.';
   }
 
   get debtCardToneClass(): string {
-    if (this.debtCardState.mode === 'consumptive') {
-      return 'debt-tone-alert';
-    }
-
-    if (this.debtCardState.mode === 'productive') {
-      return 'debt-tone-progress';
-    }
-
+    if (this.debtCardState.mode === 'consumptive') return 'debt-tone-alert';
+    if (this.debtCardState.mode === 'productive') return 'debt-tone-progress';
     return 'debt-tone-clear';
   }
 
@@ -414,10 +394,7 @@ export class Home {
   }
 
   get debtChangePercentLabel(): string {
-    if (this.debtCardState.changePercent === null) {
-      return '';
-    }
-
+    if (this.debtCardState.changePercent === null) return '';
     return `${this.debtCardState.changePercent}%`;
   }
 
@@ -426,14 +403,8 @@ export class Home {
   }
 
   get debtChangeClass(): string {
-    if (this.debtCardState.changeDirection === 'up') {
-      return 'debt-change-up';
-    }
-
-    if (this.debtCardState.changeDirection === 'down') {
-      return 'debt-change-down';
-    }
-
+    if (this.debtCardState.changeDirection === 'up') return 'debt-change-up';
+    if (this.debtCardState.changeDirection === 'down') return 'debt-change-down';
     return '';
   }
 
@@ -450,10 +421,7 @@ export class Home {
   }
 
   get danaInvestasiInputPercentOfIncome(): string {
-    if (this.pendapatanInput <= 0 || this.savingsDanaInvestasiInput <= 0) {
-      return '0';
-    }
-
+    if (this.pendapatanInput <= 0 || this.savingsDanaInvestasiInput <= 0) return '0';
     return formatPercent(
       (this.savingsDanaInvestasiInput / this.pendapatanInput) * 100,
     );
@@ -463,15 +431,11 @@ export class Home {
     if (this.pendapatanInput <= 0) {
       return 'Masukkan pemasukan untuk melihat persentase dana investasi terhadap pemasukan.';
     }
-
     return `Input ini setara ${this.danaInvestasiInputPercentOfIncome}% dari pemasukan bulanan.`;
   }
 
   get danaInvestasiIncomeTargetAmount(): number {
-    if (this.pendapatanInput <= 0) {
-      return 0;
-    }
-
+    if (this.pendapatanInput <= 0) return 0;
     return Math.round(this.pendapatanInput * 0.15);
   }
 
@@ -479,7 +443,6 @@ export class Home {
     if (this.pendapatanInput <= 0) {
       return 'Target level 4 akan muncul setelah pemasukan diisi.';
     }
-
     return `Target level 4 minimal ${this.formatRupiah(this.danaInvestasiIncomeTargetAmount)} atau 15% dari pemasukan.`;
   }
 
@@ -573,7 +536,7 @@ export class Home {
     if (this.financialData) {
       this.pendapatanInput = this.financialData.pendapatan;
       const ba = this.getCurrentBudgetAllocation();
-      this.budgetMode = this.normalizeBudgetMode(ba.mode);
+      this.budgetMode = normalizeBudgetMode(ba.mode);
       this.budgetPengeluaran = ba.pengeluaran;
       this.budgetWants = ba.wants;
       this.budgetSavings = ba.savings;
@@ -621,7 +584,7 @@ export class Home {
     this.expenseSaveError = '';
     try {
       const today = this.getReferenceToday();
-      const todayKey = this.toDateKey(today);
+      const todayKey = toDateKey(today);
       const result = await this.journalService.addExpense(todayKey, {
         amount: payload.amount,
         description: payload.description,
@@ -662,7 +625,7 @@ export class Home {
     this.incomeSubmitting = true;
     try {
       const today = this.getReferenceToday();
-      const todayKey = this.toDateKey(today);
+      const todayKey = toDateKey(today);
       const result = await this.journalService.addTemporaryIncome(
         todayKey,
         payload,
@@ -757,7 +720,7 @@ export class Home {
       wants: this.budgetWants,
       savings: this.budgetSavings,
     };
-    const totalPengeluaranPct = this.getBudgetExpensePercent(budgetAllocation);
+    const totalPengeluaranPct = getBudgetExpensePercent(budgetAllocation);
     const pengeluaranWajib = Math.round(
       (pendapatan * totalPengeluaranPct) / 100,
     );
@@ -783,34 +746,31 @@ export class Home {
         existingSavingsAlloc.danaInvestasi + this.savingsDanaInvestasiInput,
     };
     const investmentTracking = this.buildUpdatedInvestmentTracking();
-    const newlyAllocated =
-      this.savingsTabunganInput +
-      this.savingsDanaDaruratInput +
-      (this.levelEvaluation.level >= 4 ? this.savingsDanaInvestasiInput : 0);
-    const currentCycleSavingsAllocated =
-      Math.max(0, this.financialData?.currentCycleSavingsAllocated ?? 0) +
-      newlyAllocated;
-    // Preserve any "extra" accumulated in the pool beyond the formula base
-    // (e.g. income added directly via the transaction page).
-    // extra = existingPool - (oldFormulaBase - alreadyAllocated)
-    // newPool = savingsRemaining + extra
-    //         = (newFormulaBase - alreadyAllocated - newlyAllocated) + extra
-    // This keeps income additions intact when the user changes budget %s.
     const prevAlreadyAllocated = Math.max(
       0,
       this.financialData?.currentCycleSavingsAllocated ?? 0,
     );
-    const oldSavingsBase = this.computeSavingsPoolBase(
+    const newlyAllocated =
+      this.savingsTabunganInput +
+      this.savingsDanaDaruratInput +
+      (this.levelEvaluation.level >= 4 ? this.savingsDanaInvestasiInput : 0);
+    const currentCycleSavingsAllocated = prevAlreadyAllocated + newlyAllocated;
+
+    // Hitung "extra" income yang masuk lewat transaksi (di luar formula % normal).
+    // Ini perlu dipreserve supaya tidak hilang saat user ubah persentase budget.
+    const existingPool = Math.max(0, this.financialData?.currentSisaSaldoPool ?? 0);
+    const oldFormulaBase = computeSavingsPoolBase(
       this.financialData?.pendapatan ?? pendapatan,
       this.getCurrentBudgetAllocation(),
     );
-    const existingPool = Math.max(
+    const poolExtra = existingPool - Math.max(0, oldFormulaBase - prevAlreadyAllocated);
+
+    // Pool baru = formula base baru - total yang sudah dialokasikan + extra transaksi.
+    const newFormulaBase = computeSavingsPoolBase(pendapatan, budgetAllocation);
+    const newSisaSaldoPool = Math.max(
       0,
-      this.financialData?.currentSisaSaldoPool ?? 0,
+      newFormulaBase - currentCycleSavingsAllocated + poolExtra,
     );
-    const poolExtra =
-      existingPool - Math.max(0, oldSavingsBase - prevAlreadyAllocated);
-    const newSisaSaldoPool = Math.max(0, this.savingsRemaining + poolExtra);
     const updatedFinancialData: FinancialData = {
       ...(this.financialData || {
         pendapatan: 0,
@@ -844,7 +804,7 @@ export class Home {
     const totalMonths = this.selectedYear * 12 + this.selectedMonthIndex + step;
     this.selectedYear = Math.floor(totalMonths / 12);
     this.selectedMonthIndex = ((totalMonths % 12) + 12) % 12;
-    this.selectedMonthValue = this.toMonthInputValue(
+    this.selectedMonthValue = toMonthInputValue(
       this.selectedYear,
       this.selectedMonthIndex,
     );
@@ -853,9 +813,7 @@ export class Home {
 
   onPickMonth(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (!input.value) {
-      return;
-    }
+    if (!input.value) return;
 
     const [yearRaw, monthRaw] = input.value.split('-');
     const year = Number(yearRaw);
@@ -867,7 +825,7 @@ export class Home {
 
     this.selectedYear = year;
     this.selectedMonthIndex = month;
-    this.selectedMonthValue = this.toMonthInputValue(year, month);
+    this.selectedMonthValue = toMonthInputValue(year, month);
     this.refreshMonthlyExpenses();
   }
 
@@ -889,39 +847,12 @@ export class Home {
   }
 
   private refreshMonthlyExpenses(): void {
-    const rows: ExpenseRow[] = [];
-    for (const [dateKey, expenses] of Object.entries(
-      this.journal.expensesByDate,
-    )) {
-      const [yearRaw, monthRaw, dayRaw] = dateKey.split('-');
-      const year = Number(yearRaw);
-      const month = Number(monthRaw) - 1;
-      const day = Number(dayRaw);
-      if (
-        Number.isNaN(year) ||
-        Number.isNaN(month) ||
-        Number.isNaN(day) ||
-        year !== this.selectedYear ||
-        month !== this.selectedMonthIndex
-      ) {
-        continue;
-      }
-
-      for (const expense of expenses) {
-        rows.push({
-          day,
-          date: `${String(day).padStart(2, '0')} ${
-            this.monthNames[this.selectedMonthIndex]
-          } ${this.selectedYear}`,
-          amount: this.formatRupiah(expense.amount),
-          description: expense.description,
-          categoryLabel: expense.category,
-          categoryClass: this.getCategoryClass(expense.category),
-        });
-      }
-    }
-
-    this.monthlyExpenses = rows.sort((a, b) => a.day - b.day);
+    this.monthlyExpenses = buildMonthlyExpenseRows(
+      this.journal,
+      this.selectedYear,
+      this.selectedMonthIndex,
+      this.monthNames,
+    );
   }
 
   private async loadMonthlyExpenseTotal(
@@ -956,7 +887,7 @@ export class Home {
       this.getReferenceToday(),
     );
     await this.rollingBudgetService.refresh();
-    this.firstRecordDate = this.getFirstRecordDate();
+    this.firstRecordDate = getFirstRecordDate(this.journal);
     this.syncDailyStreakState();
     this.refreshMonthlyExpenses();
     this.refreshStreakCalendar();
@@ -964,7 +895,7 @@ export class Home {
 
   private syncDailyStreakState(): void {
     const today = this.getReferenceToday();
-    const todayKey = this.toDateKey(today);
+    const todayKey = toDateKey(today);
     const currentUserStreak = normalizeUserStreak(
       JSON.parse(localStorage.getItem('currentUser') || '{}').streak,
     );
@@ -974,8 +905,8 @@ export class Home {
         currentStreak: currentUserStreak,
         today,
         todayKey,
-        parseDateKey: (dateKey) => this.parseDateKey(dateKey),
-        daysBetween: (from, to) => this.daysBetween(from, to),
+        parseDateKey: (dateKey) => parseDateKey(dateKey),
+        daysBetween: (from, to) => daysBetween(from, to),
       });
 
       this.streakState = testingSync.streak;
@@ -1038,50 +969,37 @@ export class Home {
   }
 
   private getStreakDayStatus(date: Date): StreakDayStatus {
-    const day = this.startOfDay(date);
+    const day = startOfDay(date);
     const today = this.getReferenceToday();
-    if (day > today) {
-      return 'future';
-    }
+    if (day > today) return 'future';
 
     if (this.isTestingDateActive && this.streakTestMode === 'always-streak') {
       const simulatedStart =
         this.firstRecordDate ||
-        this.parseDateKey(this.streakState.lastActiveDate);
-      if (simulatedStart && day < simulatedStart) {
-        return 'before-start';
-      }
+        parseDateKey(this.streakState.lastActiveDate);
+      if (simulatedStart && day < simulatedStart) return 'before-start';
       return 'success';
     }
 
-    if (!this.firstRecordDate || day < this.firstRecordDate) {
-      return 'before-start';
-    }
+    if (!this.firstRecordDate || day < this.firstRecordDate) return 'before-start';
 
-    const hasEntry = this.getTotalEntryCountByDate(day) > 0;
-    if (!hasEntry && this.noExpensePolicy === 'require-entry') {
-      return 'skipped';
-    }
+    const hasEntry = getTotalEntryCountByDate(this.journal, day) > 0;
+    if (!hasEntry && this.noExpensePolicy === 'require-entry') return 'skipped';
 
     const rolling = this.computeRollingBudgetForDate(day);
-    if (!rolling.hasBudget) {
-      return hasEntry ? 'success' : 'skipped';
-    }
+    if (!rolling.hasBudget) return hasEntry ? 'success' : 'skipped';
 
-    const spentToday = this.getTotalExpenseByDate(day);
-    const isWithinBudget = spentToday <= rolling.dailyBudget;
-    return isWithinBudget ? 'success' : 'failed';
+    const spentToday = getTotalExpenseByDate(this.journal, day);
+    return spentToday <= rolling.dailyBudget ? 'success' : 'failed';
   }
 
   private computeRollingBudgetForDate(date: Date): {
     hasBudget: boolean;
     dailyBudget: number;
   } {
-    const cacheKey = this.toDateKey(date);
+    const cacheKey = toDateKey(date);
     const cached = this.rollingBudgetCache.get(cacheKey);
-    if (cached) {
-      return cached;
-    }
+    if (cached) return cached;
 
     if (!this.financialData) {
       const miss = { hasBudget: false, dailyBudget: 0 };
@@ -1089,8 +1007,8 @@ export class Home {
       return miss;
     }
 
-    const cycle = this.resolveCycleRangeByDate(date);
-    const totalBudget = this.getCycleBudgetByDate(date);
+    const cycle = resolveCycleRangeByDate(date, this.financialData);
+    const totalBudget = getCycleBudgetByDate(date, this.financialData);
     if (totalBudget <= 0) {
       const miss = { hasBudget: false, dailyBudget: 0 };
       this.rollingBudgetCache.set(cacheKey, miss);
@@ -1099,207 +1017,15 @@ export class Home {
 
     const dayBefore = new Date(date);
     dayBefore.setDate(dayBefore.getDate() - 1);
-    const usedBefore = this.sumExpensesInRange(cycle.start, dayBefore);
+    const usedBefore = sumExpensesInRange(this.journal, cycle.start, dayBefore);
     const remainingBudget = Math.max(0, totalBudget - usedBefore);
-    const remainingDays = Math.max(1, this.daysBetween(date, cycle.end) + 1);
+    const remainingDays = Math.max(1, daysBetween(date, cycle.end) + 1);
     const result = {
       hasBudget: true,
       dailyBudget: Math.floor(remainingBudget / remainingDays),
     };
     this.rollingBudgetCache.set(cacheKey, result);
     return result;
-  }
-
-  private resolveCycleRangeByDate(referenceDate: Date): {
-    start: Date;
-    end: Date;
-  } {
-    const intendedDay = Math.max(
-      1,
-      Math.min(
-        31,
-        Math.floor(
-          this.financialData?.intendedTanggalPemasukan ||
-            this.financialData?.tanggalPemasukan ||
-            1,
-        ),
-      ),
-    );
-    const resetDayThisMonth = this.resolveResetDay(
-      referenceDate.getFullYear(),
-      referenceDate.getMonth(),
-      intendedDay,
-    );
-    const thisMonthResetDate = new Date(
-      referenceDate.getFullYear(),
-      referenceDate.getMonth(),
-      resetDayThisMonth,
-    );
-    const start =
-      referenceDate >= thisMonthResetDate
-        ? thisMonthResetDate
-        : new Date(
-            referenceDate.getFullYear(),
-            referenceDate.getMonth() - 1,
-            this.resolveResetDay(
-              referenceDate.getFullYear(),
-              referenceDate.getMonth() - 1,
-              intendedDay,
-            ),
-          );
-    const nextStart = new Date(
-      start.getFullYear(),
-      start.getMonth() + 1,
-      this.resolveResetDay(
-        start.getFullYear(),
-        start.getMonth() + 1,
-        intendedDay,
-      ),
-    );
-    const end = new Date(nextStart);
-    end.setDate(end.getDate() - 1);
-    return {
-      start: this.startOfDay(start),
-      end: this.startOfDay(end),
-    };
-  }
-
-  private resolveResetDay(
-    year: number,
-    monthIndex: number,
-    intendedDay: number,
-  ): number {
-    const lastDay = new Date(year, monthIndex + 1, 0).getDate();
-    return Math.min(intendedDay, lastDay);
-  }
-
-  private getCycleBudgetByDate(date: Date): number {
-    if (!this.financialData) {
-      return 0;
-    }
-
-    const targetDateKey = this.toDateKey(date);
-    if (
-      this.financialData.currentCycleStart &&
-      this.financialData.currentCycleEnd &&
-      targetDateKey >= this.financialData.currentCycleStart &&
-      targetDateKey <= this.financialData.currentCycleEnd
-    ) {
-      return (
-        this.financialData.currentPengeluaranLimit ??
-        this.financialData.pengeluaranWajib
-      );
-    }
-
-    return this.financialData.pengeluaranWajib;
-  }
-
-  private getTotalExpenseByDate(date: Date): number {
-    const key = this.toDateKey(date);
-    const expenses = this.journal.expensesByDate[key] || [];
-    return expenses.reduce((sum, item) => sum + item.amount, 0);
-  }
-
-  private getTotalEntryCountByDate(date: Date): number {
-    const key = this.toDateKey(date);
-    const expenses = this.journal.expensesByDate[key]?.length || 0;
-    const incomes = this.journal.incomesByDate[key]?.length || 0;
-    return expenses + incomes;
-  }
-
-  private getFirstRecordDate(): Date | null {
-    const dateKeys = new Set<string>();
-
-    for (const [key, entries] of Object.entries(this.journal.expensesByDate)) {
-      if (entries.length > 0) {
-        dateKeys.add(key);
-      }
-    }
-
-    for (const [key, entries] of Object.entries(this.journal.incomesByDate)) {
-      if (entries.length > 0) {
-        dateKeys.add(key);
-      }
-    }
-
-    let earliest: Date | null = null;
-    for (const key of dateKeys) {
-      const parsed = this.parseDateKey(key);
-      if (!parsed) {
-        continue;
-      }
-      if (!earliest || parsed < earliest) {
-        earliest = parsed;
-      }
-    }
-    return earliest;
-  }
-
-  private sumExpensesInRange(start: Date, end: Date): number {
-    if (end < start) {
-      return 0;
-    }
-    let total = 0;
-    for (const [dateKey, expenses] of Object.entries(
-      this.journal.expensesByDate,
-    )) {
-      const date = this.parseDateKey(dateKey);
-      if (!date) {
-        continue;
-      }
-      if (date >= start && date <= end) {
-        total += expenses.reduce((sum, item) => sum + item.amount, 0);
-      }
-    }
-    return total;
-  }
-
-  private getCategoryClass(category: ExpenseCategory): string {
-    if (category === ExpenseCategory.Makanan) return 'category-makanan';
-    if (category === ExpenseCategory.Travel) return 'category-travel';
-    if (category === ExpenseCategory.Entertainment)
-      return 'category-entertainment';
-    if (category === ExpenseCategory.Subscription)
-      return 'category-subscription';
-    if (category === ExpenseCategory.Bills) return 'category-bills';
-    return 'category-other';
-  }
-
-  private startOfDay(date: Date): Date {
-    const normalized = new Date(date);
-    normalized.setHours(0, 0, 0, 0);
-    return normalized;
-  }
-
-  private parseDateKey(dateKey: string): Date | null {
-    const [yearRaw, monthRaw, dayRaw] = dateKey.split('-');
-    const year = Number(yearRaw);
-    const month = Number(monthRaw);
-    const day = Number(dayRaw);
-    if (
-      Number.isNaN(year) ||
-      Number.isNaN(month) ||
-      Number.isNaN(day) ||
-      month < 1 ||
-      month > 12 ||
-      day < 1 ||
-      day > 31
-    ) {
-      return null;
-    }
-    return this.startOfDay(new Date(year, month - 1, day));
-  }
-
-  private toDateKey(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
-  private daysBetween(from: Date, to: Date): number {
-    const ms = this.startOfDay(to).getTime() - this.startOfDay(from).getTime();
-    return Math.floor(ms / (1000 * 60 * 60 * 24));
   }
 
   private setBudgetField(
@@ -1309,6 +1035,14 @@ export class Home {
     if (field === 'pengeluaran') this.budgetPengeluaran = value;
     else if (field === 'wants') this.budgetWants = value;
     else this.budgetSavings = value;
+  }
+
+  private getBudgetFieldVal(
+    field: 'pengeluaran' | 'wants' | 'savings',
+  ): number {
+    if (field === 'pengeluaran') return this.budgetPengeluaran;
+    if (field === 'wants') return this.budgetWants;
+    return this.budgetSavings;
   }
 
   private autoFillBudget(
@@ -1323,14 +1057,13 @@ export class Home {
       );
       return;
     }
-    // 3-field mode: absorb remainder into the "other" field that wasn't just edited
-    // Priority: adjust the last field in order that isn't the edited one
+    // 3-field mode: absorb remainder into the field that wasn't just edited.
+    // Priority: adjust the last field in order that isn't the edited one.
     const priority: ('pengeluaran' | 'wants' | 'savings')[] = [
       'savings',
       'wants',
       'pengeluaran',
     ];
-    // Pick absorber: prefer the previously-edited field if it exists and isn't current, else pick by priority
     let absorber: 'pengeluaran' | 'wants' | 'savings';
     if (this.budgetLastEdited && this.budgetLastEdited !== editedField) {
       absorber = this.budgetLastEdited;
@@ -1347,21 +1080,12 @@ export class Home {
     if (remainder >= 0) {
       this.setBudgetField(absorber, remainder);
     } else {
-      // thirdField also too large, so zero the absorber and clamp thirdField
       this.setBudgetField(absorber, 0);
       this.setBudgetField(
         thirdField,
         Math.max(0, 100 - this.getBudgetFieldVal(editedField)),
       );
     }
-  }
-
-  private getBudgetFieldVal(
-    field: 'pengeluaran' | 'wants' | 'savings',
-  ): number {
-    if (field === 'pengeluaran') return this.budgetPengeluaran;
-    if (field === 'wants') return this.budgetWants;
-    return this.budgetSavings;
   }
 
   private getSavingsMaxForField(
@@ -1409,10 +1133,7 @@ export class Home {
     const thirdField = allFields.find(
       (field) => field !== editedField && field !== absorber,
     );
-
-    if (!thirdField) {
-      return;
-    }
+    if (!thirdField) return;
 
     const remainder =
       100 -
@@ -1440,15 +1161,15 @@ export class Home {
       return;
     }
 
-    this.savingsTabunganPercent = this.toSafePercent(
+    this.savingsTabunganPercent = toSafePercent(
       (this.savingsTabunganInput / total) * 100,
     );
-    this.savingsDanaDaruratPercent = this.toSafePercent(
+    this.savingsDanaDaruratPercent = toSafePercent(
       (this.savingsDanaDaruratInput / total) * 100,
     );
 
     if (this.levelEvaluation.level >= 4) {
-      this.savingsDanaInvestasiPercent = this.toSafePercent(
+      this.savingsDanaInvestasiPercent = toSafePercent(
         (this.savingsDanaInvestasiInput / total) * 100,
       );
       return;
@@ -1480,9 +1201,7 @@ export class Home {
         : 0;
 
     const overflow = this.savingsUsed - total;
-    if (overflow <= 0) {
-      return;
-    }
+    if (overflow <= 0) return;
 
     const primaryValue = this.getSavingsAmountField(primaryField);
     if (primaryValue >= overflow) {
@@ -1505,10 +1224,7 @@ export class Home {
     );
 
     for (const field of otherFields) {
-      if (remainder <= 0) {
-        break;
-      }
-
+      if (remainder <= 0) break;
       const current = this.getSavingsAmountField(field);
       const deduction = Math.min(current, remainder);
       this.setSavingsAmountField(field, current - deduction);
@@ -1522,8 +1238,7 @@ export class Home {
   ): void {
     const normalized = Math.max(0, Math.min(100, Math.floor(value)));
     if (field === 'tabungan') this.savingsTabunganPercent = normalized;
-    else if (field === 'danaDarurat')
-      this.savingsDanaDaruratPercent = normalized;
+    else if (field === 'danaDarurat') this.savingsDanaDaruratPercent = normalized;
     else this.savingsDanaInvestasiPercent = normalized;
   }
 
@@ -1554,22 +1269,7 @@ export class Home {
   }
 
   private computeEditableSavingsPoolTotal(): number {
-    // Always recompute from the pending inputs so that changing savings% or
-    // pendapatan immediately reflects in the available pool.
-    // Subtract anything already permanently moved to tabungan / danaDarurat /
-    // danaInvestasi in this cycle so the pool can never exceed what was truly
-    // earned minus what was already committed.
-    const alreadyAllocated = Math.max(
-      0,
-      this.financialData?.currentCycleSavingsAllocated ?? 0,
-    );
-    return Math.max(
-      0,
-      this.computeSavingsPoolBase(
-        this.pendapatanInput,
-        this.getPendingBudgetAllocation(),
-      ) - alreadyAllocated,
-    );
+    return Math.max(0, this.financialData?.currentSisaSaldoPool ?? 0);
   }
 
   private getPendingBudgetAllocation(): BudgetAllocation {
@@ -1584,16 +1284,14 @@ export class Home {
   private getCurrentBudgetAllocation(): BudgetAllocation {
     const currentBudget = this.financialData?.budgetAllocation;
     if (currentBudget) {
-      return this.normalizeBudgetAllocationForEditor(
+      return normalizeBudgetAllocationForEditor(
         currentBudget,
         this.financialData,
       );
     }
 
     const pendapatan = this.financialData?.pendapatan || 0;
-    if (pendapatan <= 0) {
-      return this.getPendingBudgetAllocation();
-    }
+    if (pendapatan <= 0) return this.getPendingBudgetAllocation();
 
     const pengeluaran = Math.max(
       0,
@@ -1611,88 +1309,6 @@ export class Home {
       wants: 0,
       savings: Math.max(0, 100 - pengeluaran),
     };
-  }
-
-  private getBudgetExpensePercent(budget: BudgetAllocation): number {
-    return budget.mode === 3
-      ? budget.pengeluaran + budget.wants
-      : budget.pengeluaran;
-  }
-
-  private computeSavingsPoolBase(
-    pendapatan: number,
-    budget: BudgetAllocation,
-  ): number {
-    return Math.max(
-      0,
-      Math.round((Math.max(0, pendapatan) * budget.savings) / 100),
-    );
-  }
-
-  private normalizeBudgetAllocationForEditor(
-    budget: BudgetAllocation,
-    financialData: FinancialData | null,
-  ): BudgetAllocation {
-    if (this.normalizeBudgetMode(budget.mode) !== 2) {
-      return budget;
-    }
-
-    const income = Math.max(0, financialData?.pendapatan || 0);
-    if (income <= 0) {
-      return budget;
-    }
-
-    const recordedExpense = Math.max(
-      0,
-      Math.round(financialData?.pengeluaranWajib ?? 0),
-    );
-
-    if (recordedExpense <= 0) {
-      return budget;
-    }
-
-    const expectedExpenseByPengeluaran = Math.round(
-      (income * budget.pengeluaran) / 100,
-    );
-    const expectedExpenseBySavings = Math.round(
-      (income * budget.savings) / 100,
-    );
-    const diffToPengeluaran = Math.abs(
-      recordedExpense - expectedExpenseByPengeluaran,
-    );
-    const diffToSavings = Math.abs(recordedExpense - expectedExpenseBySavings);
-
-    if (diffToPengeluaran <= 1) {
-      return budget;
-    }
-
-    if (diffToSavings <= 1) {
-      return {
-        ...budget,
-        pengeluaran: budget.savings,
-        savings: budget.pengeluaran,
-      };
-    }
-
-    const derivedPengeluaran = Math.max(
-      0,
-      Math.min(100, Math.round((recordedExpense / income) * 100)),
-    );
-
-    return {
-      ...budget,
-      pengeluaran: derivedPengeluaran,
-      wants: 0,
-      savings: Math.max(0, 100 - derivedPengeluaran),
-    };
-  }
-
-  private toSafePercent(value: number): number {
-    if (!Number.isFinite(value) || value <= 0) {
-      return 0;
-    }
-
-    return Math.max(0, Math.min(100, Math.round(value)));
   }
 
   private refreshLevelEvaluation(): void {
@@ -1721,9 +1337,7 @@ export class Home {
 
   private buildUpdatedInvestmentTracking(): InvestmentTracking | undefined {
     const existingTracking = this.financialData?.investmentTracking;
-    const cycleAmounts = {
-      ...(existingTracking?.cycleAmounts ?? {}),
-    };
+    const cycleAmounts = { ...(existingTracking?.cycleAmounts ?? {}) };
     const addedInvestment = Math.max(0, this.savingsDanaInvestasiInput);
     const currentCycleKey = this.resolveInvestmentCycleKey();
 
@@ -1732,28 +1346,16 @@ export class Home {
         Math.max(0, cycleAmounts[currentCycleKey] ?? 0) + addedInvestment;
     }
 
-    if (!Object.keys(cycleAmounts).length) {
-      return existingTracking;
-    }
-
+    if (!Object.keys(cycleAmounts).length) return existingTracking;
     return { cycleAmounts };
   }
 
   private resolveInvestmentCycleKey(): string {
     const existingCycleStart = this.financialData?.currentCycleStart;
-    if (existingCycleStart) {
-      return existingCycleStart;
-    }
+    if (existingCycleStart) return existingCycleStart;
 
     const today = this.getReferenceToday();
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
-      2,
-      '0',
-    )}-01`;
-  }
-
-  private normalizeBudgetMode(mode: number): 2 | 3 {
-    return Number(mode) === 3 ? 3 : 2;
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
   }
 
   formatRupiah(amount: number): string {
@@ -1765,256 +1367,29 @@ export class Home {
     return formatNumberUtil(value);
   }
 
-  private toMonthInputValue(year: number, monthIndex: number): string {
-    return `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
-  }
-
   private generatePercentage(): number {
     return Math.floor(Math.random() * 100) + 1;
   }
 
   private refreshDebtCardState(): void {
-    const consumptiveActive = this.getActiveDebtsByCategory('konsumtif');
-    const productiveActive = this.getActiveDebtsByCategory('produktif');
-    const consumptiveTotal = this.sumDebtRemaining(consumptiveActive);
-    const productiveTotal = this.sumDebtRemaining(productiveActive);
-
-    if (consumptiveActive.length > 0) {
-      const urgent = this.findMostUrgentDebt(consumptiveActive);
-      this.debtCardState = {
-        mode: 'consumptive',
-        total: consumptiveTotal,
-        activeCount: consumptiveActive.length,
-        changePercent: this.computeDebtChangePercent(
-          'consumptive',
-          consumptiveTotal,
-        ),
-        changeDirection: this.computeDebtChangeDirection(
-          'consumptive',
-          consumptiveTotal,
-        ),
-        urgentLine: urgent
-          ? `Paling mendesak: ${urgent.name} jatuh tempo ${this.formatDebtDueDate(
-              urgent,
-            )} (${this.formatRupiah(urgent.remainingAmount)}).`
-          : 'Masih ada hutang konsumtif aktif yang perlu diprioritaskan.',
-        payoffLabel: '',
-      };
-      this.persistCurrentDebtSnapshot(consumptiveTotal, productiveTotal);
-      return;
-    }
-
-    if (productiveActive.length > 0) {
-      this.debtCardState = {
-        mode: 'productive',
-        total: productiveTotal,
-        activeCount: productiveActive.length,
-        changePercent: this.computeDebtChangePercent(
-          'productive',
-          productiveTotal,
-        ),
-        changeDirection: this.computeDebtChangeDirection(
-          'productive',
-          productiveTotal,
-        ),
-        urgentLine: '',
-        payoffLabel: this.buildProductivePayoffLabel(productiveActive),
-      };
-      this.persistCurrentDebtSnapshot(consumptiveTotal, productiveTotal);
-      return;
-    }
-
-    this.debtCardState = {
-      mode: 'clear',
-      total: 0,
-      activeCount: 0,
-      changePercent: null,
-      changeDirection: null,
-      urgentLine: '',
-      payoffLabel: '',
-    };
-    this.persistCurrentDebtSnapshot(consumptiveTotal, productiveTotal);
-  }
-
-  private normalizeDebts(rawDebts: unknown): DebtItemSnapshot[] {
-    if (!Array.isArray(rawDebts)) {
-      return [];
-    }
-
-    return rawDebts
-      .map((item) => this.normalizeSingleDebt(item))
-      .filter((item): item is DebtItemSnapshot => Boolean(item));
-  }
-
-  private normalizeSingleDebt(raw: unknown): DebtItemSnapshot | null {
-    if (!raw || typeof raw !== 'object') {
-      return null;
-    }
-
-    const value = raw as Partial<DebtItemSnapshot> & {
-      dueDate?: unknown;
-      status?: unknown;
-    };
-
-    const remainingAmount = this.toPositiveInt(value.remainingAmount);
-    const monthlyInstallment = this.toPositiveInt(value.monthlyInstallment);
-    const dueDay = this.normalizeDueDay(value.dueDay);
-
-    return {
-      id: (value.id || `${Date.now()}`) as string,
-      name: String(value.name || 'Hutang').trim(),
-      category: value.category === 'produktif' ? 'produktif' : 'konsumtif',
-      remainingAmount,
-      monthlyInstallment,
-      dueDay,
-      dueDate: typeof value.dueDate === 'string' ? value.dueDate : '',
-      status: typeof value.status === 'string' ? value.status : '',
-    };
-  }
-
-  private getActiveDebtsByCategory(category: DebtCategory): DebtItemSnapshot[] {
-    return this.debts.filter(
-      (item) => item.category === category && this.isDebtActive(item),
-    );
-  }
-
-  private isDebtActive(item: DebtItemSnapshot): boolean {
-    if (item.remainingAmount <= 0) {
-      return false;
-    }
-
-    const normalizedStatus = item.status.trim().toLowerCase();
-    return (
-      normalizedStatus !== 'lunas' &&
-      normalizedStatus !== 'paid' &&
-      normalizedStatus !== 'settled'
-    );
-  }
-
-  private sumDebtRemaining(items: DebtItemSnapshot[]): number {
-    return items.reduce((sum, item) => sum + item.remainingAmount, 0);
-  }
-
-  private findMostUrgentDebt(
-    debts: DebtItemSnapshot[],
-  ): DebtItemSnapshot | null {
-    if (!debts.length) {
-      return null;
-    }
-
     const today = this.getReferenceToday();
-    const sorted = [...debts].sort((a, b) => {
-      const aDue = this.resolveDebtDueDate(a, today).getTime();
-      const bDue = this.resolveDebtDueDate(b, today).getTime();
-
-      if (aDue !== bDue) {
-        return aDue - bDue;
-      }
-
-      return b.remainingAmount - a.remainingAmount;
-    });
-
-    return sorted[0] ?? null;
-  }
-
-  private resolveDebtDueDate(item: DebtItemSnapshot, reference: Date): Date {
-    if (item.dueDate) {
-      const parsed = new Date(item.dueDate);
-      if (!Number.isNaN(parsed.getTime())) {
-        return this.startOfDay(parsed);
-      }
-    }
-
-    const year = reference.getFullYear();
-    const month = reference.getMonth();
-    const dayThisMonth = this.resolveDayInMonth(year, month, item.dueDay);
-    const dueThisMonth = this.startOfDay(new Date(year, month, dayThisMonth));
-
-    if (dueThisMonth >= reference) {
-      return dueThisMonth;
-    }
-
-    const nextMonth = new Date(year, month + 1, 1);
-    const dayNextMonth = this.resolveDayInMonth(
-      nextMonth.getFullYear(),
-      nextMonth.getMonth(),
-      item.dueDay,
-    );
-    return this.startOfDay(
-      new Date(nextMonth.getFullYear(), nextMonth.getMonth(), dayNextMonth),
-    );
-  }
-
-  private formatDebtDueDate(item: DebtItemSnapshot): string {
-    const due = this.resolveDebtDueDate(item, this.getReferenceToday());
-    return due.toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-    });
-  }
-
-  private buildProductivePayoffLabel(debts: DebtItemSnapshot[]): string {
-    const totalRemaining = this.sumDebtRemaining(debts);
-    const totalInstallment = debts.reduce(
-      (sum, item) => sum + Math.max(0, item.monthlyInstallment),
-      0,
-    );
-
-    if (totalRemaining <= 0 || totalInstallment <= 0) {
-      return '-';
-    }
-
-    const months = Math.ceil(totalRemaining / totalInstallment);
-    const projected = new Date(this.getReferenceToday());
-    projected.setMonth(projected.getMonth() + months);
-    return `${months} bulan (~${projected.toLocaleDateString('id-ID', {
-      month: 'long',
-      year: 'numeric',
-    })})`;
-  }
-
-  private computeDebtChangePercent(
-    mode: 'consumptive' | 'productive',
-    currentTotal: number,
-  ): number | null {
-    const previousTotal = this.getPreviousMonthRelevantDebtTotal(mode);
-    if (previousTotal <= 0 || previousTotal === currentTotal) {
-      return null;
-    }
-
-    const deltaPercent = Math.round(
-      (Math.abs(currentTotal - previousTotal) / previousTotal) * 100,
-    );
-    return deltaPercent > 0 ? deltaPercent : null;
-  }
-
-  private computeDebtChangeDirection(
-    mode: 'consumptive' | 'productive',
-    currentTotal: number,
-  ): DebtChangeDirection | null {
-    const previousTotal = this.getPreviousMonthRelevantDebtTotal(mode);
-    if (previousTotal <= 0 || previousTotal === currentTotal) {
-      return null;
-    }
-
-    return currentTotal > previousTotal ? 'up' : 'down';
-  }
-
-  private getPreviousMonthRelevantDebtTotal(
-    mode: 'consumptive' | 'productive',
-  ): number {
     const snapshots = this.getDebtSnapshots();
-    const previousMonth = new Date(this.getReferenceToday());
+    const previousMonth = new Date(today);
     previousMonth.setMonth(previousMonth.getMonth() - 1);
-    const key = this.toYearMonthKey(previousMonth);
-    const previous = snapshots[key];
-    if (!previous) {
-      return 0;
-    }
+    const previousSnapshot = snapshots[toYearMonthKey(previousMonth)] ?? null;
 
-    return mode === 'consumptive'
-      ? previous.consumptiveActiveTotal
-      : previous.productiveActiveTotal;
+    this.debtCardState = computeDebtCardState(
+      this.debts,
+      previousSnapshot,
+      today,
+    );
+
+    const consumptiveActive = getActiveDebtsByCategory(this.debts, 'konsumtif');
+    const productiveActive = getActiveDebtsByCategory(this.debts, 'produktif');
+    this.persistCurrentDebtSnapshot(
+      sumDebtRemaining(consumptiveActive),
+      sumDebtRemaining(productiveActive),
+    );
   }
 
   private persistCurrentDebtSnapshot(
@@ -2022,12 +1397,11 @@ export class Home {
     productiveTotal: number,
   ): void {
     const snapshots = this.getDebtSnapshots();
-    const currentKey = this.toYearMonthKey(this.getReferenceToday());
+    const currentKey = toYearMonthKey(this.getReferenceToday());
     snapshots[currentKey] = {
       consumptiveActiveTotal: Math.max(0, Math.round(consumptiveTotal)),
       productiveActiveTotal: Math.max(0, Math.round(productiveTotal)),
     };
-
     localStorage.setItem(
       this.debtSnapshotStorageKey,
       JSON.stringify(snapshots),
@@ -2039,23 +1413,16 @@ export class Home {
       const parsed = JSON.parse(
         localStorage.getItem(this.debtSnapshotStorageKey) || '{}',
       );
-      if (!parsed || typeof parsed !== 'object') {
-        return {};
-      }
+      if (!parsed || typeof parsed !== 'object') return {};
 
       const entries = Object.entries(parsed as Record<string, unknown>);
       const snapshots: Record<string, DebtMonthlySnapshot> = {};
       for (const [key, value] of entries) {
-        if (!value || typeof value !== 'object') {
-          continue;
-        }
-
+        if (!value || typeof value !== 'object') continue;
         const raw = value as Partial<DebtMonthlySnapshot>;
         snapshots[key] = {
-          consumptiveActiveTotal: this.toPositiveInt(
-            raw.consumptiveActiveTotal,
-          ),
-          productiveActiveTotal: this.toPositiveInt(raw.productiveActiveTotal),
+          consumptiveActiveTotal: toPositiveInt(raw.consumptiveActiveTotal),
+          productiveActiveTotal: toPositiveInt(raw.productiveActiveTotal),
         };
       }
 
@@ -2065,98 +1432,6 @@ export class Home {
     }
   }
 
-  private toYearMonthKey(date: Date): string {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-      2,
-      '0',
-    )}`;
-  }
-
-  private toPositiveInt(value: unknown): number {
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      return 0;
-    }
-
-    return Math.round(parsed);
-  }
-
-  private normalizeDueDay(value: unknown): number {
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed)) {
-      return 1;
-    }
-
-    return Math.max(1, Math.min(31, Math.floor(parsed)));
-  }
-
-  private resolveDayInMonth(
-    year: number,
-    monthIndex: number,
-    intendedDay: number,
-  ): number {
-    const lastDay = new Date(year, monthIndex + 1, 0).getDate();
-    return Math.min(Math.max(1, intendedDay), lastDay);
-  }
-
-  private computeDebtSummaryFromRawDebts(
-    rawDebts: unknown,
-  ):
-    | { totalPrincipalAmount: number; totalRemainingAmount: number }
-    | undefined {
-    if (!Array.isArray(rawDebts) || !rawDebts.length) {
-      return undefined;
-    }
-
-    const konsumtif = rawDebts.filter(
-      (d) =>
-        d &&
-        typeof d === 'object' &&
-        (d as Record<string, unknown>)['category'] === 'konsumtif',
-    );
-    if (!konsumtif.length) {
-      return undefined;
-    }
-
-    const totalPrincipalAmount = konsumtif.reduce(
-      (sum, d) =>
-        sum +
-        Math.max(
-          0,
-          Number((d as Record<string, unknown>)['principalAmount']) || 0,
-        ),
-      0,
-    );
-    const totalRemainingAmount = konsumtif.reduce(
-      (sum, d) =>
-        sum +
-        Math.max(
-          0,
-          Number((d as Record<string, unknown>)['remainingAmount']) || 0,
-        ),
-      0,
-    );
-
-    if (totalPrincipalAmount <= 0) {
-      return undefined;
-    }
-
-    return { totalPrincipalAmount, totalRemainingAmount };
-  }
-
-  private buildLegacyConsumptiveDebt(amount: number): DebtItemSnapshot {
-    return {
-      id: 'legacy-consumptive-debt',
-      name: 'Hutang Konsumtif',
-      category: 'konsumtif',
-      remainingAmount: Math.max(0, Math.round(amount)),
-      monthlyInstallment: Math.max(1, Math.round(amount * 0.1)),
-      dueDay: this.normalizeDueDay(this.financialData?.tanggalPemasukan),
-      dueDate: '',
-      status: 'aktif',
-    };
-  }
-
   private async reloadForReferenceDate(): Promise<void> {
     this.syncReferenceDateControls();
     await this.initializeDashboard();
@@ -2164,12 +1439,12 @@ export class Home {
 
   private syncReferenceDateControls(): void {
     const reference = this.getReferenceToday();
-    this.testingDateInput = this.toDateKey(reference);
+    this.testingDateInput = toDateKey(reference);
     this.streakTestMode = 'realistic';
     this.checkpointExists = false;
     this.selectedYear = reference.getFullYear();
     this.selectedMonthIndex = reference.getMonth();
-    this.selectedMonthValue = this.toMonthInputValue(
+    this.selectedMonthValue = toMonthInputValue(
       this.selectedYear,
       this.selectedMonthIndex,
     );
@@ -2178,7 +1453,7 @@ export class Home {
   }
 
   private getReferenceToday(): Date {
-    return this.startOfDay(new Date());
+    return startOfDay(new Date());
   }
 
   /** Write current financialData back into the localStorage user cache so the
@@ -2197,26 +1472,7 @@ export class Home {
   }
 
   private parseTestingDateInput(value: string): Date | null {
-    if (!value) {
-      return null;
-    }
-
-    const [yearRaw, monthRaw, dayRaw] = value.split('-');
-    const year = Number(yearRaw);
-    const month = Number(monthRaw);
-    const day = Number(dayRaw);
-    if (
-      Number.isNaN(year) ||
-      Number.isNaN(month) ||
-      Number.isNaN(day) ||
-      month < 1 ||
-      month > 12 ||
-      day < 1 ||
-      day > 31
-    ) {
-      return null;
-    }
-
-    return this.startOfDay(new Date(year, month - 1, day));
+    if (!value) return null;
+    return parseDateKey(value);
   }
 }
