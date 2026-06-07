@@ -1,11 +1,12 @@
 ﻿<div class="home-container">
   <app-sidebar
     [showRollingBudgetPanel]="true"
-    [rollingTotalBudget]="rollingTotalBudget"
-    [rollingUsedBudget]="rollingUsedBudget"
-    [rollingBudgetRemaining]="rollingBudgetRemaining"
-    [rollingDaysRemaining]="rollingDaysRemaining"
-    [rollingBudgetToday]="rollingBudgetToday"
+    [rollingTotalBudget]="rollingBudgetService.currentState.rollingTotalBudget"
+    [rollingUsedBudget]="rollingBudgetService.currentState.rollingUsedBudget"
+    [rollingBudgetRemaining]="rollingBudgetService.currentState.rollingBudgetRemaining"
+    [rollingDaysRemaining]="rollingBudgetService.currentState.rollingDaysRemaining"
+    [rollingBudgetToday]="rollingBudgetService.currentState.rollingBudgetToday"
+    [rollingSpentToday]="rollingBudgetService.currentState.rollingSpentToday"
     [profileName]="userName"
     [profileEmail]="userEmail"
     [profileImage]="userProfileImage"
@@ -114,12 +115,6 @@
           <div class="sisa-saldo-card">
             <div class="title-subtitle-cards">
               <div class="title-cards">Sisa Saldo</div>
-              <div class="percentage-cards">
-                <div class="arrow-cards up">
-                  <img src="assets/arrow_up.svg" alt="Arrow up" />
-                </div>
-                {{ saldoPercentage }}%
-              </div>
             </div>
             <div class="cards-value value-positive">{{ sisaSaldo }}</div>
           </div>
@@ -133,36 +128,16 @@
           <div class="pemasukan-card">
             <div class="title-subtitle-cards">
               <div class="title-cards">Pemasukan</div>
-              <div class="percentage-cards">
-                <div class="arrow-cards up">
-                  <img src="assets/arrow_up.svg" alt="Arrow up" />
-                </div>
-                {{ pemasukanPercentage }}%
-              </div>
             </div>
             <div class="cards-value value-positive">
               {{ pendapatanFormatted }}
             </div>
           </div>
-          <p
-            class="mention-text"
-            [class.mention-hidden]="!showMentions.pemasukan"
-          >
-            Pemasukan lebih banyak
-            <span class="mention-percent">{{ pemasukanPercentage }}%</span>
-            bulan ini
-          </p>
         </div>
         <div class="card-with-mention">
           <div class="pengeluaran-card">
             <div class="title-subtitle-cards">
               <div class="title-cards">Pengeluaran</div>
-              <div class="percentage-cards">
-                <div class="arrow-cards down">
-                  <img src="assets/arrow_up.svg" alt="Arrow down" />
-                </div>
-                {{ pengeluaranPercentage }}%
-              </div>
             </div>
             <div class="cards-value value-negative expense-combined">
               <span class="expense-current"
@@ -174,30 +149,11 @@
               >
             </div>
           </div>
-          <p
-            class="mention-text"
-            [class.mention-hidden]="!showMentions.pengeluaran"
-          >
-            Pengeluaran lebih sedikit
-            <span class="mention-percent">{{ pengeluaranPercentage }}%</span>
-            bulan ini
-          </p>
         </div>
         <div class="card-with-mention">
           <div class="hutang-card">
             <div class="title-subtitle-cards">
               <div class="title-cards">{{ debtCardTitle }}</div>
-              @if (showDebtChange) {
-              <div class="percentage-cards" [ngClass]="debtChangeClass">
-                <div
-                  class="arrow-cards"
-                  [class.down]="debtChangeDirection === 'down'"
-                >
-                  <img src="assets/arrow_up.svg" alt="Arrow down" />
-                </div>
-                {{ debtChangePercentLabel }}
-              </div>
-              }
             </div>
             <div class="cards-value value-negative">
               {{ debtCardPrimaryValue }}
@@ -214,7 +170,7 @@
             src="assets/symbol-setting_persenan.svg"
             alt="Description of image"
           />
-          <p>setting persenan</p>
+          <p>Setting Persenan</p>
         </div>
         <div class="card-add-or-edit" (click)="openTambahPemasukan()">
           <img
@@ -656,8 +612,8 @@
 
           @if (isSisaSaldoEmpty && savingsUsed === 0) {
           <div class="sp-warning-box">
-            ΓÜá∩╕Å Sisa saldo kamu sudah habis. Tidak bisa mengalokasikan
-            tabungan lagi.
+            Sisa saldo kamu sudah habis. Tidak bisa mengalokasikan tabungan
+            lagi.
           </div>
           }
 

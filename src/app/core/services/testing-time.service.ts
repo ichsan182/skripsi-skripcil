@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
 
 export type StreakTestMode = 'realistic' | 'always-streak';
+export const StreakTestModes = {
+  REALISTIC: 'realistic',
+  ALWAYS_STREAK: 'always-streak',
+} as const satisfies Record<string, StreakTestMode>;
 
 @Injectable({
   providedIn: 'root',
