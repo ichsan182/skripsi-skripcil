@@ -1,5 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
 import {
   CurrencyAmountLimitTier,
   formatCurrencyInputValue,
@@ -16,7 +25,9 @@ type InputFieldAlign = 'left' | 'right';
   templateUrl: './input-field.html',
   styleUrl: './input-field.css',
 })
-export class InputField {
+export class InputField implements OnChanges {
+  @ViewChild('nativeInput')
+  private readonly nativeInput?: ElementRef<HTMLInputElement>;
   @Input() label = '';
   @Input() value = '';
   @Input() type: 'text' | 'number' | 'email' | 'password' | 'date' = 'text';
@@ -24,10 +35,10 @@ export class InputField {
   @Input() inputmode: 'text' | 'decimal' | 'numeric' | 'email' | 'tel' = 'text';
   @Input() maxlength?: number;
 
-  @Input() min?: number;
-  @Input() max?: number;
-  @Input() step?: number;
-  @Input() disabled = false;
+  @Input() min?: number; // ada g befungsi
+  @Input() max?: number; // ada g befungsi
+  @Input() step?: number; // ada g befungsi
+  @Input() disabled = false; // ada g befungsi
   @Input() readonly = false;
   @Input() required = false;
 
@@ -53,6 +64,22 @@ export class InputField {
 
   protected get wrapperClassName(): string {
     return `input-field input-field--${this.styleVariant}`;
+  }
+
+  /**
+   * When the parent externally changes `value` (e.g. after clamping or sync),
+   * Angular's template binding alone sometimes misses the update because
+   * onInput() already mutated the @Input. Directly writing the native element
+   * mirrors what home.ts does: `input.value = String(value)` after clamping.
+   */
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['value'] && !changes['value'].firstChange) {
+      const incoming = (changes['value'].currentValue as string) ?? '';
+      const native = this.nativeInput?.nativeElement;
+      if (native && native.value !== incoming) {
+        native.value = incoming;
+      }
+    }
   }
 
   protected onInput(event: Event): void {

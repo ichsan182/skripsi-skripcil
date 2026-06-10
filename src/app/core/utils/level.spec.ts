@@ -80,4 +80,30 @@ describe('level utilities', () => {
     expect(evaluation.level).toBe(4);
     expect(evaluation.progressPercent).toBe(67);
   });
+
+  it('tracks level 2 payoff progress from consumptive debt baseline', () => {
+    const financialData = createFinancialData({
+      estimasiTabungan: 6_000_000,
+      hutangWajib: 100_000,
+      hutangWajibPrincipal: 200_000,
+    });
+
+    const evaluation = evaluateFinancialLevel(buildLevelSignals(financialData));
+
+    expect(evaluation.level).toBe(2);
+    expect(evaluation.progressPercent).toBe(50);
+  });
+
+  it('resets level 2 progress to 0% when new consumptive debt increases total baseline', () => {
+    const financialData = createFinancialData({
+      estimasiTabungan: 6_000_000,
+      hutangWajib: 300_000,
+      hutangWajibPrincipal: 300_000,
+    });
+
+    const evaluation = evaluateFinancialLevel(buildLevelSignals(financialData));
+
+    expect(evaluation.level).toBe(2);
+    expect(evaluation.progressPercent).toBe(0);
+  });
 });

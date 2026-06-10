@@ -1,30 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
-import { USERS_API_URL } from '../../../core/config/app-api.config';
-
-interface RegisterPayload {
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-  onboardingCompleted: boolean;
-  level: number;
-  investmentWatchlist: {
-    items: never[];
-    selectedSymbol: null;
-    updatedAt: string;
-  };
-  journal: {
-    nextChatMessageId: number;
-    chatByDate: Record<string, never[]>;
-    expensesByDate: Record<string, never[]>;
-    incomesByDate: Record<string, never[]>;
-  };
-}
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
+import { RegisterPayload } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-register',
@@ -34,7 +14,8 @@ interface RegisterPayload {
 })
 export class Register {
   private readonly formBuilder = inject(FormBuilder);
-  private readonly httpClient = inject(HttpClient);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   protected isSubmitting = false;
   protected isPasswordVisible = false;
@@ -62,48 +43,56 @@ export class Register {
     try {
       const formValues = this.registerForm.getRawValue();
       const payload: RegisterPayload = {
+        id: this.generateUserId(),
         name: formValues.name ?? '',
-        email: formValues.email ?? '',
+        email: (formValues.email ?? '').trim().toLowerCase(),
         phone: formValues.phone ?? '',
         password: formValues.password ?? '',
         onboardingCompleted: false,
         level: 1,
-        investmentWatchlist: {
-          items: [],
-          selectedSymbol: null,
-          updatedAt: new Date().toISOString(),
-        },
-        journal: {
-          nextChatMessageId: 1,
-          chatByDate: {},
-          expensesByDate: {},
-          incomesByDate: {},
-        },
+        investmentWatchlist: null,
+        journal: null,
+        financialData: null,
+        streak: null,
+        debts: [],
       };
 
-      const existingUser = await firstValueFrom(
-        this.httpClient.get<RegisterPayload[]>(
-          `${USERS_API_URL}?email=${encodeURIComponent(payload.email)}`,
-        ),
+      const existingUsers = await this.authService.getAllUsers();
+
+      const isEmailTaken = existingUsers.some(
+        (user) => user.email.trim().toLowerCase() === payload.email,
       );
 
-      if (existingUser.length) {
+      if (isEmailTaken) {
         this.errorMessage =
           'Email sudah terdaftar. Silakan gunakan email lain.';
         return;
       }
 
-      await firstValueFrom(this.httpClient.post(USERS_API_URL, payload));
+      await this.authService.registerUser(payload);
 
-      this.successMessage =
-        'Registrasi berhasil. Silakan login menggunakan akun baru.';
-      this.registerForm.reset();
-    } catch {
-      this.errorMessage =
-        'Gagal menyimpan data. Pastikan json-server berjalan.';
+      await this.router.navigate(['/login'], {
+        queryParams: { registered: 'success' },
+      });
+    } catch (err) {
+      if (err instanceof HttpErrorResponse && err.status === 409) {
+        this.errorMessage =
+          'Nomor telepon sudah terdaftar. Silakan gunakan nomor lain.';
+      } else {
+        this.errorMessage =
+          'Gagal menyimpan data. Pastikan backend Spring Boot berjalan.';
+      }
     } finally {
       this.isSubmitting = false;
     }
+  }
+
+  private generateUserId(): string {
+    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+      return `user-${crypto.randomUUID()}`;
+    }
+
+    return `user-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
   }
 
   protected showError(

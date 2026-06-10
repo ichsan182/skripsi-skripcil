@@ -179,7 +179,11 @@ export function formatCurrencyWithPrefix(
   prefix: string = getCurrencyPrefix(DEFAULT_CURRENCY_CODE),
   options: CurrencyFormatOptions = {},
 ): string {
-  return `${prefix}${formatCurrencyPlain(amount, options)}`;
+  const normalized = Number.isFinite(amount) ? amount : 0;
+  if (normalized < 0) {
+    return `-${prefix}${formatCurrencyPlain(-normalized, options)}`;
+  }
+  return `${prefix}${formatCurrencyPlain(normalized, options)}`;
 }
 
 export function formatCurrencyByCode(

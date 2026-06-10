@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { USERS_API_URL } from '../../../core/config/app-api.config';
 import { CurrentUserService } from '../../../core/services/current-user.service';
@@ -18,13 +19,12 @@ import {
 import { InputField } from '../../../shared/components/input-field/input-field';
 import { Sidebar } from '../../../shared/components/sidebar/sidebar';
 
-type DebtCategory = 'konsumtif' | 'produktif';
+type DebtCategory = 'konsumtif' | 'produktif' | 'pembayaran' | 'emergency';
 
 type DebtType =
   | 'Paylater'
   | 'Pinjol'
   | 'Kartu Kredit'
-  | 'Cicilan Barang'
   | 'KPR'
   | 'Modal Usaha'
   | 'Hutang Personal'
@@ -49,6 +49,7 @@ interface DebtFormModel {
   principalAmount: string;
   remainingAmount: string;
   monthlyInstallment: string;
+  estimatedMonths: string;
   dueDay: number;
   notes: string;
 }
@@ -63,7 +64,7 @@ interface StoredUser {
 @Component({
   selector: 'app-debt',
   standalone: true,
-  imports: [CommonModule, FormsModule, Sidebar, InputField],
+  imports: [CommonModule, FormsModule, RouterLink, Sidebar, InputField],
   templateUrl: './debt.html',
   styleUrl: './debt.css',
 })
@@ -77,20 +78,28 @@ export class Debt {
     'Paylater',
     'Pinjol',
     'Kartu Kredit',
-    'Cicilan Barang',
     'KPR',
     'Modal Usaha',
     'Hutang Personal',
     'Lainnya',
   ];
 
+  private readonly debtTypeByCategory: Record<DebtCategory, DebtType[]> = {
+    konsumtif: this.debtTypeOptions,
+    produktif: this.debtTypeOptions,
+    pembayaran: ['Kartu Kredit', 'Paylater'],
+    emergency: ['Paylater', 'Kartu Kredit', 'Pinjol'],
+  };
+
   protected debts: DebtItem[] = [];
   protected financialData: FinancialData | null = null;
   protected isSaving = false;
   protected formError = '';
   protected showLargeDebtPrompt = false;
+  protected showConsumptiveConfirmModal = false;
   protected editingDebtId: string | null = null;
   protected paymentInputs: Record<string, string> = {};
+  private pendingConsumptiveSubmission: Omit<DebtItem, 'id'> | null = null;
 
   protected form: DebtFormModel = {
     name: '',
@@ -99,9 +108,13 @@ export class Debt {
     principalAmount: '',
     remainingAmount: '',
     monthlyInstallment: '',
+    estimatedMonths: '',
     dueDay: 1,
     notes: '',
   };
+  protected get debtTypeOptionsForCategory(): DebtType[] {
+    return this.debtTypeByCategory[this.form.category] ?? this.debtTypeOptions;
+  }
 
   constructor() {
     this.loadDebtPageState();
@@ -119,6 +132,12 @@ export class Debt {
 
   protected get sisaHutangWajib(): number {
     return this.totalConsumptiveDebt;
+  }
+
+  protected get totalConsumptivePrincipal(): number {
+    return this.debts
+      .filter((item) => item.category === 'konsumtif')
+      .reduce((sum, item) => sum + item.principalAmount, 0);
   }
 
   protected get totalProductiveDebt(): number {
@@ -195,24 +214,6 @@ export class Debt {
     return this.buildPayoffDateLabel(this.estimatedPayoffMonths);
   }
 
-  protected get formEstimatedMonths(): number {
-    const remaining = this.parseCurrencyInput(this.form.remainingAmount);
-    const installment = this.parseCurrencyInput(this.form.monthlyInstallment);
-    if (remaining <= 0 || installment <= 0) {
-      return 0;
-    }
-
-    return Math.ceil(remaining / installment);
-  }
-
-  protected get formEstimatedLabel(): string {
-    if (this.formEstimatedMonths <= 0) {
-      return '-';
-    }
-
-    return this.buildPayoffDateLabel(this.formEstimatedMonths);
-  }
-
   protected get consumptiveDebtRatioToIncome(): number {
     if (this.monthlyIncome <= 0) {
       return 0;
@@ -249,10 +250,40 @@ export class Debt {
     value: string,
   ): void {
     this.form[field] = value;
+
+    if (field === 'monthlyInstallment') {
+      this.syncEstimatedMonthsFromInstallment();
+      return;
+    }
+
+    if (field === 'remainingAmount') {
+      const estimatedMonths = this.parsePositiveInteger(
+        this.form.estimatedMonths,
+      );
+      if (estimatedMonths > 0) {
+        this.syncMonthlyInstallmentFromEstimatedMonths();
+        return;
+      }
+
+      this.syncEstimatedMonthsFromInstallment();
+    }
   }
 
   protected onNameInput(value: string): void {
     this.form.name = value;
+  }
+
+  protected onCategoryChange(value: DebtCategory): void {
+    this.form.category = value;
+    const options = this.debtTypeOptionsForCategory;
+    if (!options.includes(this.form.debtType)) {
+      this.form.debtType = options[0] ?? 'Lainnya';
+    }
+  }
+
+  protected onEstimatedMonthsInput(value: string): void {
+    this.form.estimatedMonths = value;
+    this.syncMonthlyInstallmentFromEstimatedMonths();
   }
 
   protected onDueDayInput(value: number): void {
@@ -267,6 +298,35 @@ export class Debt {
       return;
     }
 
+    if (parsed.category === 'konsumtif') {
+      this.pendingConsumptiveSubmission = parsed;
+      this.showConsumptiveConfirmModal = true;
+      return;
+    }
+
+    await this.commitDebtSubmission(parsed);
+  }
+
+  protected async confirmConsumptiveSubmission(): Promise<void> {
+    if (!this.pendingConsumptiveSubmission) {
+      this.showConsumptiveConfirmModal = false;
+      return;
+    }
+
+    const parsed = this.pendingConsumptiveSubmission;
+    this.pendingConsumptiveSubmission = null;
+    this.showConsumptiveConfirmModal = false;
+    await this.commitDebtSubmission(parsed);
+  }
+
+  protected cancelConsumptiveSubmission(): void {
+    this.pendingConsumptiveSubmission = null;
+    this.showConsumptiveConfirmModal = false;
+  }
+
+  private async commitDebtSubmission(
+    parsed: Omit<DebtItem, 'id'>,
+  ): Promise<void> {
     if (this.editingDebtId) {
       this.debts = this.debts.map((item) =>
         item.id === this.editingDebtId ? { ...parsed, id: item.id } : item,
@@ -281,6 +341,7 @@ export class Debt {
 
   protected editDebt(item: DebtItem): void {
     this.editingDebtId = item.id;
+    const estimatedMonths = this.estimateDebtMonths(item);
     this.form = {
       name: item.name,
       category: item.category,
@@ -288,6 +349,7 @@ export class Debt {
       principalAmount: this.formatNumber(item.principalAmount),
       remainingAmount: this.formatNumber(item.remainingAmount),
       monthlyInstallment: this.formatNumber(item.monthlyInstallment),
+      estimatedMonths: estimatedMonths > 0 ? String(estimatedMonths) : '',
       dueDay: item.dueDay,
       notes: item.notes,
     };
@@ -380,6 +442,22 @@ export class Debt {
     return this.buildPayoffDateLabel(months);
   }
 
+  protected getDebtCategoryLabel(category: DebtCategory): string {
+    if (category === 'konsumtif') {
+      return 'Konsumtif';
+    }
+
+    if (category === 'produktif') {
+      return 'Produktif';
+    }
+
+    if (category === 'pembayaran') {
+      return 'Pembayaran';
+    }
+
+    return 'Emergency';
+  }
+
   private loadDebtPageState(): void {
     const user = this.currentUserService.getCurrentUserOrDefault<StoredUser>(
       {},
@@ -413,20 +491,36 @@ export class Debt {
     }
 
     const raw = value as Partial<DebtItem>;
+    const category = this.normalizeDebtCategory(raw.category);
     const remaining = this.toPositiveNumber(raw.remainingAmount);
     const installment = this.toPositiveNumber(raw.monthlyInstallment);
 
     return {
       id: raw.id || this.generateDebtId(),
       name: (raw.name || '').trim(),
-      category: raw.category === 'produktif' ? 'produktif' : 'konsumtif',
-      debtType: this.normalizeDebtType(raw.debtType),
+      category,
+      debtType: this.resolveDebtTypeForCategory(
+        category,
+        this.normalizeDebtType(raw.debtType),
+      ),
       principalAmount: this.toPositiveNumber(raw.principalAmount),
       remainingAmount: remaining,
       monthlyInstallment: installment,
       dueDay: this.normalizeDueDay(raw.dueDay),
       notes: (raw.notes || '').trim(),
     };
+  }
+
+  private normalizeDebtCategory(value: unknown): DebtCategory {
+    if (
+      value === 'produktif' ||
+      value === 'pembayaran' ||
+      value === 'emergency'
+    ) {
+      return value;
+    }
+
+    return 'konsumtif';
   }
 
   private normalizeDebtType(value: unknown): DebtType {
@@ -443,13 +537,31 @@ export class Debt {
     return Math.max(1, Math.min(31, Math.floor(day)));
   }
 
+  private resolveDebtTypeForCategory(
+    category: DebtCategory,
+    debtType: DebtType,
+  ): DebtType {
+    const options = this.debtTypeByCategory[category] ?? this.debtTypeOptions;
+    return options.includes(debtType) ? debtType : (options[0] ?? 'Lainnya');
+  }
+
   private validateAndBuildDebtFromForm(): Omit<DebtItem, 'id'> | null {
     const name = this.form.name.trim();
     const principalAmount = this.parseCurrencyInput(this.form.principalAmount);
     const remainingAmount = this.parseCurrencyInput(this.form.remainingAmount);
-    const monthlyInstallment = this.parseCurrencyInput(
+    const inputInstallment = this.parseCurrencyInput(
       this.form.monthlyInstallment,
     );
+    const estimatedMonths = this.parsePositiveInteger(
+      this.form.estimatedMonths,
+    );
+    const monthlyInstallment =
+      inputInstallment > 0
+        ? inputInstallment
+        : this.computeMonthlyInstallmentFromEstimatedMonths(
+            remainingAmount,
+            estimatedMonths,
+          );
     const dueDay = this.normalizeDueDay(this.form.dueDay);
 
     if (!name) {
@@ -457,12 +569,14 @@ export class Debt {
       return null;
     }
 
-    if (
-      principalAmount <= 0 ||
-      remainingAmount <= 0 ||
-      monthlyInstallment <= 0
-    ) {
-      this.formError = 'Nominal hutang dan cicilan harus lebih besar dari 0.';
+    if (principalAmount <= 0 || remainingAmount <= 0) {
+      this.formError = 'Nominal hutang harus lebih besar dari 0.';
+      return null;
+    }
+
+    if (monthlyInstallment <= 0) {
+      this.formError =
+        'Isi cicilan per bulan atau estimasi lunas (bulan) dengan nilai lebih besar dari 0.';
       return null;
     }
 
@@ -475,7 +589,10 @@ export class Debt {
     return {
       name,
       category: this.form.category,
-      debtType: this.form.debtType,
+      debtType: this.resolveDebtTypeForCategory(
+        this.form.category,
+        this.form.debtType,
+      ),
       principalAmount,
       remainingAmount,
       monthlyInstallment,
@@ -488,6 +605,26 @@ export class Debt {
     const user = this.currentUserService.getCurrentUserOrDefault<StoredUser>(
       {},
     );
+    const currentConsumptiveDebt = this.totalConsumptiveDebt;
+    const previousConsumptiveDebt = Math.max(
+      0,
+      this.financialData?.hutangWajib ?? 0,
+    );
+    const previousPayoffBaseline = Math.max(
+      previousConsumptiveDebt,
+      this.financialData?.hutangWajibPrincipal ?? 0,
+    );
+    const consumptivePrincipalSnapshot = Math.max(
+      0,
+      this.totalConsumptivePrincipal,
+    );
+    const consumptiveDebtPayoffBaseline =
+      this.resolveConsumptiveDebtPayoffBaseline({
+        currentConsumptiveDebt,
+        previousPayoffBaseline,
+        consumptivePrincipalSnapshot,
+      });
+
     const nextFinancialData: FinancialData = {
       ...(this.financialData ?? {
         pendapatan: 0,
@@ -497,7 +634,12 @@ export class Debt {
         estimasiTabungan: 0,
         danaDarurat: 0,
       }),
-      hutangWajib: this.totalConsumptiveDebt,
+      hutangWajib: currentConsumptiveDebt,
+      hutangWajibPrincipal: consumptiveDebtPayoffBaseline,
+      debtSummary: {
+        totalPrincipalAmount: consumptivePrincipalSnapshot,
+        totalRemainingAmount: currentConsumptiveDebt,
+      },
     };
 
     this.financialData = nextFinancialData;
@@ -522,11 +664,18 @@ export class Debt {
 
     this.isSaving = true;
     try {
+      const serverUser = await firstValueFrom(
+        this.http.get<Record<string, unknown>>(
+          `${USERS_API_URL}/${updatedUser.id}`,
+        ),
+      );
       await firstValueFrom(
-        this.http.patch(`${USERS_API_URL}/${updatedUser.id}`, {
+        this.http.put(`${USERS_API_URL}/${updatedUser.id}`, {
+          ...serverUser,
           level: updatedUser.level,
-          financialData: nextFinancialData,
-          debts: this.debts,
+          financialData: updatedUser.financialData,
+          debts: updatedUser.debts,
+          id: updatedUser.id,
         }),
       );
     } catch {
@@ -539,6 +688,8 @@ export class Debt {
   private resetForm(): void {
     this.editingDebtId = null;
     this.formError = '';
+    this.pendingConsumptiveSubmission = null;
+    this.showConsumptiveConfirmModal = false;
     this.form = {
       name: '',
       category: 'konsumtif',
@@ -546,15 +697,100 @@ export class Debt {
       principalAmount: '',
       remainingAmount: '',
       monthlyInstallment: '',
+      estimatedMonths: '',
       dueDay: 1,
       notes: '',
     };
+  }
+
+  private syncEstimatedMonthsFromInstallment(): void {
+    const remaining = this.parseCurrencyInput(this.form.remainingAmount);
+    const monthlyInstallment = this.parseCurrencyInput(
+      this.form.monthlyInstallment,
+    );
+    if (remaining <= 0 || monthlyInstallment <= 0) {
+      this.form.estimatedMonths = '';
+      return;
+    }
+
+    const months = Math.ceil(remaining / monthlyInstallment);
+    this.form.estimatedMonths = String(months);
+  }
+
+  private syncMonthlyInstallmentFromEstimatedMonths(): void {
+    const remaining = this.parseCurrencyInput(this.form.remainingAmount);
+    const estimatedMonths = this.parsePositiveInteger(
+      this.form.estimatedMonths,
+    );
+    if (remaining <= 0 || estimatedMonths <= 0) {
+      return;
+    }
+
+    const monthlyInstallment =
+      this.computeMonthlyInstallmentFromEstimatedMonths(
+        remaining,
+        estimatedMonths,
+      );
+    this.form.monthlyInstallment = this.formatNumber(monthlyInstallment);
+  }
+
+  private computeMonthlyInstallmentFromEstimatedMonths(
+    remainingAmount: number,
+    estimatedMonths: number,
+  ): number {
+    if (remainingAmount <= 0 || estimatedMonths <= 0) {
+      return 0;
+    }
+
+    return Math.ceil(remainingAmount / estimatedMonths);
+  }
+
+  private parsePositiveInteger(value: string): number {
+    const normalized = (value || '').replace(/[^0-9]/g, '');
+    if (!normalized) {
+      return 0;
+    }
+
+    const parsed = Number(normalized);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return 0;
+    }
+
+    return Math.floor(parsed);
   }
 
   private parseCurrencyInput(value: string): number {
     return parseCurrencyInputValue(
       value,
       resolveCurrencyAmountLimit(this.currencyMaxTier),
+    );
+  }
+
+  private resolveConsumptiveDebtPayoffBaseline(params: {
+    currentConsumptiveDebt: number;
+    previousPayoffBaseline: number;
+    consumptivePrincipalSnapshot: number;
+  }): number {
+    const {
+      currentConsumptiveDebt,
+      previousPayoffBaseline,
+      consumptivePrincipalSnapshot,
+    } = params;
+
+    if (currentConsumptiveDebt <= 0) {
+      return 0;
+    }
+
+    // Reset progress baseline only when total debt exceeds the last payoff baseline.
+    // This prevents false reset caused by stale previous hutangWajib snapshots.
+    if (currentConsumptiveDebt > previousPayoffBaseline) {
+      return currentConsumptiveDebt;
+    }
+
+    return Math.max(
+      currentConsumptiveDebt,
+      previousPayoffBaseline,
+      consumptivePrincipalSnapshot,
     );
   }
 

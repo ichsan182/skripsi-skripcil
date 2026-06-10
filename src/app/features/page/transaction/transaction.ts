@@ -90,14 +90,8 @@ const CATEGORY_META: Record<ExpenseCategory, CategoryMeta> = {
 })
 export class Transaction {
   private readonly journalService = inject(JournalService);
-  private readonly rollingBudgetService = inject(RollingBudgetService);
+  protected readonly rollingBudgetService = inject(RollingBudgetService);
   private readonly testingTimeService = inject(TestingTimeService);
-
-  rollingBudgetToday = 0;
-  rollingBudgetRemaining = 0;
-  rollingDaysRemaining = 0;
-  rollingTotalBudget = 0;
-  rollingUsedBudget = 0;
 
   readonly weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   readonly categoryMeta = CATEGORY_META;
@@ -195,9 +189,13 @@ export class Transaction {
     if (!this.budgetPrompt) {
       return 0;
     }
-    return this.topUpSource === 'tabungan'
-      ? this.budgetPrompt.maxTopUpFromTabungan
-      : this.budgetPrompt.maxTopUpFromDanaDarurat;
+    if (this.topUpSource === 'tabungan') {
+      return this.budgetPrompt.maxTopUpFromTabungan;
+    }
+    if (this.topUpSource === 'sisaSaldo') {
+      return this.budgetPrompt.maxTopUpFromSisaSaldo;
+    }
+    return this.budgetPrompt.maxTopUpFromDanaDarurat;
   }
 
   get cycleTopUpWarningText(): string {
@@ -409,7 +407,7 @@ export class Transaction {
       this.rebuildCalendar();
     }
 
-    void this.refreshPromptState();
+    void this.syncSelectedDateData();
   }
 
   isSameDate(dateA: Date, dateB: Date): boolean {
@@ -436,7 +434,7 @@ export class Transaction {
     );
     this.journal = result.journal;
     this.currentFinancialData = result.financialData;
-    this.computeRollingBudgetToday();
+    await this.rollingBudgetService.refresh();
 
     if (result.requiresTopUp && result.prompt && result.pendingExpense) {
       this.openTopUpModal(result.prompt, result.pendingExpense, text, true);
@@ -470,7 +468,7 @@ export class Transaction {
 
     this.journal = result.journal;
     this.currentFinancialData = result.financialData;
-    this.computeRollingBudgetToday();
+    await this.rollingBudgetService.refresh();
 
     if (result.requiresTopUp && result.prompt && result.pendingExpense) {
       this.openTopUpModal(result.prompt, result.pendingExpense, '', false);
@@ -530,10 +528,17 @@ export class Transaction {
       this.selectedDate,
     );
     this.currentFinancialData = cycle.financialData;
-    this.computeRollingBudgetToday();
+    await this.rollingBudgetService.refresh();
     this.budgetPrompt = await this.journalService.getExpensePromptForDate(
       this.selectedDateKey,
     );
+  }
+
+  private async syncSelectedDateData(): Promise<void> {
+    this.journal = await this.journalService.loadCurrentUserJournal(
+      this.selectedDate,
+    );
+    await this.refreshPromptState();
   }
 
   async confirmTopUpAndRetry(): Promise<void> {
@@ -558,7 +563,7 @@ export class Transaction {
       this.journal = result.journal;
       this.currentFinancialData = result.financialData;
       this.closeTopUpModal();
-      this.computeRollingBudgetToday();
+      await this.rollingBudgetService.refresh();
       await this.refreshPromptState();
       return;
     }
@@ -575,7 +580,7 @@ export class Transaction {
 
     this.journal = result.journal;
     this.currentFinancialData = result.financialData;
-    this.computeRollingBudgetToday();
+    await this.rollingBudgetService.refresh();
     if (!result.requiresTopUp) {
       this.expenseDraft.description = '';
       this.expenseDraft.amount = null;
@@ -603,7 +608,11 @@ export class Transaction {
     this.pendingFromChat = fromChat;
     this.pendingChatText = rawChatText;
     this.topUpSource =
-      prompt.maxTopUpFromTabungan > 0 ? 'tabungan' : 'danaDarurat';
+      prompt.maxTopUpFromTabungan > 0
+        ? 'tabungan'
+        : prompt.maxTopUpFromSisaSaldo > 0
+          ? 'sisaSaldo'
+          : 'danaDarurat';
     this.topUpAmountInput = null;
     this.topUpModalOpen = true;
   }
@@ -639,19 +648,5 @@ export class Transaction {
         isToday: this.isSameDate(normalizedDate, this.today),
       };
     });
-  }
-
-  private computeRollingBudgetToday(): void {
-    const state = this.rollingBudgetService.computeRollingBudgetState(
-      this.currentFinancialData,
-      this.journal,
-      this.today,
-    );
-
-    this.rollingTotalBudget = state.rollingTotalBudget;
-    this.rollingUsedBudget = state.rollingUsedBudget;
-    this.rollingBudgetRemaining = state.rollingBudgetRemaining;
-    this.rollingDaysRemaining = state.rollingDaysRemaining;
-    this.rollingBudgetToday = state.rollingBudgetToday;
   }
 }

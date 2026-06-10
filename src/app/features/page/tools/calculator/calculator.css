@@ -143,12 +143,21 @@
 }
 
 .back-link {
+  display: inline-flex;
+  align-items: center;
   width: fit-content;
   text-decoration: none;
-  color: var(--color-primary);
-  font-size: var(--font-size-sm);
+  color: var(--color-black);
+  font-size: var(--font-size-xl);
   font-weight: 600;
   letter-spacing: 0.02em;
+}
+
+.back-link-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 12px;
+  flex-shrink: 0;
 }
 
 .back-link:hover {
@@ -165,16 +174,14 @@
 
 .calculator-header h1 {
   color: var(--color-black);
-  font-size: clamp(1.5rem, 2.8vw, 2.25rem);
+  font-size: var(--font-size-3xl);
   line-height: 1.25;
-  max-width: 26ch;
 }
 
 .header-caption {
   color: color-mix(in srgb, var(--color-black) 72%, var(--color-gray));
   font-size: var(--font-size-base);
   line-height: 1.6;
-  max-width: 72ch;
 }
 
 .card-title-wrap {

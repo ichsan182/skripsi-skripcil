@@ -1,11 +1,12 @@
 ﻿<div class="page-container">
   <app-sidebar
     [showRollingBudgetPanel]="true"
-    [rollingTotalBudget]="rollingTotalBudget"
-    [rollingUsedBudget]="rollingUsedBudget"
-    [rollingBudgetRemaining]="rollingBudgetRemaining"
-    [rollingDaysRemaining]="rollingDaysRemaining"
-    [rollingBudgetToday]="rollingBudgetToday"
+    [rollingTotalBudget]="rollingBudgetService.currentState.rollingTotalBudget"
+    [rollingUsedBudget]="rollingBudgetService.currentState.rollingUsedBudget"
+    [rollingBudgetRemaining]="rollingBudgetService.currentState.rollingBudgetRemaining"
+    [rollingDaysRemaining]="rollingBudgetService.currentState.rollingDaysRemaining"
+    [rollingBudgetToday]="rollingBudgetService.currentState.rollingBudgetToday"
+    [rollingSpentToday]="rollingBudgetService.currentState.rollingSpentToday"
   ></app-sidebar>
   <section class="page-content">
     <h1>Transaction</h1>
@@ -116,12 +117,28 @@
             />
             <button
               type="button"
-              class="send-btn"
+              class="send-btn chat-send-btn"
               (click)="sendMessage()"
               [disabled]="!isSelectedDateToday || !messageInput.trim()"
+              aria-label="Kirim pesan"
             >
-              Kirim
+              <img src="assets/send.svg" alt="" aria-hidden="true" />
             </button>
+          </div>
+
+          <div class="chat-warning">
+            <span class="chat-warning-icon">⚠️</span>
+            <div class="chat-warning-body">
+              <p class="chat-warning-title">
+                Hanya untuk pencatatan <strong>pengeluaran</strong>
+              </p>
+              <p class="chat-warning-format">
+                Format: <code>makan 10.000</code> &nbsp;·&nbsp;
+                <code>10000 makan</code> &nbsp;·&nbsp;
+                <code>makan 10000</code> &nbsp;·&nbsp;
+                <code>makan 10.000</code>
+              </p>
+            </div>
           </div>
         </article>
       </section>
@@ -262,11 +279,9 @@
                 <tbody>
                   <tr *ngIf="filteredExpenses.length === 0">
                     <td colspan="3" class="empty-table-cell">
-                      {{
-                        selectedExpenses.length === 0
-                          ? 'Belum ada data pengeluaran.'
-                          : 'Tidak ada pengeluaran yang cocok dengan filter.'
-                      }}
+                      {{ selectedExpenses.length === 0 ? 'Belum ada data
+                      pengeluaran.' : 'Tidak ada pengeluaran yang cocok dengan
+                      filter.' }}
                     </td>
                   </tr>
                   <tr *ngFor="let expense of filteredExpenses">
@@ -365,11 +380,9 @@
                 <tbody>
                   <tr *ngIf="filteredIncomes.length === 0">
                     <td colspan="3" class="empty-table-cell">
-                      {{
-                        selectedIncomes.length === 0
-                          ? 'Belum ada data pemasukan.'
-                          : 'Tidak ada pemasukan yang cocok dengan filter.'
-                      }}
+                      {{ selectedIncomes.length === 0 ? 'Belum ada data
+                      pemasukan.' : 'Tidak ada pemasukan yang cocok dengan
+                      filter.' }}
                     </td>
                   </tr>
                   <tr *ngFor="let income of filteredIncomes">
@@ -419,6 +432,15 @@
       </button>
       <button
         type="button"
+        [class.active]="topUpSource === 'sisaSaldo'"
+        [disabled]="budgetPrompt.maxTopUpFromSisaSaldo <= 0"
+        (click)="topUpSource = 'sisaSaldo'"
+      >
+        Sisa Saldo (Maks: {{ formatCurrency(budgetPrompt.maxTopUpFromSisaSaldo)
+        }})
+      </button>
+      <button
+        type="button"
         [class.active]="topUpSource === 'danaDarurat'"
         [disabled]="budgetPrompt.maxTopUpFromDanaDarurat <= 0"
         (click)="topUpSource = 'danaDarurat'"
@@ -442,6 +464,11 @@
       Sisa penarikan Tabungan periode ini: {{
       budgetPrompt.tabunganTopUpRemainingCount }}x dari {{
       budgetPrompt.tabunganTopUpAllowedCount }}x.
+    </p>
+    <p class="modal-note" *ngIf="topUpSource === 'sisaSaldo'">
+      Sisa penarikan Sisa Saldo periode ini: {{
+      budgetPrompt.sisaSaldoTopUpRemainingCount }}x dari {{
+      budgetPrompt.sisaSaldoTopUpAllowedCount }}x.
     </p>
 
     <div class="modal-actions">

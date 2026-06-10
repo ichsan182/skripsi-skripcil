@@ -41,6 +41,7 @@ export class Questionnaire {
       [
         Validators.required,
         Validators.pattern(/^[0-9]{1,2}$/),
+        Validators.min(1),
         Validators.max(MAX_TANGGAL_PEMASUKAN),
       ],
     ],
@@ -48,8 +49,8 @@ export class Questionnaire {
   });
 
   form2 = this.fb.group({
-    estimasiTabungan: ['', [Validators.required]],
-    danaDarurat: ['', [Validators.required]],
+    estimasiTabungan: [''],
+    danaDarurat: [''],
   });
 
   get isForm1Valid(): boolean {
@@ -80,6 +81,7 @@ export class Questionnaire {
   }
 
   nextStep(): void {
+    this.validatePengeluaranWajibLimit();
     if (this.form1.invalid) {
       this.form1.markAllAsTouched();
       return;
@@ -88,6 +90,8 @@ export class Questionnaire {
   }
 
   async onFinish(): Promise<void> {
+    this.normalizeOptionalFinancialFields();
+
     if (this.form2.invalid) {
       this.form2.markAllAsTouched();
       return;
@@ -98,6 +102,11 @@ export class Questionnaire {
       const user = this.currentUserService.getCurrentUserOrDefault<{
         id?: number | string;
       }>({});
+
+      if (!user.id) {
+        return;
+      }
+
       const tanggalPemasukan = this.parseNumber(
         this.form1.value.tanggalPemasukan || '',
       );
@@ -119,30 +128,54 @@ export class Questionnaire {
         }
       }
 
+      const pendapatan = this.parseNumber(this.form1.value.pendapatan || '');
+      const pengeluaranWajib = this.parseNumber(
+        this.form1.value.pengeluaranWajib || '',
+      );
+      const hutangWajib = this.parseNumber(this.form1.value.hutangWajib || '');
+      const estimasiTabungan = this.parseNumber(
+        this.form2.value.estimasiTabungan || '',
+      );
+      const danaDarurat = this.parseNumber(this.form2.value.danaDarurat || '');
+      const pengeluaranPercent =
+        pendapatan > 0
+          ? this.clampPercent(Math.round((pengeluaranWajib / pendapatan) * 100))
+          : 0;
+      const now = new Date();
+      const cycleRange = this.buildCycleRange(now, tanggalPemasukan);
+      const currentPengeluaranLimit = pengeluaranWajib;
+      const currentSisaSaldoPool = Math.max(0, pendapatan - pengeluaranWajib);
+
       const financialData = {
-        pendapatan: this.parseNumber(this.form1.value.pendapatan || ''),
-        pengeluaranWajib: this.parseNumber(
-          this.form1.value.pengeluaranWajib || '',
-        ),
+        pendapatan,
+        pengeluaranWajib,
         tanggalPemasukan,
         intendedTanggalPemasukan: tanggalPemasukan,
-        hutangWajib: this.parseNumber(this.form1.value.hutangWajib || ''),
-        estimasiTabungan: this.parseNumber(
-          this.form2.value.estimasiTabungan || '',
-        ),
-        danaDarurat: this.parseNumber(this.form2.value.danaDarurat || ''),
+        hutangWajib,
+        estimasiTabungan,
+        danaDarurat,
+        budgetAllocation: {
+          mode: 2,
+          pengeluaran: pengeluaranPercent,
+          wants: 0,
+          savings: Math.max(0, 100 - pengeluaranPercent),
+        },
+        currentPengeluaranLimit,
+        currentPengeluaranUsed: 0,
+        currentSisaSaldoPool,
+        lastCycleCarryOverSaldo: 0,
+        monthlyTopUp: {
+          cycleKey: cycleRange.start,
+          fromTabunganCount: 0,
+          totalFromTabungan: 0,
+          totalFromDanaDarurat: 0,
+        },
+        currentCycleStart: cycleRange.start,
+        currentCycleEnd: cycleRange.end,
       };
 
       const level = this.calculateLevel(
         financialData as unknown as FinancialData,
-      );
-
-      await firstValueFrom(
-        this.http.patch(`${USERS_API_URL}/${user.id}`, {
-          onboardingCompleted: true,
-          financialData,
-          level,
-        }),
       );
 
       const updatedUser = {
@@ -151,6 +184,20 @@ export class Questionnaire {
         financialData,
         level,
       };
+
+      const serverUser = await firstValueFrom(
+        this.http.get<Record<string, unknown>>(`${USERS_API_URL}/${user.id}`),
+      );
+      await firstValueFrom(
+        this.http.put(`${USERS_API_URL}/${user.id}`, {
+          ...serverUser,
+          onboardingCompleted: true,
+          financialData,
+          level,
+          id: user.id,
+        }),
+      );
+
       this.currentUserService.setCurrentUser(updatedUser);
 
       this.router.navigateByUrl('/result');
@@ -191,6 +238,13 @@ export class Questionnaire {
     control.setValue(state.formattedValue, {
       emitEvent: false,
     });
+
+    if (
+      form === 'form1' &&
+      (controlName === 'pendapatan' || controlName === 'pengeluaranWajib')
+    ) {
+      this.validatePengeluaranWajibLimit();
+    }
   }
 
   onTanggalPemasukanInput(): void {
@@ -208,7 +262,7 @@ export class Questionnaire {
       delete currentErrors['max'];
     }
     control.setErrors(Object.keys(currentErrors).length ? currentErrors : null);
-    control.setValue(numericValue > 0 ? String(numericValue) : '', {
+    control.setValue(numericValue >= 0 ? String(numericValue) : '', {
       emitEvent: false,
     });
   }
@@ -246,9 +300,117 @@ export class Questionnaire {
     return Math.max(0, Math.min(MAX_TANGGAL_PEMASUKAN, value));
   }
 
+  private clampPercent(value: number): number {
+    return Math.max(0, Math.min(100, value));
+  }
+
+  private normalizeOptionalFinancialFields(): void {
+    const estimasiTabunganControl = this.form2.get('estimasiTabungan');
+    const danaDaruratControl = this.form2.get('danaDarurat');
+
+    if (
+      estimasiTabunganControl &&
+      !String(estimasiTabunganControl.value || '').trim()
+    ) {
+      estimasiTabunganControl.setValue('0', { emitEvent: false });
+    }
+
+    if (danaDaruratControl && !String(danaDaruratControl.value || '').trim()) {
+      danaDaruratControl.setValue('0', { emitEvent: false });
+    }
+  }
+
+  private validatePengeluaranWajibLimit(): void {
+    const pendapatanControl = this.form1.get('pendapatan');
+    const pengeluaranControl = this.form1.get('pengeluaranWajib');
+
+    if (!pendapatanControl || !pengeluaranControl) {
+      return;
+    }
+
+    const pendapatan = this.parseNumber(String(pendapatanControl.value || ''));
+    const pengeluaran = this.parseNumber(
+      String(pengeluaranControl.value || ''),
+    );
+    const currentErrors = { ...(pengeluaranControl.errors || {}) };
+
+    if (pendapatan > 0 && pengeluaran > pendapatan) {
+      currentErrors['exceedsPendapatan'] = true;
+    } else {
+      delete currentErrors['exceedsPendapatan'];
+    }
+
+    pengeluaranControl.setErrors(
+      Object.keys(currentErrors).length ? currentErrors : null,
+    );
+  }
+
   private calculateLevel(data: FinancialData): number {
     const signals = buildLevelSignals(data);
     const evaluation = evaluateFinancialLevel(signals);
     return evaluation.level;
+  }
+
+  private buildCycleRange(
+    referenceDate: Date,
+    intendedDay: number,
+  ): { start: string; end: string } {
+    const normalizedDay = Math.max(1, Math.min(31, intendedDay));
+    const thisMonthResetDay = this.resolveResetDay(
+      referenceDate.getFullYear(),
+      referenceDate.getMonth(),
+      normalizedDay,
+    );
+    const thisMonthResetDate = new Date(
+      referenceDate.getFullYear(),
+      referenceDate.getMonth(),
+      thisMonthResetDay,
+    );
+
+    const startDate =
+      referenceDate >= thisMonthResetDate
+        ? thisMonthResetDate
+        : new Date(
+            referenceDate.getFullYear(),
+            referenceDate.getMonth() - 1,
+            this.resolveResetDay(
+              referenceDate.getFullYear(),
+              referenceDate.getMonth() - 1,
+              normalizedDay,
+            ),
+          );
+
+    const nextStartDate = new Date(
+      startDate.getFullYear(),
+      startDate.getMonth() + 1,
+      this.resolveResetDay(
+        startDate.getFullYear(),
+        startDate.getMonth() + 1,
+        normalizedDay,
+      ),
+    );
+    const endDate = new Date(nextStartDate);
+    endDate.setDate(endDate.getDate() - 1);
+
+    return {
+      start: this.toDateKey(startDate),
+      end: this.toDateKey(endDate),
+    };
+  }
+
+  private resolveResetDay(
+    year: number,
+    monthIndex: number,
+    intendedDay: number,
+  ): number {
+    const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+    return Math.min(intendedDay, lastDay);
+  }
+
+  private toDateKey(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }
