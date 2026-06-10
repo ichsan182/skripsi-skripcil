@@ -845,7 +845,8 @@
 
   .home-page {
     margin-left: 0;
-    padding: 40px 16px 16px 16px;
+    padding: 16px 16px 16px 16px;
+    padding-top: calc(60px + 16px);
   }
 
   .home-page h1 {
@@ -910,7 +911,8 @@
 
 @media (max-width: 480px) {
   .home-page {
-    padding: 30px 12px 12px 12px;
+    padding: 12px 12px 12px 12px;
+    padding-top: calc(60px + 12px);
   }
 
   .home-page h1 {

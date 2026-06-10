@@ -67,6 +67,34 @@
   gap: 8px;
 }
 
+.debt-header-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.debt-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  text-decoration: none;
+  flex-shrink: 0;
+  opacity: 0.75;
+  transition: opacity 0.18s;
+}
+
+.debt-back-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.debt-back-btn:hover {
+  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
 .debt-kicker {
   text-transform: uppercase;
   font-size: var(--font-size-xs);

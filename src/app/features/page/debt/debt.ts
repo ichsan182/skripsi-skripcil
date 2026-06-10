@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { USERS_API_URL } from '../../../core/config/app-api.config';
 import { CurrentUserService } from '../../../core/services/current-user.service';
@@ -63,7 +64,7 @@ interface StoredUser {
 @Component({
   selector: 'app-debt',
   standalone: true,
-  imports: [CommonModule, FormsModule, Sidebar, InputField],
+  imports: [CommonModule, FormsModule, RouterLink, Sidebar, InputField],
   templateUrl: './debt.html',
   styleUrl: './debt.css',
 })
@@ -131,6 +132,12 @@ export class Debt {
 
   protected get sisaHutangWajib(): number {
     return this.totalConsumptiveDebt;
+  }
+
+  protected get totalConsumptivePrincipal(): number {
+    return this.debts
+      .filter((item) => item.category === 'konsumtif')
+      .reduce((sum, item) => sum + item.principalAmount, 0);
   }
 
   protected get totalProductiveDebt(): number {
@@ -598,6 +605,26 @@ export class Debt {
     const user = this.currentUserService.getCurrentUserOrDefault<StoredUser>(
       {},
     );
+    const currentConsumptiveDebt = this.totalConsumptiveDebt;
+    const previousConsumptiveDebt = Math.max(
+      0,
+      this.financialData?.hutangWajib ?? 0,
+    );
+    const previousPayoffBaseline = Math.max(
+      previousConsumptiveDebt,
+      this.financialData?.hutangWajibPrincipal ?? 0,
+    );
+    const consumptivePrincipalSnapshot = Math.max(
+      0,
+      this.totalConsumptivePrincipal,
+    );
+    const consumptiveDebtPayoffBaseline =
+      this.resolveConsumptiveDebtPayoffBaseline({
+        currentConsumptiveDebt,
+        previousPayoffBaseline,
+        consumptivePrincipalSnapshot,
+      });
+
     const nextFinancialData: FinancialData = {
       ...(this.financialData ?? {
         pendapatan: 0,
@@ -607,7 +634,12 @@ export class Debt {
         estimasiTabungan: 0,
         danaDarurat: 0,
       }),
-      hutangWajib: this.totalConsumptiveDebt,
+      hutangWajib: currentConsumptiveDebt,
+      hutangWajibPrincipal: consumptiveDebtPayoffBaseline,
+      debtSummary: {
+        totalPrincipalAmount: consumptivePrincipalSnapshot,
+        totalRemainingAmount: currentConsumptiveDebt,
+      },
     };
 
     this.financialData = nextFinancialData;
@@ -632,9 +664,17 @@ export class Debt {
 
     this.isSaving = true;
     try {
+      const serverUser = await firstValueFrom(
+        this.http.get<Record<string, unknown>>(
+          `${USERS_API_URL}/${updatedUser.id}`,
+        ),
+      );
       await firstValueFrom(
         this.http.put(`${USERS_API_URL}/${updatedUser.id}`, {
-          ...updatedUser,
+          ...serverUser,
+          level: updatedUser.level,
+          financialData: updatedUser.financialData,
+          debts: updatedUser.debts,
           id: updatedUser.id,
         }),
       );
@@ -723,6 +763,34 @@ export class Debt {
     return parseCurrencyInputValue(
       value,
       resolveCurrencyAmountLimit(this.currencyMaxTier),
+    );
+  }
+
+  private resolveConsumptiveDebtPayoffBaseline(params: {
+    currentConsumptiveDebt: number;
+    previousPayoffBaseline: number;
+    consumptivePrincipalSnapshot: number;
+  }): number {
+    const {
+      currentConsumptiveDebt,
+      previousPayoffBaseline,
+      consumptivePrincipalSnapshot,
+    } = params;
+
+    if (currentConsumptiveDebt <= 0) {
+      return 0;
+    }
+
+    // Reset progress baseline only when total debt exceeds the last payoff baseline.
+    // This prevents false reset caused by stale previous hutangWajib snapshots.
+    if (currentConsumptiveDebt > previousPayoffBaseline) {
+      return currentConsumptiveDebt;
+    }
+
+    return Math.max(
+      currentConsumptiveDebt,
+      previousPayoffBaseline,
+      consumptivePrincipalSnapshot,
     );
   }
 

@@ -402,7 +402,7 @@ export class ToolsCalculator {
   }
 
   protected calculateNow(): void {
-    this.recalculateAll();
+    // recalculation happens automatically on every field change
   }
 
   protected onChartGranularityChange(): void {

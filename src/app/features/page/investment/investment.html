@@ -1,11 +1,12 @@
 <div class="page-container">
   <app-sidebar
     [showRollingBudgetPanel]="true"
-    [rollingTotalBudget]="rollingTotalBudget"
-    [rollingUsedBudget]="rollingUsedBudget"
-    [rollingBudgetRemaining]="rollingBudgetRemaining"
-    [rollingDaysRemaining]="rollingDaysRemaining"
-    [rollingBudgetToday]="rollingBudgetToday"
+    [rollingTotalBudget]="rollingBudgetService.currentState.rollingTotalBudget"
+    [rollingUsedBudget]="rollingBudgetService.currentState.rollingUsedBudget"
+    [rollingBudgetRemaining]="rollingBudgetService.currentState.rollingBudgetRemaining"
+    [rollingDaysRemaining]="rollingBudgetService.currentState.rollingDaysRemaining"
+    [rollingBudgetToday]="rollingBudgetService.currentState.rollingBudgetToday"
+    [rollingSpentToday]="rollingBudgetService.currentState.rollingSpentToday"
   ></app-sidebar>
 
   <section class="page-content investment-page">
@@ -334,10 +335,8 @@
     </section>
 
     <p class="api-note">
-      Catatan integrasi API: dashboard ini memakai Twelve Data (symbol search,
-      chart, profile, RSI/SMA), FRED (katalog indikator ekonomi multi-kategori),
-      dan NewsAPI (headline berita) dengan endpoint free yang stabil untuk
-      penggunaan aplikasi ini.
+      Dashboard ini menampilkan data berita, indikator ekonomi, dan chart dari
+      layanan API eksternal. Jumlah indikator yang seharusnya dimuat adalah 42.
     </p>
   </section>
 </div>

@@ -1,29 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
-import { USERS_API_URL } from '../../../core/config/app-api.config';
-
-interface RegisterPayload {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-  onboardingCompleted: boolean;
-  level: number;
-  investmentWatchlist: null;
-  journal: null;
-  financialData: null;
-  streak: null;
-  debts: never[];
-}
-
-interface ExistingUser {
-  email: string;
-}
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
+import { RegisterPayload } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-register',
@@ -33,7 +14,8 @@ interface ExistingUser {
 })
 export class Register {
   private readonly formBuilder = inject(FormBuilder);
-  private readonly httpClient = inject(HttpClient);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   protected isSubmitting = false;
   protected isPasswordVisible = false;
@@ -75,9 +57,7 @@ export class Register {
         debts: [],
       };
 
-      const existingUsers = await firstValueFrom(
-        this.httpClient.get<ExistingUser[]>(USERS_API_URL),
-      );
+      const existingUsers = await this.authService.getAllUsers();
 
       const isEmailTaken = existingUsers.some(
         (user) => user.email.trim().toLowerCase() === payload.email,
@@ -89,14 +69,19 @@ export class Register {
         return;
       }
 
-      await firstValueFrom(this.httpClient.post(USERS_API_URL, payload));
+      await this.authService.registerUser(payload);
 
-      this.successMessage =
-        'Registrasi berhasil. Silakan login menggunakan akun baru.';
-      this.registerForm.reset();
-    } catch {
-      this.errorMessage =
-        'Gagal menyimpan data. Pastikan backend Spring Boot berjalan.';
+      await this.router.navigate(['/login'], {
+        queryParams: { registered: 'success' },
+      });
+    } catch (err) {
+      if (err instanceof HttpErrorResponse && err.status === 409) {
+        this.errorMessage =
+          'Nomor telepon sudah terdaftar. Silakan gunakan nomor lain.';
+      } else {
+        this.errorMessage =
+          'Gagal menyimpan data. Pastikan backend Spring Boot berjalan.';
+      }
     } finally {
       this.isSubmitting = false;
     }

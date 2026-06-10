@@ -90,14 +90,8 @@ const CATEGORY_META: Record<ExpenseCategory, CategoryMeta> = {
 })
 export class Transaction {
   private readonly journalService = inject(JournalService);
-  private readonly rollingBudgetService = inject(RollingBudgetService);
+  protected readonly rollingBudgetService = inject(RollingBudgetService);
   private readonly testingTimeService = inject(TestingTimeService);
-
-  rollingBudgetToday = 0;
-  rollingBudgetRemaining = 0;
-  rollingDaysRemaining = 0;
-  rollingTotalBudget = 0;
-  rollingUsedBudget = 0;
 
   readonly weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   readonly categoryMeta = CATEGORY_META;
@@ -440,7 +434,7 @@ export class Transaction {
     );
     this.journal = result.journal;
     this.currentFinancialData = result.financialData;
-    this.computeRollingBudgetToday();
+    await this.rollingBudgetService.refresh();
 
     if (result.requiresTopUp && result.prompt && result.pendingExpense) {
       this.openTopUpModal(result.prompt, result.pendingExpense, text, true);
@@ -474,7 +468,7 @@ export class Transaction {
 
     this.journal = result.journal;
     this.currentFinancialData = result.financialData;
-    this.computeRollingBudgetToday();
+    await this.rollingBudgetService.refresh();
 
     if (result.requiresTopUp && result.prompt && result.pendingExpense) {
       this.openTopUpModal(result.prompt, result.pendingExpense, '', false);
@@ -534,7 +528,7 @@ export class Transaction {
       this.selectedDate,
     );
     this.currentFinancialData = cycle.financialData;
-    this.computeRollingBudgetToday();
+    await this.rollingBudgetService.refresh();
     this.budgetPrompt = await this.journalService.getExpensePromptForDate(
       this.selectedDateKey,
     );
@@ -569,7 +563,7 @@ export class Transaction {
       this.journal = result.journal;
       this.currentFinancialData = result.financialData;
       this.closeTopUpModal();
-      this.computeRollingBudgetToday();
+      await this.rollingBudgetService.refresh();
       await this.refreshPromptState();
       return;
     }
@@ -586,7 +580,7 @@ export class Transaction {
 
     this.journal = result.journal;
     this.currentFinancialData = result.financialData;
-    this.computeRollingBudgetToday();
+    await this.rollingBudgetService.refresh();
     if (!result.requiresTopUp) {
       this.expenseDraft.description = '';
       this.expenseDraft.amount = null;
@@ -654,19 +648,5 @@ export class Transaction {
         isToday: this.isSameDate(normalizedDate, this.today),
       };
     });
-  }
-
-  private computeRollingBudgetToday(): void {
-    const state = this.rollingBudgetService.computeRollingBudgetState(
-      this.currentFinancialData,
-      this.journal,
-      this.today,
-    );
-
-    this.rollingTotalBudget = state.rollingTotalBudget;
-    this.rollingUsedBudget = state.rollingUsedBudget;
-    this.rollingBudgetRemaining = state.rollingBudgetRemaining;
-    this.rollingDaysRemaining = state.rollingDaysRemaining;
-    this.rollingBudgetToday = state.rollingBudgetToday;
   }
 }

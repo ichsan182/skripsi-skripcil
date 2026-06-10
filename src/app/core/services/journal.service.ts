@@ -75,6 +75,7 @@ export interface FinancialData {
   tanggalPemasukan: number;
   intendedTanggalPemasukan?: number;
   hutangWajib: number;
+  hutangWajibPrincipal?: number;
   estimasiTabungan: number;
   danaDarurat: number;
   danaInvestasi?: number;
@@ -89,6 +90,10 @@ export interface FinancialData {
   lastCycleCarryOverSaldo?: number;
   currentCycleSavingsAllocated?: number;
   monthlyTopUp?: MonthlyTopUpSummary;
+  debtSummary?: {
+    totalPrincipalAmount: number;
+    totalRemainingAmount: number;
+  };
 }
 
 export interface ExpenseBudgetPrompt {
